@@ -22,34 +22,12 @@ and enable the server bundle.
 Installing the Web Server Bundle
 --------------------------------
 
-First, execute this command:
+Move into your project directory and run this command:
 
 .. code-block:: terminal
 
     $ cd your-project/
-    $ composer require symfony/web-server-bundle
-
-Then, enable the bundle in the kernel of the application::
-
-    // src/Kernel.php
-    class Kernel extends Kernel
-    {
-        public function registerBundles()
-        {
-            $bundles = array(
-                // ...
-            );
-
-            if ('dev' === $this->getEnvironment()) {
-                // ...
-                $bundles[] = new Symfony\Bundle\WebServerBundle\WebServerBundle();
-            }
-
-            // ...
-        }
-
-        // ...
-    }
+    $ composer require symfony/web-server-bundle --dev
 
 Starting the Web Server
 -----------------------
@@ -124,7 +102,7 @@ Use the ``--router`` option to use your own router script:
 
 .. code-block:: terminal
 
-    $ php bin/console server:start --router=app/config/my_router.php
+    $ php bin/console server:start --router=config/my_router.php
 
 If your application's document root differs from the standard directory layout,
 you have to pass the correct location using the ``--docroot`` option:
@@ -151,5 +129,5 @@ when the web server listens to another IP address or to another port:
 
     $ php bin/console server:stop 192.168.0.1:8080
 
-.. _`built-in web server`: http://www.php.net/manual/en/features.commandline.webserver.php
-.. _`php.net`: http://php.net/manual/en/features.commandline.webserver.php#example-411
+.. _`built-in web server`: https://php.net/manual/en/features.commandline.webserver.php
+.. _`php.net`: https://php.net/manual/en/features.commandline.webserver.php#example-411

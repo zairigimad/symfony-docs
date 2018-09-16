@@ -10,15 +10,22 @@ The CssSelector Component
 Installation
 ------------
 
-You can install the component in 2 different ways:
+.. code-block:: terminal
 
-* :doc:`Install it via Composer </components/using_components>` (``symfony/css-selector`` on `Packagist`_);
-* Use the official Git repository (https://github.com/symfony/css-selector).
+    $ composer require symfony/css-selector
+
+Alternatively, you can clone the `<https://github.com/symfony/css-selector>`_ repository.
 
 .. include:: /components/require_autoload.rst.inc
 
 Usage
 -----
+
+.. seealso::
+
+    This article explains how to use the CssSelector features as an independent
+    component in any PHP application. Read the :ref:`Symfony Functional Tests <functional-tests>`
+    article to learn about how to use it when creating Symfony tests.
 
 Why to Use CSS selectors?
 ~~~~~~~~~~~~~~~~~~~~~~~~~

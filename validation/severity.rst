@@ -35,24 +35,24 @@ Use the ``payload`` option to configure the error level for each constraint:
         class User
         {
             /**
-             * @Assert\NotBlank(payload = {"severity" = "error"})
+             * @Assert\NotBlank(payload={"severity"="error"})
              */
             protected $username;
 
             /**
-             * @Assert\NotBlank(payload = {"severity" = "error"})
+             * @Assert\NotBlank(payload={"severity"="error"})
              */
             protected $password;
 
             /**
-             * @Assert\Iban(payload = {"severity" = "warning"})
+             * @Assert\Iban(payload={"severity"="warning"})
              */
             protected $bankAccountNumber;
         }
 
     .. code-block:: yaml
 
-        # src/Resources/config/validation.yml
+        # config/validator/validation.yaml
         App\Entity\User:
             properties:
                 username:
@@ -70,7 +70,7 @@ Use the ``payload`` option to configure the error level for each constraint:
 
     .. code-block:: xml
 
-        <!-- src/Resources/config/validation.xml -->
+        <!-- config/validator/validation.xml -->
         <?xml version="1.0" encoding="UTF-8" ?>
         <constraint-mapping xmlns="http://symfony.com/schema/dic/constraint-mapping"
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -148,10 +148,7 @@ so that the severity is added as an additional HTML class:
         {%- if errors|length > 0 -%}
         <ul>
             {%- for error in errors -%}
-                {% if error.cause.constraint.payload.severity is defined %}
-                    {% set severity = error.cause.constraint.payload.severity %}
-                {% endif %}
-                <li{% if severity is defined %} class="{{ severity }}"{% endif %}>{{ error.message }}</li>
+                <li class="{{ error.cause.constraint.payload.severity ?? '' }}">{{ error.message }}</li>
             {%- endfor -%}
         </ul>
         {%- endif -%}

@@ -12,7 +12,7 @@ several cached items, keeping them in sync can be difficult.
 
 The Symfony Cache component provides two mechanisms to help solving this problem:
 
-* :ref:`Tags based invalidation <cache-component-tags>` for managing data dependencies;
+* :ref:`Tags-based invalidation <cache-component-tags>` for managing data dependencies;
 * :ref:`Expiration based invalidation <cache-component-expiration>` for time related dependencies.
 
 .. _cache-component-tags:
@@ -20,7 +20,7 @@ The Symfony Cache component provides two mechanisms to help solving this problem
 Using Cache Tags
 ----------------
 
-To benefit from tags based invalidation, you need to attach the proper tags to
+To benefit from tags-based invalidation, you need to attach the proper tags to
 each cached item. Each tag is a plain string identifier that you can use at any
 time to trigger the removal of all items associated with this tag.
 
@@ -44,6 +44,9 @@ you can invalidate the cached items by calling
 
     // if you know the cache key, you can also delete the item directly
     $cache->deleteItem('cache_key');
+
+    // If you don't remember the item key, you can use the getKey() method
+    $cache->deleteItem($item->getKey());
 
 Using tags invalidation is very useful when tracking cache keys becomes difficult.
 
@@ -76,6 +79,16 @@ your fronts and have very fast invalidation checks::
         // Adapter for tags
         new RedisAdapter('redis://localhost')
     );
+
+.. note::
+
+    Since Symfony 3.4, :class:`Symfony\\Component\\Cache\\Adapter\\TagAwareAdapter`
+    implements :class:`Symfony\\Component\\Cache\\PruneableInterface`,
+    enabling manual
+    :ref:`pruning of expired cache entries <component-cache-cache-pool-prune>` by
+    calling its :method:`Symfony\\Component\\Cache\\Adapter\\TagAwareAdapter::prune`
+    method (assuming the wrapped adapter itself implements
+    :class:`Symfony\\Component\\Cache\\PruneableInterface`).
 
 .. _cache-component-expiration:
 

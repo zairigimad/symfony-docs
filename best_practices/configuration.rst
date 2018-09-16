@@ -17,9 +17,9 @@ application behavior.
 
 .. best-practice::
 
-    Define the infrastructure-related configuration options as environment
-    variables. During development, use the ``.env`` file at the root of your
-    project to set these.
+    Define the infrastructure-related configuration options as
+    :doc:`environment variables </configuration/external_parameters>`. During
+    development, use the ``.env`` file at the root of your project to set these.
 
 By default, Symfony adds these types of options to the ``.env`` file when
 installing new dependencies in the app:
@@ -41,6 +41,13 @@ These options aren't defined inside the ``config/services.yaml`` file because
 they have nothing to do with the application's behavior. In other words, your
 application doesn't care about the location of your database or the credentials
 to access to it, as long as the database is correctly configured.
+
+.. caution::
+
+    Beware that dumping the contents of the ``$_SERVER`` and ``$_ENV`` variables
+    or outputting the ``phpinfo()`` contents will display the values of the
+    environment variables, exposing sensitive information such as the database
+    credentials.
 
 .. _best-practices-canonical-parameters:
 
@@ -96,20 +103,20 @@ to control the number of posts to display on the blog homepage:
 
     # config/services.yaml
     parameters:
-        homepage.num_items: 10
+        homepage.number_of_items: 10
 
 If you've done something like this in the past, it's likely that you've in fact
 *never* actually needed to change that value. Creating a configuration
 option for a value that you are never going to configure just isn't necessary.
 Our recommendation is to define these values as constants in your application.
-You could, for example, define a ``NUM_ITEMS`` constant in the ``Post`` entity::
+You could, for example, define a ``NUMBER_OF_ITEMS`` constant in the ``Post`` entity::
 
     // src/Entity/Post.php
     namespace App\Entity;
 
     class Post
     {
-        const NUM_ITEMS = 10;
+        const NUMBER_OF_ITEMS = 10;
 
         // ...
     }
@@ -124,13 +131,11 @@ Constants can be used for example in your Twig templates thanks to the
 .. code-block:: html+twig
 
     <p>
-        Displaying the {{ constant('NUM_ITEMS', post) }} most recent results.
+        Displaying the {{ constant('NUMBER_OF_ITEMS', post) }} most recent results.
     </p>
 
 And Doctrine entities and repositories can now easily access these values,
-whereas they cannot access the container parameters:
-
-.. code-block:: php
+whereas they cannot access the container parameters::
 
     namespace App\Repository;
 
@@ -139,7 +144,7 @@ whereas they cannot access the container parameters:
 
     class PostRepository extends EntityRepository
     {
-        public function findLatest($limit = Post::NUM_ITEMS)
+        public function findLatest($limit = Post::NUMBER_OF_ITEMS)
         {
             // ...
         }
@@ -178,4 +183,4 @@ just one or two words to describe the purpose of the parameter:
 Next: :doc:`/best_practices/business-logic`
 
 .. _`feature toggles`: https://en.wikipedia.org/wiki/Feature_toggle
-.. _`constant() function`: http://twig.sensiolabs.org/doc/functions/constant.html
+.. _`constant() function`: https://twig.symfony.com/doc/2.x/functions/constant.html

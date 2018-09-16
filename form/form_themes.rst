@@ -24,56 +24,34 @@ To understand how this works, customize the ``form_row`` fragment and
 add a class attribute to the ``div`` element that surrounds each row. To
 do this, create a new template file that will store the new markup:
 
-.. configuration-block::
+.. code-block:: html+twig
 
-    .. code-block:: html+twig
-
-        {# templates/form/fields.html.twig #}
-        {% block form_row %}
-        {% spaceless %}
-            <div class="form_row">
-                {{ form_label(form) }}
-                {{ form_errors(form) }}
-                {{ form_widget(form) }}
-            </div>
-        {% endspaceless %}
-        {% endblock form_row %}
-
-    .. code-block:: html+php
-
-        <!-- templates/form/form_row.html.php -->
+    {# templates/form/fields.html.twig #}
+    {% block form_row %}
+    {% spaceless %}
         <div class="form_row">
-            <?php echo $view['form']->label($form, $label) ?>
-            <?php echo $view['form']->errors($form) ?>
-            <?php echo $view['form']->widget($form, $parameters) ?>
+            {{ form_label(form) }}
+            {{ form_errors(form) }}
+            {{ form_widget(form) }}
+            {{ form_help(form) }}
         </div>
+    {% endspaceless %}
+    {% endblock form_row %}
 
 The ``form_row`` form fragment is used when rendering most fields via the
 ``form_row()`` function. To tell the Form component to use your new ``form_row``
 fragment defined above, add the following to the top of the template that
 renders the form:
 
-.. configuration-block::
+.. code-block:: html+twig
 
-    .. code-block:: html+twig
+    {# templates/default/new.html.twig #}
+    {% form_theme form 'form/fields.html.twig' %}
 
-        {# templates/default/new.html.twig #}
-        {% form_theme form 'form/fields.html.twig' %}
+    {# or if you want to use multiple themes #}
+    {% form_theme form 'form/fields.html.twig' 'form/fields2.html.twig' %}
 
-        {# or if you want to use multiple themes #}
-        {% form_theme form 'form/fields.html.twig' 'form/fields2.html.twig' %}
-
-        {# ... render the form #}
-
-    .. code-block:: html+php
-
-        <!-- templates/default/new.html.php -->
-        <?php $view['form']->setTheme($form, array('form')) ?>
-
-        <!-- or if you want to use multiple themes -->
-        <?php $view['form']->setTheme($form, array('form', 'form2')) ?>
-
-        <!-- ... render the form -->
+    {# ... render the form #}
 
 The ``form_theme`` tag (in Twig) "imports" the fragments defined in the given
 template and uses them when rendering the form. In other words, when the
@@ -134,6 +112,8 @@ are 4 possible *parts* of a form that can be rendered:
 | ``widget``  | (e.g. ``form_widget()``)   | renders the field's HTML representation                 |
 +-------------+----------------------------+---------------------------------------------------------+
 | ``errors``  | (e.g. ``form_errors()``)   | renders the field's errors                              |
++-------------+----------------------------+---------------------------------------------------------+
+| ``help``    | (e.g. ``form_help()``)     | renders the field's help                                |
 +-------------+----------------------------+---------------------------------------------------------+
 | ``row``     | (e.g. ``form_row()``)      | renders the field's entire row (label, widget & errors) |
 +-------------+----------------------------+---------------------------------------------------------+
@@ -202,6 +182,7 @@ file:
         # config/packages/twig.yaml
         twig:
             form_themes:
+                - '...'
                 - 'form/fields.html.twig'
             # ...
 
@@ -217,6 +198,7 @@ file:
                 http://symfony.com/schema/dic/twig http://symfony.com/schema/dic/twig/twig-1.0.xsd">
 
             <twig:config>
+                <twig:theme>...</twig:theme>
                 <twig:theme>form/fields.html.twig</twig:theme>
                 <!-- ... -->
             </twig:config>
@@ -227,10 +209,16 @@ file:
         // config/packages/twig.php
         $container->loadFromExtension('twig', array(
             'form_themes' => array(
+                '...',
                 'form/fields.html.twig',
             ),
             // ...
         ));
+
+.. note::
+
+    Add your custom theme at the end of the ``form_themes`` list because each
+    theme overrides all the previous themes.
 
 Any blocks inside the ``fields.html.twig`` template are now used globally
 to define form output.

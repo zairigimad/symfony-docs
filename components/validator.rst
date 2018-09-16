@@ -11,19 +11,26 @@ The Validator Component
 Installation
 ------------
 
-You can install the component in two different ways:
+.. code-block:: terminal
 
-* :doc:`Install it via Composer </components/using_components>` (``symfony/validator`` on `Packagist`_);
-* Use the official Git repository (https://github.com/symfony/Validator).
+    $ composer require symfony/validator
+
+Alternatively, you can clone the `<https://github.com/symfony/validator>`_ repository.
 
 .. include:: /components/require_autoload.rst.inc
 
 Usage
 -----
 
+.. seealso::
+
+    This article explains how to use the Validator features as an independent
+    component in any PHP application. Read the :doc:`/validation` article to
+    learn about how to validate data and entities in Symfony applications.
+
 The Validator component behavior is based on two concepts:
 
-* Contraints, which define the rules to be validated;
+* Constraints, which define the rules to be validated;
 * Validators, which are the classes that contain the actual validation logic.
 
 The following example shows how to validate that a string is at least 10
@@ -46,7 +53,19 @@ characters long::
         }
     }
 
-The validator returns the list of violations.
+The  ``validate()`` method returns the list of violations as an object that
+implements :class:`Symfony\\Component\\Validator\\ConstraintViolationListInterface`.
+If you have lots of validation errors, you can filter them by error code::
+
+    use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
+
+    $violations = $validator->validate(...);
+    if (0 !== count($violations->findByCodes(UniqueEntity::NOT_UNIQUE_ERROR))) {
+        // handle this specific error (display some message, send an email, etc.)
+    }
+
+.. versionadded:: 3.3
+    The ``findByCodes()`` method was introduced in Symfony 3.3.
 
 Retrieving a Validator Instance
 -------------------------------

@@ -71,7 +71,7 @@ First, to use ESI, be sure to enable it in your application configuration:
 
         <!-- config/packages/framework.xml -->
         <?xml version="1.0" encoding="UTF-8" ?>
-        <container xmlns="http://symfony.com/schema/dic/symfony"
+        <container xmlns="http://symfony.com/schema/dic/services"
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
             xmlns:framework="http://symfony.com/schema/dic/symfony"
             xsi:schemaLocation="http://symfony.com/schema/dic/services
@@ -95,19 +95,17 @@ First, to use ESI, be sure to enable it in your application configuration:
 
 Now, suppose you have a page that is relatively static, except for a news
 ticker at the bottom of the content. With ESI, you can cache the news ticker
-independent of the rest of the page.
-
-.. code-block:: php
+independent of the rest of the page::
 
     // src/Controller/DefaultController.php
 
     // ...
-    class DefaultController extends Controller
+    class DefaultController extends AbstractController
     {
         public function about()
         {
             $response = $this->render('static/about.html.twig');
-            // set the shared max age - which also marks the response as public
+            // sets the shared max age - which also marks the response as public
             $response->setSharedMaxAge(600);
 
             return $response;
@@ -122,39 +120,15 @@ for more details).
 As the embedded content comes from another page (or controller for that
 matter), Symfony uses the standard ``render`` helper to configure ESI tags:
 
-.. configuration-block::
+.. code-block:: twig
 
-    .. code-block:: twig
+    {# templates/static/about.html.twig #}
 
-        {# templates/static/about.html.twig #}
+    {# you can use a controller reference #}
+    {{ render_esi(controller('App\\Controller\\NewsController::latest', { 'maxPerPage': 5 })) }}
 
-        {# you can use a controller reference #}
-        {{ render_esi(controller('App\Controller\NewsController::latest', { 'maxPerPage': 5 })) }}
-
-        {# ... or a URL #}
-        {{ render_esi(url('latest_news', { 'maxPerPage': 5 })) }}
-
-    .. code-block:: html+php
-
-        <!-- templates/static/about.html.php -->
-
-        <!-- you can use a controller reference -->
-        <?php echo $view['actions']->render(
-            new Symfony\Component\HttpKernel\Controller\ControllerReference(
-                'AppBundle:News:latest',
-                array('maxPerPage' => 5)
-            ),
-            array('strategy' => 'esi')
-        ) ?>
-
-        <!-- ... or a URL -->
-        <?php echo $view['actions']->render(
-            $view['router']->path(
-                'latest_news',
-                array('maxPerPage' => 5)
-            ),
-            array('strategy' => 'esi')
-        ) ?>
+    {# ... or a URL #}
+    {{ render_esi(url('latest_news', { 'maxPerPage': 5 })) }}
 
 By using the ``esi`` renderer (via the ``render_esi()`` Twig function), you
 tell Symfony that the action should be rendered as an ESI tag. You might be
@@ -185,15 +159,13 @@ used ``render()``.
     proxy.
 
 The embedded action can now specify its own caching rules, entirely independent
-of the master page.
-
-.. code-block:: php
+of the master page::
 
     // src/Controller/NewsController.php
     namespace App\Controller;
 
     // ...
-    class NewsController extends Controller
+    class NewsController extends AbstractController
     {
         public function latest($maxPerPage)
         {

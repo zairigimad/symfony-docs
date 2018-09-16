@@ -49,7 +49,7 @@ First, enable form login under your firewall:
 
     .. code-block:: php
 
-        // app/config/security.php
+        // config/packages/security.php
         $container->loadFromExtension('security', array(
             'firewalls' => array(
                 'main' => array(
@@ -75,9 +75,9 @@ is your job. First, create a new ``SecurityController`` inside a bundle::
     // src/Controller/SecurityController.php
     namespace App\Controller;
 
-    use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+    use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
-    class SecurityController extends Controller
+    class SecurityController extends AbstractController
     {
     }
 
@@ -91,15 +91,14 @@ configuration (``login``):
         // src/Controller/SecurityController.php
 
         // ...
-        use Symfony\Component\HttpFoundation\Request;
         use Symfony\Component\Routing\Annotation\Route;
 
-        class SecurityController extends Controller
+        class SecurityController extends AbstractController
         {
             /**
              * @Route("/login", name="login")
              */
-            public function login(Request $request)
+            public function login()
             {
             }
         }
@@ -132,31 +131,38 @@ configuration (``login``):
         use Symfony\Component\Routing\RouteCollection;
         use Symfony\Component\Routing\Route;
 
-        $collection = new RouteCollection();
-        $collection->add('login', new Route('/login', array(
+        $routes = new RouteCollection();
+        $routes->add('login', new Route('/login', array(
             '_controller' => array(SecurityController::class, 'login'),
         )));
 
-        return $collection;
+        return $routes;
 
 Great! Next, add the logic to ``login()`` that displays the login form::
 
     // src/Controller/SecurityController.php
     use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
 
-    public function login(Request $request, AuthenticationUtils $authUtils)
+    public function login(AuthenticationUtils $authenticationUtils)
     {
         // get the login error if there is one
-        $error = $authUtils->getLastAuthenticationError();
+        $error = $authenticationUtils->getLastAuthenticationError();
 
         // last username entered by the user
-        $lastUsername = $authUtils->getLastUsername();
+        $lastUsername = $authenticationUtils->getLastUsername();
 
         return $this->render('security/login.html.twig', array(
             'last_username' => $lastUsername,
             'error'         => $error,
         ));
     }
+
+.. note::
+
+    If you get an error that the ``$authenticationUtils`` argument is missing,
+    it's probably because the controllers of your application are not defined as
+    services and tagged with the ``controller.service_arguments`` tag, as done
+    in the :ref:`default services.yaml configuration <service-container-services-load-example>`.
 
 Don't let this controller confuse you. As you'll see in a moment, when the
 user submits the form, the security system automatically handles the form
@@ -170,56 +176,30 @@ the submitted username and password and authenticating the user.
 
 Finally, create the template:
 
-.. configuration-block::
+.. code-block:: html+twig
 
-    .. code-block:: html+twig
+    {# templates/security/login.html.twig #}
+    {# ... you will probably extend your base template, like base.html.twig #}
 
-        {# templates/security/login.html.twig #}
-        {# ... you will probably extend your base template, like base.html.twig #}
+    {% if error %}
+        <div>{{ error.messageKey|trans(error.messageData, 'security') }}</div>
+    {% endif %}
 
-        {% if error %}
-            <div>{{ error.messageKey|trans(error.messageData, 'security') }}</div>
-        {% endif %}
+    <form action="{{ path('login') }}" method="post">
+        <label for="username">Username:</label>
+        <input type="text" id="username" name="_username" value="{{ last_username }}" />
 
-        <form action="{{ path('login') }}" method="post">
-            <label for="username">Username:</label>
-            <input type="text" id="username" name="_username" value="{{ last_username }}" />
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="_password" />
 
-            <label for="password">Password:</label>
-            <input type="password" id="password" name="_password" />
+        {#
+            If you want to control the URL the user
+            is redirected to on success (more details below)
+            <input type="hidden" name="_target_path" value="/account" />
+        #}
 
-            {#
-                If you want to control the URL the user
-                is redirected to on success (more details below)
-                <input type="hidden" name="_target_path" value="/account" />
-            #}
-
-            <button type="submit">login</button>
-        </form>
-
-    .. code-block:: html+php
-
-        <!-- src/Resources/views/Security/login.html.php -->
-        <?php if ($error): ?>
-            <div><?php echo $error->getMessage() ?></div>
-        <?php endif ?>
-
-        <form action="<?php echo $view['router']->path('login') ?>" method="post">
-            <label for="username">Username:</label>
-            <input type="text" id="username" name="_username" value="<?php echo $last_username ?>" />
-
-            <label for="password">Password:</label>
-            <input type="password" id="password" name="_password" />
-
-            <!--
-                If you want to control the URL the user
-                is redirected to on success (more details below)
-                <input type="hidden" name="_target_path" value="/account" />
-            -->
-
-            <button type="submit">login</button>
-        </form>
-
+        <button type="submit">login</button>
+    </form>
 
 .. tip::
 
@@ -243,8 +223,7 @@ The form can look like anything, but it usually follows some conventions:
 .. caution::
 
     This login form is currently not protected against CSRF attacks. Read
-    :doc:`/security/csrf_in_login_form` on how to protect your login
-    form.
+    :doc:`/security/csrf` on how to protect your login form.
 
 And that's it! When you submit the form, the security system will automatically
 check the user's credentials and either authenticate the user or send the
@@ -325,7 +304,7 @@ all URLs (including the ``/login`` URL), will cause a redirect loop:
 
     .. code-block:: php
 
-        // app/config/security.php
+        // config/packages/security.php
 
         // ...
         'access_control' => array(
@@ -365,7 +344,7 @@ fixes the problem:
 
     .. code-block:: php
 
-        // app/config/security.php
+        // config/packages/security.php
 
         // ...
         'access_control' => array(

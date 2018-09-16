@@ -80,9 +80,7 @@ makes them easier to re-use later.
 The Symfony Form component allows you to add buttons as fields on your form.
 This is a nice way to simplify the template that renders your form. But if you
 add the buttons directly in your form class, this would effectively limit the
-scope of that form:
-
-.. code-block:: php
+scope of that form::
 
     class PostType extends AbstractType
     {
@@ -106,10 +104,10 @@ some developers configure form buttons in the controller::
     use App\Entity\Post;
     use App\Form\PostType;
     use Symfony\Component\HttpFoundation\Request;
-    use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+    use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
     use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 
-    class PostController extends Controller
+    class PostController extends AbstractController
     {
         // ...
 
@@ -164,9 +162,7 @@ can control *how* the form renders at a global level using form theming.
 Handling Form Submits
 ---------------------
 
-Handling a form submit usually follows a similar template:
-
-.. code-block:: php
+Handling a form submit usually follows a similar template::
 
     public function new(Request $request)
     {
@@ -175,9 +171,9 @@ Handling a form submit usually follows a similar template:
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $em = $this->getDoctrine()->getManager();
-            $em->persist($post);
-            $em->flush();
+            $entityManager = $this->getDoctrine()->getManager();
+            $entityManager->persist($post);
+            $entityManager->flush();
 
             return $this->redirectToRoute('admin_post_show', [
                 'id' => $post->getId()

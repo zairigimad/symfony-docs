@@ -16,20 +16,22 @@ be from a normal form post or from an API.
 Installation
 ------------
 
-You can install the component in 2 different ways:
+.. code-block:: terminal
 
-* :doc:`Install it via Composer </components/using_components>` (``symfony/form`` on `Packagist`_);
-* Use the official Git repository (https://github.com/symfony/form).
+    $ composer require symfony/form
+
+Alternatively, you can clone the `<https://github.com/symfony/form>`_ repository.
 
 .. include:: /components/require_autoload.rst.inc
 
 Configuration
 -------------
 
-.. tip::
+.. seealso::
 
-    If you are working with the full-stack Symfony Framework, the Form component
-    is already configured for you. In this case, skip to :ref:`component-form-intro-create-simple-form`.
+    This article explains how to use the Form features as an independent
+    component in any PHP application. Read the :doc:`/forms` article to learn
+    about how to use it in Symfony applications.
 
 In Symfony, forms are represented by objects and these objects are built
 by using a *form factory*. Building a form factory is simple::
@@ -125,7 +127,7 @@ The following snippet adds CSRF protection to the form factory::
     use Symfony\Component\Security\Csrf\TokenGenerator\UriSafeTokenGenerator;
     use Symfony\Component\Security\Csrf\CsrfTokenManager;
 
-    // create a Session object from the HttpFoundation component
+    // creates a Session object from the HttpFoundation component
     $session = new Session();
 
     $csrfGenerator = new UriSafeTokenGenerator();
@@ -174,44 +176,47 @@ to bootstrap or access Twig and add the :class:`Symfony\\Bridge\\Twig\\Extension
 
     use Symfony\Component\Form\Forms;
     use Symfony\Bridge\Twig\Extension\FormExtension;
-    use Symfony\Bridge\Twig\Form\TwigRenderer;
+    use Symfony\Component\Form\FormRenderer;
     use Symfony\Bridge\Twig\Form\TwigRendererEngine;
+    use Twig\Environment;
+    use Twig\Loader\FilesystemLoader;
+    use Twig\RuntimeLoader\FactoryRuntimeLoader;
 
     // the Twig file that holds all the default markup for rendering forms
     // this file comes with TwigBridge
     $defaultFormTheme = 'form_div_layout.html.twig';
 
-    $vendorDir = realpath(__DIR__.'/../vendor');
+    $vendorDirectory = realpath(__DIR__.'/../vendor');
     // the path to TwigBridge library so Twig can locate the
     // form_div_layout.html.twig file
     $appVariableReflection = new \ReflectionClass('\Symfony\Bridge\Twig\AppVariable');
-    $vendorTwigBridgeDir = dirname($appVariableReflection->getFileName());
+    $vendorTwigBridgeDirectory = dirname($appVariableReflection->getFileName());
     // the path to your other templates
-    $viewsDir = realpath(__DIR__.'/../views');
+    $viewsDirectory = realpath(__DIR__.'/../views');
 
-    $twig = new Twig_Environment(new Twig_Loader_Filesystem(array(
-        $viewsDir,
-        $vendorTwigBridgeDir.'/Resources/views/Form',
+    $twig = new Environment(new FilesystemLoader(array(
+        $viewsDirectory,
+        $vendorTwigBridgeDirectory.'/Resources/views/Form',
     )));
     $formEngine = new TwigRendererEngine(array($defaultFormTheme), $twig);
-    $twig->addRuntimeLoader(new \Twig_FactoryRuntimeLoader(array(
-        TwigRenderer::class => function () use ($formEngine, $csrfManager) {
-            return new TwigRenderer($formEngine, $csrfManager);
+    $twig->addRuntimeLoader(new FactoryRuntimeLoader(array(
+        FormRenderer::class => function () use ($formEngine, $csrfManager) {
+            return new FormRenderer($formEngine, $csrfManager);
         },
     )));
 
     // ... (see the previous CSRF Protection section for more information)
 
-    // add the FormExtension to Twig
+    // adds the FormExtension to Twig
     $twig->addExtension(new FormExtension());
 
-    // create your form factory as normal
+    // creates a form factory
     $formFactory = Forms::createFormFactoryBuilder()
         // ...
         ->getFormFactory();
 
 .. versionadded:: 1.30
-    The ``Twig_FactoryRuntimeLoader`` was introduced in Twig 1.30.
+    The ``Twig\\RuntimeLoader\\FactoryRuntimeLoader`` was introduced in Twig 1.30.
 
 The exact details of your `Twig Configuration`_ will vary, but the goal is
 always to add the :class:`Symfony\\Bridge\\Twig\\Extension\\FormExtension`
@@ -251,14 +256,14 @@ installed:
     $ composer require symfony/translation symfony/config
 
 Next, add the :class:`Symfony\\Bridge\\Twig\\Extension\\TranslationExtension`
-to your ``Twig_Environment`` instance::
+to your ``Twig\\Environment`` instance::
 
     use Symfony\Component\Form\Forms;
     use Symfony\Component\Translation\Translator;
     use Symfony\Component\Translation\Loader\XliffFileLoader;
     use Symfony\Bridge\Twig\Extension\TranslationExtension;
 
-    // create the Translator
+    // creates the Translator
     $translator = new Translator('en');
     // somehow load some translations into it
     $translator->addLoader('xlf', new XliffFileLoader());
@@ -268,7 +273,7 @@ to your ``Twig_Environment`` instance::
         'en'
     );
 
-    // add the TranslationExtension (gives us trans and transChoice filters)
+    // adds the TranslationExtension (gives us trans and transChoice filters)
     $twig->addExtension(new TranslationExtension($translator));
 
     $formFactory = Forms::createFormFactoryBuilder()
@@ -307,23 +312,23 @@ Your integration with the Validation component will look something like this::
     use Symfony\Component\Form\Extension\Validator\ValidatorExtension;
     use Symfony\Component\Validator\Validation;
 
-    $vendorDir = realpath(__DIR__.'/../vendor');
-    $vendorFormDir = $vendorDir.'/symfony/form';
-    $vendorValidatorDir = $vendorDir.'/symfony/validator';
+    $vendorDirectory = realpath(__DIR__.'/../vendor');
+    $vendorFormDirectory = $vendorDirectory.'/symfony/form';
+    $vendorValidatorDirectory = $vendorDirectory.'/symfony/validator';
 
-    // create the validator - details will vary
+    // creates the validator - details will vary
     $validator = Validation::createValidator();
 
     // there are built-in translations for the core error messages
     $translator->addResource(
         'xlf',
-        $vendorFormDir.'/Resources/translations/validators.en.xlf',
+        $vendorFormDirectory.'/Resources/translations/validators.en.xlf',
         'en',
         'validators'
     );
     $translator->addResource(
         'xlf',
-        $vendorValidatorDir.'/Resources/translations/validators.en.xlf',
+        $vendorValidatorDirectory.'/Resources/translations/validators.en.xlf',
         'en',
         'validators'
     );
@@ -398,17 +403,17 @@ is created from the form factory.
 
     .. code-block:: php-symfony
 
-        // src/Acme/TaskBundle/Controller/DefaultController.php
-        namespace Acme\TaskBundle\Controller;
+        // src/Controller/TaskController.php
+        namespace App\Controller;
 
-        use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+        use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
         use Symfony\Component\HttpFoundation\Request;
         use Symfony\Component\Form\Extension\Core\Type\TextType;
         use Symfony\Component\Form\Extension\Core\Type\DateType;
 
-        class DefaultController extends Controller
+        class TaskController extends AbstractController
         {
-            public function newAction(Request $request)
+            public function new(Request $request)
             {
                 // createFormBuilder is a shortcut to get the "form factory"
                 // and then call "createBuilder()" on it
@@ -418,7 +423,7 @@ is created from the form factory.
                     ->add('dueDate', DateType::class)
                     ->getForm();
 
-                return $this->render('@AcmeTask/Default/new.html.twig', array(
+                return $this->render('task/new.html.twig', array(
                     'form' => $form->createView(),
                 ));
             }
@@ -460,16 +465,16 @@ builder:
 
     .. code-block:: php-symfony
 
-        // src/Acme/TaskBundle/Controller/DefaultController.php
-        namespace Acme\TaskBundle\Controller;
+        // src/Controller/DefaultController.php
+        namespace App\Controller;
 
-        use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+        use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
         use Symfony\Component\Form\Extension\Core\Type\TextType;
         use Symfony\Component\Form\Extension\Core\Type\DateType;
 
-        class DefaultController extends Controller
+        class DefaultController extends AbstractController
         {
-            public function newAction(Request $request)
+            public function new(Request $request)
             {
                 $defaults = array(
                     'dueDate' => new \DateTime('tomorrow'),
@@ -542,15 +547,15 @@ by ``handleRequest()`` to determine whether a form has been submitted):
 
     .. code-block:: php-symfony
 
-        // src/Acme/TaskBundle/Controller/DefaultController.php
-        namespace Acme\TaskBundle\Controller;
+        // src/Controller/DefaultController.php
+        namespace App\Controller;
 
-        use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+        use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
         use Symfony\Component\Form\Extension\Core\Type\FormType;
 
-        class DefaultController extends Controller
+        class DefaultController extends AbstractController
         {
-            public function searchAction()
+            public function search()
             {
                 $formBuilder = $this->createFormBuilder(null, array(
                     'action' => '/search',
@@ -604,16 +609,16 @@ method:
 
     .. code-block:: php-symfony
 
-        // src/Acme/TaskBundle/Controller/DefaultController.php
-        namespace Acme\TaskBundle\Controller;
+        // src/Controller/TaskController.php
+        namespace App\Controller;
 
-        use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+        use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
         use Symfony\Component\Form\Extension\Core\Type\DateType;
         use Symfony\Component\Form\Extension\Core\Type\TextType;
 
-        class DefaultController extends Controller
+        class TaskController extends AbstractController
         {
-            public function newAction(Request $request)
+            public function new(Request $request)
             {
                 $form = $this->createFormBuilder()
                     ->add('task', TextType::class)
@@ -680,18 +685,18 @@ option when building each field:
 
     .. code-block:: php-symfony
 
-        // src/Acme/TaskBundle/Controller/DefaultController.php
-        namespace Acme\TaskBundle\Controller;
+        // src/Controller/DefaultController.php
+        namespace App\Controller;
 
-        use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+        use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
         use Symfony\Component\Validator\Constraints\NotBlank;
         use Symfony\Component\Validator\Constraints\Type;
         use Symfony\Component\Form\Extension\Core\Type\DateType;
         use Symfony\Component\Form\Extension\Core\Type\TextType;
 
-        class DefaultController extends Controller
+        class DefaultController extends AbstractController
         {
-            public function newAction(Request $request)
+            public function new(Request $request)
             {
                 $form = $this->createFormBuilder()
                     ->add('task', TextType::class, array(
@@ -728,7 +733,7 @@ method to access the list of errors. It returns a
     // ...
 
     // a FormErrorIterator instance, but only errors attached to this
-    // form level (e.g. "global errors)
+    // form level (e.g. global errors)
     $errors = $form->getErrors();
 
     // a FormErrorIterator instance, but only errors attached to the
@@ -742,6 +747,21 @@ method to access the list of errors. It returns a
     // a FormErrorIterator instance representing the form tree structure
     $errors = $form->getErrors(true, false);
 
+Clearing Form Errors
+~~~~~~~~~~~~~~~~~~~~
+
+.. versionadded:: 4.2
+    The ``clearErrors()`` method was introduced in Symfony 4.2.
+
+Any errors can be manually cleared using the
+:method:`Symfony\\Component\\Form\\ClearableErrorsInterface::clearErrors`
+method. This is useful when you'd like to validate the form without showing
+validation errors to the user (i.e. during a partial AJAX submission or
+:doc:`dynamic form modification </form/dynamic_form_modification>`).
+
+Because clearing the errors makes the form valid, ``clearErrors()`` should only
+be called after testing whether the form is valid.
+
 Learn more
 ----------
 
@@ -752,5 +772,5 @@ Learn more
     /form/*
 
 .. _Packagist: https://packagist.org/packages/symfony/form
-.. _Twig: http://twig.sensiolabs.org
-.. _`Twig Configuration`: http://twig.sensiolabs.org/doc/intro.html
+.. _Twig: https://twig.symfony.com
+.. _`Twig Configuration`: https://twig.symfony.com/doc/2.x/intro.html

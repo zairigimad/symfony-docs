@@ -1,8 +1,10 @@
 .. index::
     single: Configuration reference; Framework
 
-FrameworkBundle Configuration ("framework")
-===========================================
+.. _framework-bundle-configuration:
+
+Framework Configuration Reference (FrameworkBundle)
+===================================================
 
 The FrameworkBundle defines the main framework configuration, from sessions and
 translations to forms, validation, routing and more. All these options are
@@ -11,7 +13,7 @@ configured under the ``framework`` key in your application configuration.
 .. code-block:: terminal
 
     # displays the default config values defined by Symfony
-    $ php bin/console config:dump framework
+    $ php bin/console config:dump-reference framework
 
     # displays the actual config values used by your application
     $ php bin/console debug:config framework
@@ -25,110 +27,165 @@ configured under the ``framework`` key in your application configuration.
 Configuration
 -------------
 
-* `secret`_
+.. class:: list-config-options list-config-options--complex
+
+* `annotations`_
+
+  * :ref:`cache <reference-annotations-cache>`
+  * `debug`_
+  * `file_cache_dir`_
+
+* `assets`_
+
+  * `base_path`_
+  * `base_urls`_
+  * `json_manifest_path`_
+  * `packages`_
+  * `version_format`_
+  * `version_strategy`_
+  * `version`_
+
+* :ref:`cache <reference-cache>`
+
+  * :ref:`app <reference-cache-app>`
+  * `default_doctrine_provider`_
+  * `default_memcached_provider`_
+  * `default_pdo_provider`_
+  * `default_psr6_provider`_
+  * `default_redis_provider`_
+  * `directory`_
+  * `pools`_
+
+    * :ref:`name <reference-cache-pools-name>`
+
+      * `adapter`_
+      * `clearer`_
+      * `default_lifetime`_
+      * `provider`_
+      * `public`_
+      * `tags`_
+
+  * `prefix_seed`_
+  * `system`_
+
+* `csrf_protection`_
+
+  * :ref:`enabled <reference-csrf_protection-enabled>`
+
+* `default_locale`_
+* `esi`_
+
+  * :ref:`enabled <reference-esi-enabled>`
+
+* :ref:`form <reference-framework-form>`
+
+  * :ref:`enabled <reference-form-enabled>`
+
+* `fragments`_
+
+  * :ref:`enabled <reference-fragments-enabled>`
+  * :ref:`path <reference-fragments-path>`
+
 * `http_method_override`_
 * `ide`_
-* `test`_
-* `default_locale`_
-* `trusted_hosts`_
-* :ref:`form <reference-framework-form>`
-    * :ref:`enabled <reference-form-enabled>`
-* `csrf_protection`_
-    * :ref:`enabled <reference-csrf_protection-enabled>`
-* `esi`_
-    * :ref:`enabled <reference-esi-enabled>`
-* `fragments`_
-    * :ref:`enabled <reference-fragments-enabled>`
-    * :ref:`path <reference-fragments-path>`
-* `profiler`_
-    * :ref:`enabled <reference-profiler-enabled>`
-    * `collect`_
-    * `only_exceptions`_
-    * `only_master_requests`_
-    * `dsn`_
-* `request`_:
-    * `formats`_
-* `router`_
-    * `resource`_
-    * `type`_
-    * `http_port`_
-    * `https_port`_
-    * `strict_requirements`_
-* `session`_
-    * `storage_id`_
-    * `handler_id`_
-    * `name`_
-    * `cookie_lifetime`_
-    * `cookie_path`_
-    * `cookie_domain`_
-    * `cookie_secure`_
-    * `cookie_httponly`_
-    * `gc_divisor`_
-    * `gc_probability`_
-    * `gc_maxlifetime`_
-    * `save_path`_
-    * `metadata_update_threshold`_
-* `assets`_
-    * `base_path`_
-    * `base_urls`_
-    * `packages`_
-    * `version_strategy`_
-    * `version`_
-    * `version_format`_
-    * `json_manifest_path`_
-* `templating`_
-    * `hinclude_default_template`_
-    * :ref:`form <reference-templating-form>`
-        * `resources`_
-    * :ref:`cache <reference-templating-cache>`
-    * `engines`_
-    * `loaders`_
-* `translator`_
-    * :ref:`enabled <reference-translator-enabled>`
-    * `fallbacks`_
-    * `logging`_
-    * :ref:`paths <reference-translator-paths>`
-* `property_access`_
-    * `magic_call`_
-    * `throw_exception_on_invalid_index`_
-* `validation`_
-    * :ref:`enabled <reference-validation-enabled>`
-    * :ref:`cache <reference-validation-cache>`
-    * :ref:`enable_annotations <reference-validation-enable_annotations>`
-    * `translation_domain`_
-    * `strict_email`_
-    * :ref:`mapping <reference-validation-mapping>`
-        * :ref:`paths <reference-validation-mapping-paths>`
-* `annotations`_
-    * :ref:`cache <reference-annotations-cache>`
-    * `file_cache_dir`_
-    * `debug`_
-* `serializer`_
-    * :ref:`enabled <reference-serializer-enabled>`
-    * :ref:`enable_annotations <reference-serializer-enable_annotations>`
-    * :ref:`name_converter <reference-serializer-name_converter>`
-    * :ref:`circular_reference_handler <reference-serializer-circular_reference_handler>`
-    * :ref:`mapping <reference-serializer-mapping>`
-        * :ref:`paths <reference-serializer-mapping-paths>`
+* :ref:`lock <reference-lock>`
 * `php_errors`_
-    * `log`_
-    * `throw`_
-* :ref:`cache <reference-cache>`
-    * :ref:`app <reference-cache-app>`
-    * `system`_
-    * `directory`_
-    * `default_doctrine_provider`_
-    * `default_psr6_provider`_
-    * `default_redis_provider`_
-    * `default_memcached_provider`_
-    * `pools`_
-        * :ref:`name <reference-cache-pools-name>`
-            * `adapter`_
-            * `public`_
-            * `default_lifetime`_
-            * `provider`_
-            * `clearer`_
-    * `prefix_seed`_
+
+  * `log`_
+  * `throw`_
+
+* `profiler`_
+
+  * `collect`_
+  * `dsn`_
+  * :ref:`enabled <reference-profiler-enabled>`
+  * `only_exceptions`_
+  * `only_master_requests`_
+
+* `property_access`_
+
+  * `magic_call`_
+  * `throw_exception_on_invalid_index`_
+
+* `property_info`_
+
+  * :ref:`enabled <reference-property-info-enabled>`
+
+* `request`_:
+
+  * `formats`_
+
+* `router`_
+
+  * `http_port`_
+  * `https_port`_
+  * `resource`_
+  * `strict_requirements`_
+  * `type`_
+
+* `secret`_
+* `serializer`_
+
+  * :ref:`circular_reference_handler <reference-serializer-circular_reference_handler>`
+  * :ref:`enable_annotations <reference-serializer-enable_annotations>`
+  * :ref:`enabled <reference-serializer-enabled>`
+  * :ref:`mapping <reference-serializer-mapping>`
+
+    * :ref:`paths <reference-serializer-mapping-paths>`
+
+  * :ref:`name_converter <reference-serializer-name_converter>`
+
+* `session`_
+
+  * `cookie_domain`_
+  * `cookie_httponly`_
+  * `cookie_lifetime`_
+  * `cookie_path`_
+  * `cookie_samesite`_
+  * `cookie_secure`_
+  * `gc_divisor`_
+  * `gc_maxlifetime`_
+  * `gc_probability`_
+  * `handler_id`_
+  * `metadata_update_threshold`_
+  * `name`_
+  * `save_path`_
+  * `storage_id`_
+
+* `templating`_
+
+  * :ref:`cache <reference-templating-cache>`
+  * `engines`_
+  * :ref:`form <reference-templating-form>`
+
+    * `resources`_
+
+  * `hinclude_default_template`_
+  * `loaders`_
+
+* `test`_
+* `translator`_
+
+  * :ref:`default_path <reference-translator-default_path>`
+  * :ref:`enabled <reference-translator-enabled>`
+  * `fallbacks`_
+  * `logging`_
+  * :ref:`paths <reference-translator-paths>`
+
+* `trusted_hosts`_
+* `trusted_proxies`_
+* `validation`_
+
+  * :ref:`cache <reference-validation-cache>`
+  * `email_validation_mode`_
+  * :ref:`enable_annotations <reference-validation-enable_annotations>`
+  * :ref:`enabled <reference-validation-enabled>`
+  * :ref:`mapping <reference-validation-mapping>`
+
+    * :ref:`paths <reference-validation-mapping-paths>`
+
+  * `strict_email`_
+  * `translation_domain`_
 
 secret
 ~~~~~~
@@ -204,7 +261,8 @@ ide
 Symfony turns file paths seen in variable dumps and exception messages into
 links that open those files right inside your browser. If you prefer to open
 those files in your favorite IDE or text editor, set this option to any of the
-following values: ``phpstorm``, ``sublime``, ``textmate``, ``macvim`` and ``emacs``.
+following values: ``phpstorm``, ``sublime``, ``textmate``, ``macvim``, ``emacs``
+and ``atom``.
 
 .. note::
 
@@ -327,8 +385,8 @@ method might be vulnerable to some of these attacks because it depends on
 the configuration of your web server. One simple solution to avoid these
 attacks is to whitelist the hosts that your Symfony application can respond
 to. That's the purpose of this ``trusted_hosts`` option. If the incoming
-request's hostname doesn't match one in this list, the application won't
-respond and the user will receive a 400 response.
+request's hostname doesn't match one of the regular expressions in this list,
+the application won't respond and the user will receive a 400 response.
 
 .. configuration-block::
 
@@ -336,7 +394,7 @@ respond and the user will receive a 400 response.
 
         # config/packages/framework.yaml
         framework:
-            trusted_hosts:  ['example.com', 'example.org']
+            trusted_hosts:  ['^example\.com$', '^example\.org$']
 
     .. code-block:: xml
 
@@ -350,8 +408,8 @@ respond and the user will receive a 400 response.
                 http://symfony.com/schema/dic/symfony http://symfony.com/schema/dic/symfony/symfony-1.0.xsd">
 
             <framework:config>
-                <framework:trusted-host>example.com</framework:trusted-host>
-                <framework:trusted-host>example.org</framework:trusted-host>
+                <framework:trusted-host>^example\.com$</framework:trusted-host>
+                <framework:trusted-host>^example\.org$</framework:trusted-host>
                 <!-- ... -->
             </framework:config>
         </container>
@@ -360,17 +418,17 @@ respond and the user will receive a 400 response.
 
         // config/packages/framework.php
         $container->loadFromExtension('framework', array(
-            'trusted_hosts' => array('example.com', 'example.org'),
+            'trusted_hosts' => array('^example\.com$', '^example\.org$'),
         ));
 
-Hosts can also be configured using regular expressions (e.g.  ``^(.+\.)?example.com$``),
-which make it easier to respond to any subdomain.
+Hosts can also be configured to respond to any subdomain, via
+``^(.+\.)?example\.com$`` for instance.
 
 In addition, you can also set the trusted hosts in the front controller
 using the ``Request::setTrustedHosts()`` method::
 
     // public/index.php
-    Request::setTrustedHosts(array('^(.+\.)?example.com$', '^(.+\.)?example.org$'));
+    Request::setTrustedHosts(array('^(.+\.)?example\.com$', '^(.+\.)?example\.org$'));
 
 The default value for this option is an empty array, meaning that the application
 can respond to any given host.
@@ -389,7 +447,7 @@ form
 enabled
 .......
 
-**type**: ``boolean`` **default**: ``false``
+**type**: ``boolean`` **default**: ``true`` or ``false`` depending on your installation
 
 Whether to enable the form services or not in the service container. If
 you don't use forms, setting this to ``false`` may increase your application's
@@ -406,23 +464,24 @@ settings is configured.
 
     For more details, see :doc:`/forms`.
 
+.. _reference-framework-csrf-protection:
+
 csrf_protection
 ~~~~~~~~~~~~~~~
 
 .. seealso::
 
-    For more information about CSRF protection in forms, see :doc:`/form/csrf_protection`.
+    For more information about CSRF protection, see :doc:`/security/csrf`.
 
 .. _reference-csrf_protection-enabled:
 
 enabled
 .......
 
-**type**: ``boolean`` **default**: ``true`` if form support is enabled, ``false``
-otherwise
+**type**: ``boolean`` **default**: ``true`` or ``false`` depending on your installation
 
 This option can be used to disable CSRF protection on *all* forms. But you
-can also :ref:`disable CSRF protection on individual forms <form-disable-csrf>`.
+can also :ref:`disable CSRF protection on individual forms <form-csrf-customization>`.
 
 If you're using forms, but want to avoid starting your session (e.g. using
 forms in an API-only website), ``csrf_protection`` will need to be set to
@@ -519,7 +578,7 @@ enabled
 **type**: ``boolean`` **default**: ``false``
 
 The profiler can be enabled by setting this option to ``true``. When you
-are using the Symfony Standard Edition, the profiler is enabled in the ``dev``
+install it using Symfony Flex, the profiler is enabled in the ``dev``
 and ``test`` environments.
 
 .. note::
@@ -649,7 +708,7 @@ type
 
 The type of the resource to hint the loaders about the format. This isn't
 needed when you use the default routers with the expected file extensions
-(``.xml``, ``.yml`` / ``.yaml``, ``.php``).
+(``.xml``, ``.yml`` or ``.yaml``, ``.php``).
 
 http_port
 .........
@@ -687,6 +746,8 @@ The value can be one of:
 
 ``true`` is recommended in the development environment, while ``false``
 or ``null`` might be preferred in production.
+
+.. _config-framework-session:
 
 session
 ~~~~~~~
@@ -754,12 +815,51 @@ This determines the domain to set in the session cookie. By default it's
 blank, meaning the host name of the server which generated the cookie according
 to the cookie specification.
 
+cookie_samesite
+...............
+
+**type**: ``string`` or ``null`` **default**: ``null``
+
+. versionadded:: 4.2
+    The ``cookie_samesite`` option was introduced in Symfony 4.2.
+
+It controls they way cookies are sent when the HTTP request was not originated
+from the same domain the cookies are associated to. Setting this option is
+recommended to mitigate `CSRF security attacks`_.
+
+By default, browsers send all cookies related to the domain of the HTTP request.
+This may be a problem for example when you visit a forum and some malicious
+comment includes a link like ``https://some-bank.com/?send_money_to=attacker&amount=1000``.
+If you were previously logged into your bank website, the browser will send all
+those cookies when making that HTTP request.
+
+The possible values for this option are:
+
+* ``null``, use it to disable this protection. Same behavior as in older Symfony
+  versions.
+* ``'strict'`` (or the ``Cookie::SAMESITE_STRICT`` constant), use it to never
+  send any cookie when the HTTP request is not originated from the same domain.
+* ``'lax'`` (or the ``Cookie::SAMESITE_LAX`` constant), use it to allow sending
+  cookies when the request originated from a different domain, but only when the
+  user consciously made the request (by clicking a link or submitting a form
+  with the ``GET`` method).
+
+.. note::
+
+    This option is available starting from PHP 7.3, but Symfony has a polyfill
+    so you can use it with any older PHP version as well.
+
 cookie_secure
 .............
 
-**type**: ``boolean`` **default**: ``false``
+**type**: ``boolean`` or ``string`` **default**: ``'auto'``
 
-This determines whether cookies should only be sent over secure connections.
+This determines whether cookies should only be sent over secure connections. The
+default value is ``auto``, which means ``true`` for HTTPS requests and ``false``
+for HTTP requests.
+
+.. versionadded:: 4.2
+    The ``auto`` value was introduced in Symfony 4.2.
 
 cookie_httponly
 ...............
@@ -1009,15 +1109,9 @@ You can group assets into packages, to specify different base URLs for them:
 
 Now you can use the ``avatars`` package in your templates:
 
-.. configuration-block:: php
+.. code-block:: html+twig
 
-    .. code-block:: html+twig
-
-        <img src="{{ asset('...', 'avatars') }}">
-
-    .. code-block:: html+php
-
-        <img src="<?php echo $view['assets']->getUrl('...', 'avatars') ?>">
+    <img src="{{ asset('...', 'avatars') }}">
 
 Each package can configure the following options:
 
@@ -1043,15 +1137,9 @@ equivalent) as well as assets rendered with Assetic.
 
 For example, suppose you have the following:
 
-.. configuration-block::
+.. code-block:: html+twig
 
-    .. code-block:: html+twig
-
-        <img src="{{ asset('images/logo.png') }}" alt="Symfony!" />
-
-    .. code-block:: php
-
-        <img src="<?php echo $view['assets']->getUrl('images/logo.png') ?>" alt="Symfony!" />
+    <img src="{{ asset('images/logo.png') }}" alt="Symfony!" />
 
 By default, this will render a path to your image such as ``/images/logo.png``.
 Now, activate the ``version`` option:
@@ -1267,11 +1355,11 @@ package:
        framework:
             assets:
                 # this manifest is applied to every asset (including packages)
-                json_manifest_path: "%kernel.project_dir%/web/assets/manifest.json"
+                json_manifest_path: "%kernel.project_dir%/public/build/manifest.json"
                 packages:
                     foo_package:
                         # this package uses its own manifest (the default file is ignored)
-                        json_manifest_path: "%kernel.project_dir%/web/assets/a_different_manifest.json"
+                        json_manifest_path: "%kernel.project_dir%/public/build/a_different_manifest.json"
                     bar_package:
                         # this package uses the global manifest (the default file is used)
                         base_path: '/images'
@@ -1288,11 +1376,11 @@ package:
 
             <framework:config>
                 <!-- this manifest is applied to every asset (including packages) -->
-                <framework:assets json-manifest-path="%kernel.project_dir%/web/assets/manifest.json">
+                <framework:assets json-manifest-path="%kernel.project_dir%/public/build/manifest.json">
                     <!-- this package uses its own manifest (the default file is ignored) -->
                     <framework:package
                         name="foo_package"
-                        json-manifest-path="%kernel.project_dir%/web/assets/a_different_manifest.json" />
+                        json-manifest-path="%kernel.project_dir%/public/build/a_different_manifest.json" />
                     <!-- this package uses the global manifest (the default file is used) -->
                     <framework:package
                         name="bar_package"
@@ -1307,11 +1395,11 @@ package:
         $container->loadFromExtension('framework', array(
             'assets' => array(
                 // this manifest is applied to every asset (including packages)
-                'json_manifest_path' => '%kernel.project_dir%/web/assets/manifest.json',
+                'json_manifest_path' => '%kernel.project_dir%/public/build/manifest.json',
                 'packages' => array(
                     'foo_package' => array(
                         // this package uses its own manifest (the default file is ignored)
-                        'json_manifest_path' => '%kernel.project_dir%/web/assets/a_different_manifest.json',
+                        'json_manifest_path' => '%kernel.project_dir%/public/build/a_different_manifest.json',
                     ),
                     'bar_package' => array(
                         // this package uses the global manifest (the default file is used)
@@ -1402,7 +1490,7 @@ configure this like:
             'templating' => array(
                 'form' => array(
                     'resources' => array(
-                        'form_themes'
+                        'form_themes',
                     ),
                 ),
             ),
@@ -1460,7 +1548,7 @@ translator
 enabled
 .......
 
-**type**: ``boolean`` **default**: ``false``
+**type**: ``boolean`` **default**: ``true`` or ``false`` depending on your installation
 
 Whether or not to enable the ``translator`` service in the service container.
 
@@ -1500,6 +1588,19 @@ paths
 This option allows to define an array of paths where the component will look
 for translation files.
 
+.. _reference-translator-default_path:
+
+default_path
+............
+
+.. versionadded:: 3.4
+    The ``default_path`` option was introduced in Symfony 3.4.
+
+**type**: ``string`` **default**: ``%kernel.project_dir%/translations``
+
+This option allows to define the path where the application translations files
+are stored.
+
 property_access
 ~~~~~~~~~~~~~~~
 
@@ -1520,6 +1621,16 @@ throw_exception_on_invalid_index
 When enabled, the ``property_accessor`` service throws an exception when you
 try to access an invalid index of an array.
 
+property_info
+~~~~~~~~~~~~~
+
+.. _reference-property-info-enabled:
+
+enabled
+.......
+
+**type**: ``boolean`` **default**: ``true`` or ``false`` depending on your installation
+
 validation
 ~~~~~~~~~~
 
@@ -1528,8 +1639,7 @@ validation
 enabled
 .......
 
-**type**: ``boolean`` **default**: ``true`` if :ref:`form support is enabled <reference-form-enabled>`,
-``false`` otherwise
+**type**: ``boolean`` **default**: ``true`` or ``false`` depending on your installation
 
 Whether or not to enable validation support.
 
@@ -1571,9 +1681,33 @@ strict_email
 
 **type**: ``Boolean`` **default**: ``false``
 
+.. versionadded:: 4.1
+    The ``strict_email`` option was deprecated in Symfony 4.1. Use the new
+    ``email_validation_mode`` option instead.
+
 If this option is enabled, the `egulias/email-validator`_ library will be
 used by the :doc:`/reference/constraints/Email` constraint validator. Otherwise,
 the validator uses a simple regular expression to validate email addresses.
+
+email_validation_mode
+.....................
+
+**type**: ``string`` **default**: ``loose``
+
+.. versionadded:: 4.1
+    The ``email_validation_mode`` option was introduced in Symfony 4.1.
+
+It controls the way email addresses are validated by the
+:doc:`/reference/constraints/Email` validator. The possible values are:
+
+* ``loose``, it uses a simple regular expression to validate the address (it
+  checks that at least one ``@`` character is present, etc.). This validation is
+  too simple and it's recommended to use the ``html5`` validation instead;
+* ``html5``, it validates email addresses using the same regular expression
+  defined in the HTML5 standard, making the backend validation consistent with
+  the one provided by browsers;
+* ``strict``, it uses the `egulias/email-validator`_ library (which you must
+  install separately) to validate the addresses according to the `RFC 5322`_.
 
 .. _reference-validation-mapping:
 
@@ -1638,7 +1772,7 @@ serializer
 enabled
 .......
 
-**type**: ``boolean`` **default**: ``false``
+**type**: ``boolean`` **default**: ``true`` or ``false`` depending on your installation
 
 Whether to enable the ``serializer`` service or not in the service container.
 
@@ -1709,9 +1843,14 @@ php_errors
 log
 ...
 
-**type**: ``boolean`` **default**: ``false``
+**type**: ``boolean|int`` **default**: ``%kernel.debug%``
 
 Use the application logger instead of the PHP logger for logging PHP errors.
+When an integer value is used, it also sets the log level. Those integer
+values must be the same used in the `error_reporting PHP option`_.
+
+.. versionadded:: 4.1
+    The support for integers in the ``log`` option was introduced in Symfony 4.1.
 
 throw
 .....
@@ -1734,21 +1873,33 @@ app
 **type**: ``string`` **default**: ``cache.adapter.filesystem``
 
 The cache adapter used by the ``cache.app`` service. The FrameworkBundle
-ships with multiple adapters: ``apcu``, ``doctrine``, ``system``, ``filesystem``,
-``psr6``, ``redis`` and ``memcached``.
+ships with multiple adapters: ``cache.adapter.apcu``, ``cache.adapter.doctrine``,
+``cache.adapter.system``, ``cache.adapter.filesystem``, ``cache.adapter.psr6``,
+``cache.adapter.redis``, ``cache.adapter.memcached`` and ``cache.adapter.pdo``.
+
+There's also a special adapter called ``cache.adapter.array`` which stores
+contents in memory using a PHP array and it's used to disable caching (mostly on
+the ``dev`` environment).
+
+.. versionadded:: 4.1
+    The ``cache.adapter.array`` adapter was introduced in Symfony 4.1.
 
 .. tip::
 
-    It might be tough to understand at the beginning, so to avoid confusion remember that all pools perform the
-    same actions but on different medium given the adapter they are based on. Internally, a pool wraps the definition
+    It might be tough to understand at the beginning, so to avoid confusion
+    remember that all pools perform the same actions but on different medium
+    given the adapter they are based on. Internally, a pool wraps the definition
     of an adapter.
+
+.. _reference-cache-systen:
 
 system
 ......
 
 **type**: ``string`` **default**: ``cache.adapter.system``
 
-The cache adapter used by the ``cache.system`` service.
+The cache adapter used by the ``cache.system`` service. It supports the same
+adapters available for the ``cache.app`` service.
 
 directory
 .........
@@ -1790,6 +1941,14 @@ default_memcached_provider
 The DSN to use by the Memcached provider. The provider is available as the ``cache.memcached``
 service.
 
+default_pdo_provider
+....................
+
+**type**: ``string`` **default**: ``doctrine.dbal.default_connection``
+
+The service id of the database connection, which should be either a PDO or a
+Doctrine DBAL instance.
+
 pools
 .....
 
@@ -1823,7 +1982,7 @@ The name of the adapter to use. You could also use your own implementation.
 
 .. note::
 
-    Your service MUST implement the :class:`Psr\\Cache\\CacheItemPoolInterface` interface.
+    Your service MUST implement the ``Psr\\Cache\\CacheItemPoolInterface`` interface.
 
 public
 """"""
@@ -1831,6 +1990,17 @@ public
 **type**: ``boolean`` **default**: ``false``
 
 Whether your service should be public or not.
+
+tags
+""""
+
+**type**: ``boolean`` | ``string`` **default**: ``null``
+
+.. versionadded:: 4.2
+    The ``tags`` option was introduced in Symfony 4.2.
+
+Whether your service should be able to handle tags or not.
+Can also be the service id of another cache pool where tags will be stored.
 
 default_lifetime
 """"""""""""""""
@@ -1860,9 +2030,6 @@ The cache clearer used to clear your PSR-6 cache.
 prefix_seed
 ...........
 
-.. versionadded:: 3.2
-    The ``prefix_seed`` option was introduced in Symfony 3.2.
-
 **type**: ``string`` **default**: ``null``
 
 If defined, this value is used as part of the "namespace" generated for the
@@ -1875,168 +2042,25 @@ It's also useful when using `blue/green deployment`_ strategies and more
 generally, when you need to abstract out the actual deployment directory (for
 example, when warming caches offline).
 
-Full Default Configuration
---------------------------
+.. _reference-lock:
 
-.. configuration-block::
+lock
+~~~~
 
-    .. code-block:: yaml
+**type**: ``string``
 
-        framework:
-            secret:               ~
-            http_method_override: true
-            trusted_proxies:      []
-            ide:                  ~
-            test:                 ~
-            default_locale:       en
-
-            csrf_protection:
-                enabled:              false
-
-            # form configuration
-            form:
-                enabled:              false
-                csrf_protection:
-                    enabled:          true
-                    field_name:       ~
-
-            # esi configuration
-            esi:
-                enabled:              false
-
-            # fragments configuration
-            fragments:
-                enabled:              false
-                path:                 /_fragment
-
-            # profiler configuration
-            profiler:
-                enabled:              false
-                collect:              true
-                only_exceptions:      false
-                only_master_requests: false
-                dsn:                  file:%kernel.cache_dir%/profiler
-
-            # router configuration
-            router:
-                resource:             ~ # Required
-                type:                 ~
-                http_port:            80
-                https_port:           443
-
-                # * set to true to throw an exception when a parameter does not
-                #   match the requirements
-                # * set to false to disable exceptions when a parameter does not
-                #   match the requirements (and return null instead)
-                # * set to null to disable parameter checks against requirements
-                #
-                # 'true' is the preferred configuration in development mode, while
-                # 'false' or 'null' might be preferred in production
-                strict_requirements:  true
-
-            # session configuration
-            session:
-                storage_id:           session.storage.native
-                handler_id:           session.handler.native_file
-                name:                 ~
-                cookie_lifetime:      ~
-                cookie_path:          ~
-                cookie_domain:        ~
-                cookie_secure:        ~
-                cookie_httponly:      ~
-                gc_divisor:           ~
-                gc_probability:       ~
-                gc_maxlifetime:       ~
-                save_path:            '%kernel.cache_dir%/sessions'
-
-            # serializer configuration
-            serializer:
-               enabled:                   false
-               cache:                      ~
-               name_converter:             ~
-               circular_reference_handler: ~
-
-            # assets configuration
-            assets:
-                base_path:          ~
-                base_urls:          []
-                version:            ~
-                version_format:     '%%s?%%s'
-                packages:
-
-                    # Prototype
-                    name:
-                        base_path:            ~
-                        base_urls:            []
-                        version:              ~
-                        version_format:       '%%s?%%s'
-
-            # templating configuration
-            templating:
-                hinclude_default_template:  ~
-                form:
-                    resources:
-
-                        # Default:
-                        - FrameworkBundle:Form
-                cache:                ~
-                engines:              # Required
-
-                    # Example:
-                    - twig
-                loaders:              []
-
-            # translator configuration
-            translator:
-                enabled:              false
-                fallbacks:            [en]
-                logging:              "%kernel.debug%"
-                paths:                []
-
-            # validation configuration
-            validation:
-                enabled:              false
-                cache:                ~
-                enable_annotations:   false
-                translation_domain:   validators
-                mapping:
-                    paths:            []
-
-            # annotation configuration
-            annotations:
-                cache:                file
-                file_cache_dir:       '%kernel.cache_dir%/annotations'
-                debug:                '%kernel.debug%'
-
-            # PHP errors handling configuration
-            php_errors:
-                log:                  false
-                throw:                '%kernel.debug%'
-
-            # cache configuration
-            cache:
-                app: cache.app
-                system: cache.system
-                directory: '%kernel.cache_dir%/pools'
-                default_doctrine_provider: ~
-                default_psr6_provider: ~
-                default_redis_provider: 'redis://localhost'
-                default_memcached_provider: 'memcached://localhost'
-                pools:
-                    # Prototype
-                    name:
-                        adapter: cache.app
-                        public: false
-                        default_lifetime: ~
-                        provider: ~
-                        clearer: ~
+The default lock adapter. If not defined, the value is set to ``semaphore`` when
+available, or to ``flock`` otherwise. Store's DSN are also allowed.
 
 .. _`HTTP Host header attacks`: http://www.skeletonscribe.net/2013/05/practical-http-host-header-attacks.html
 .. _`Security Advisory Blog post`: https://symfony.com/blog/security-releases-symfony-2-0-24-2-1-12-2-2-5-and-2-3-3-released#cve-2013-4752-request-gethost-poisoning
 .. _`Doctrine Cache`: http://docs.doctrine-project.org/projects/doctrine-common/en/latest/reference/caching.html
 .. _`egulias/email-validator`: https://github.com/egulias/EmailValidator
+.. _`RFC 5322`: https://tools.ietf.org/html/rfc5322
 .. _`PhpStormProtocol`: https://github.com/aik099/PhpStormProtocol
 .. _`phpstorm-url-handler`: https://github.com/sanduhrs/phpstorm-url-handler
 .. _`blue/green deployment`: http://martinfowler.com/bliki/BlueGreenDeployment.html
 .. _`gulp-rev`: https://www.npmjs.com/package/gulp-rev
 .. _`webpack-manifest-plugin`: https://www.npmjs.com/package/webpack-manifest-plugin
+.. _`error_reporting PHP option`: https://secure.php.net/manual/en/errorfunc.configuration.php#ini.error-reporting
+.. _`CSRF security attacks`: https://en.wikipedia.org/wiki/Cross-site_request_forgery

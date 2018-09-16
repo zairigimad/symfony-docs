@@ -13,7 +13,7 @@ First, install the security checker in your project:
 
 .. code-block:: terminal
 
-    $ composer require security-checker
+    $ composer require sensiolabs/security-checker
 
 Then run this command:
 
@@ -32,4 +32,11 @@ FriendsOfPHP organization.
     any of your dependencies is affected by a known security vulnerability.
     Therefore, you can easily integrate it in your build process.
 
+.. tip::
+
+    The security checker is also available as an independent console application
+    and distributed as a PHAR file so you can use it in any PHP application.
+    Check out the `Security Checker repository`_ for more details.
+
 .. _`security advisories database`: https://github.com/FriendsOfPHP/security-advisories
+.. _`Security Checker repository`: https://github.com/sensiolabs/security-checker

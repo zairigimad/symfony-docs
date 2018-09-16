@@ -22,7 +22,7 @@ the session lasts using a cookie with the ``remember_me`` firewall option:
                 main:
                     # ...
                     remember_me:
-                        secret:   '%secret%'
+                        secret:   '%kernel.secret%'
                         lifetime: 604800 # 1 week in seconds
                         path:     /
                         # by default, the feature is enabled by checking a
@@ -48,7 +48,7 @@ the session lasts using a cookie with the ``remember_me`` firewall option:
 
                     <!-- 604800 is 1 week in seconds -->
                     <remember-me
-                        secret="%secret%"
+                        secret="%kernel.secret%"
                         lifetime="604800"
                         path="/" />
                     <!-- by default, the feature is enabled by checking a checkbox
@@ -60,7 +60,7 @@ the session lasts using a cookie with the ``remember_me`` firewall option:
 
     .. code-block:: php
 
-        // app/config/security.php
+        // config/packages/security.php
         $container->loadFromExtension('security', array(
             // ...
 
@@ -68,7 +68,7 @@ the session lasts using a cookie with the ``remember_me`` firewall option:
                 'main' => array(
                     // ...
                     'remember_me' => array(
-                        'secret'   => '%secret%',
+                        'secret'   => '%kernel.secret%',
                         'lifetime' => 604800, // 1 week in seconds
                         'path'     => '/',
                         // by default, the feature is enabled by checking a
@@ -84,7 +84,7 @@ The ``remember_me`` firewall defines the following configuration options:
 
 ``secret`` (**required**)
     The value used to encrypt the cookie's content. It's common to use the
-    ``secret`` value defined in the ``app/config/parameters.yml`` file.
+    ``secret`` value defined in the ``APP_SECRET`` environment variable.
 
 ``name`` (default value: ``REMEMBERME``)
     The name of the cookie used to keep the user logged in. If you enable the
@@ -113,6 +113,10 @@ The ``remember_me`` firewall defines the following configuration options:
     If ``true``, the cookie associated with this feature is accessible only
     through the HTTP protocol. This means that the cookie won't be accessible
     by scripting languages, such as JavaScript.
+
+``samesite`` (default value: ``null``)
+    If set to ``strict``, the cookie associated with this feature will not
+    be sent along with cross-site requests, even when following a regular link.
 
 ``remember_me_parameter`` (default value: ``_remember_me``)
     The name of the form field checked to decide if the "Remember Me" feature
@@ -143,48 +147,25 @@ the cookie will automatically be set when the checkbox is checked and the user
 successfully logs in. So, your specific login form might ultimately look like
 this:
 
-.. configuration-block::
+.. code-block:: html+twig
 
-    .. code-block:: html+twig
+    {# templates/security/login.html.twig #}
+    {% if error %}
+        <div>{{ error.message }}</div>
+    {% endif %}
 
-        {# templates/security/login.html.twig #}
-        {% if error %}
-            <div>{{ error.message }}</div>
-        {% endif %}
+    <form action="{{ path('login') }}" method="post">
+        <label for="username">Username:</label>
+        <input type="text" id="username" name="_username" value="{{ last_username }}" />
 
-        <form action="{{ path('login') }}" method="post">
-            <label for="username">Username:</label>
-            <input type="text" id="username" name="_username" value="{{ last_username }}" />
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="_password" />
 
-            <label for="password">Password:</label>
-            <input type="password" id="password" name="_password" />
+        <input type="checkbox" id="remember_me" name="_remember_me" checked />
+        <label for="remember_me">Keep me logged in</label>
 
-            <input type="checkbox" id="remember_me" name="_remember_me" checked />
-            <label for="remember_me">Keep me logged in</label>
-
-            <input type="submit" name="login" />
-        </form>
-
-    .. code-block:: html+php
-
-        <!-- templates/security/login.html.php -->
-        <?php if ($error): ?>
-            <div><?php echo $error->getMessage() ?></div>
-        <?php endif ?>
-
-        <form action="<?php echo $view['router']->path('login') ?>" method="post">
-            <label for="username">Username:</label>
-            <input type="text" id="username"
-                   name="_username" value="<?php echo $last_username ?>" />
-
-            <label for="password">Password:</label>
-            <input type="password" id="password" name="_password" />
-
-            <input type="checkbox" id="remember_me" name="_remember_me" checked />
-            <label for="remember_me">Keep me logged in</label>
-
-            <input type="submit" name="login" />
-        </form>
+        <input type="submit" name="login" />
+    </form>
 
 The user will then automatically be logged in on subsequent visits while
 the cookie remains valid.
@@ -236,9 +217,7 @@ by securing specific controller actions using these roles. The edit action
 in the controller could be secured using the service context.
 
 In the following example, the action is only allowed if the user has the
-``IS_AUTHENTICATED_FULLY`` role.
-
-.. code-block:: php
+``IS_AUTHENTICATED_FULLY`` role::
 
     // ...
     use Symfony\Component\Security\Core\Exception\AccessDeniedException;
@@ -251,10 +230,8 @@ In the following example, the action is only allowed if the user has the
         // ...
     }
 
-If your application is based on the Symfony Standard Edition, you can also secure
-your controller using annotations:
-
-.. code-block:: php
+If you have installed `SensioFrameworkExtraBundle`_ in your application, you can also secure
+your controller using annotations::
 
     use Sensio\Bundle\FrameworkExtraBundle\Configuration\Security;
 
@@ -288,3 +265,5 @@ your controller using annotations:
 
 For more information on securing services or methods in this way,
 see :doc:`/security/securing_services`.
+
+.. _`SensioFrameworkExtraBundle`: http://symfony.com/doc/current/bundles/SensioFrameworkExtraBundle/index.html

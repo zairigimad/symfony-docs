@@ -27,7 +27,7 @@ property they use to access their account via the API::
 
     /**
      * @ORM\Entity
-     * @ORM\Table(name="user")
+     * @ORM\Table(name="`user`")
      */
     class User implements UserInterface
     {
@@ -70,6 +70,13 @@ property they use to access their account via the API::
 
         // more getters/setters
     }
+
+.. caution::
+
+    In the example above, the table name is ``user``. This is a reserved SQL
+    keyword and `must be quoted with backticks`_ in Doctrine to avoid errors.
+    You might also change the table name (e.g. with ``app_users``) to solve
+    this issue.
 
 .. tip::
 
@@ -173,7 +180,7 @@ This requires you to implement several methods::
          */
         public function supports(Request $request)
         {
-            return $request->headers->has('X-AUTH-TOKEN')
+            return $request->headers->has('X-AUTH-TOKEN');
         }
 
         /**
@@ -310,7 +317,7 @@ Finally, configure your ``firewalls`` key in ``security.yaml`` to use this authe
 
     .. code-block:: php
 
-        // app/config/security.php
+        // config/packages/security.php
 
         // ..
         use App\Security\TokenAuthenticator;
@@ -404,7 +411,7 @@ Each authenticator needs the following methods:
 
 **supportsRememberMe()**
     If you want to support "remember me" functionality, return true from this method.
-    You will still need to active ``remember_me`` under your firewall for it to work.
+    You will still need to activate ``remember_me`` under your firewall for it to work.
     Since this is a stateless API, you do not want to support "remember me"
     functionality in this example.
 
@@ -417,8 +424,9 @@ Each authenticator needs the following methods:
 
 The picture below shows how Symfony calls Guard Authenticator methods:
 
-.. image:: /_images/security/authentication-guard-methods.png
-   :align: center
+.. raw:: html
+
+    <object data="../_images/security/authentication-guard-methods.svg" type="image/svg+xml"></object>
 
 .. _guard-customize-error:
 
@@ -426,8 +434,8 @@ Customizing Error Messages
 --------------------------
 
 When ``onAuthenticationFailure()`` is called, it is passed an ``AuthenticationException``
-that describes *how* authentication failed via its ``$e->getMessageKey()`` (and
-``$e->getMessageData()``) method. The message will be different based on *where*
+that describes *how* authentication failed via its ``$exception->getMessageKey()`` (and
+``$exception->getMessageData()``) method. The message will be different based on *where*
 authentication fails (i.e. ``getUser()`` versus ``checkCredentials()``).
 
 But, you can easily return a custom message by throwing a
@@ -484,7 +492,8 @@ Adding CSRF Protection
 If you're using a Guard authenticator to build a login form and want to add CSRF
 protection, no problem!
 
-First, :ref:`add the _csrf_token to your login template <csrf-login-template>`.
+First, check that :ref:`the csrf_protection option <reference-framework-csrf-protection>`
+is enabled and :ref:`add the _csrf_token field to your login form <csrf-login-template>`.
 
 Then, type-hint ``CsrfTokenManagerInterface`` in your ``__construct()`` method
 (or manually configure the ``Symfony\Component\Security\Csrf\CsrfTokenManagerInterface``
@@ -496,6 +505,7 @@ service to be passed) and add the following logic::
     use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
     use Symfony\Component\Security\Csrf\CsrfToken;
     use Symfony\Component\Security\Core\Exception\InvalidCsrfTokenException;
+    use Symfony\Component\Security\Guard\Authenticator\AbstractFormLoginAuthenticator;
 
     class ExampleFormAuthenticator extends AbstractFormLoginAuthenticator
     {
@@ -520,6 +530,75 @@ service to be passed) and add the following logic::
         // ...
     }
 
+Avoid Authenticating the Browser on Every Request
+-------------------------------------------------
+
+If you create a Guard login system that's used by a browser and you're experiencing
+problems with your session or CSRF tokens, the cause could be bad behavior by your
+authenticator. When a Guard authenticator is meant to be used by a browser, you
+should *not* authenticate the user on *every* request. In other words, you need to
+make sure the ``supports()`` method *only* returns ``true`` when
+you actually *need* to authenticate the user. Why? Because, when ``supports()``
+returns true (and authentication is ultimately successful), for security purposes,
+the user's session is "migrated" to a new session id.
+
+This is an edge-case, and unless you're having session or CSRF token issues, you
+can ignore this. Here is an example of good and bad behavior::
+
+    public function supports(Request $request)
+    {
+        // GOOD behavior: only authenticate on a specific route
+        if ($request->attributes->get('_route') !== 'login_route' || !$request->isMethod('POST')) {
+            return true;
+        }
+
+        // e.g. your login system authenticates by the user's IP address
+        // BAD behavior: So, you decide to *always* return true so that
+        // you can check the user's IP address on every request
+        return true;
+    }
+
+The problem occurs when your browser-based authenticator tries to authenticate
+the user on *every* request - like in the IP address-based example above. There
+are two possible fixes:
+
+1. If you do *not* need authentication to be stored in the session, set
+   ``stateless: true`` under your firewall.
+2. Update your authenticator to avoid authentication if the user is already
+   authenticated:
+
+.. code-block:: diff
+
+    // src/Security/MyIpAuthenticator.php
+    // ...
+
+    + use Symfony\Component\Security\Core\Security;
+
+    class MyIpAuthenticator
+    {
+    +     private $security;
+
+    +     public function __construct(Security $security)
+    +     {
+    +         $this->security = $security;
+    +     }
+
+        public function supports(Request $request)
+        {
+    +         // if there is already an authenticated user (likely due to the session)
+    +         // then return null and skip authentication: there is no need.
+    +         if ($this->security->getUser()) {
+    +             return false;
+    +         }
+
+    +         // the user is not logged in, so the authenticator should continue
+    +         return true;
+        }
+    }
+
+If you use autowiring, the ``Security``  service will automatically be passed to
+your authenticator.
+
 Frequently Asked Questions
 --------------------------
 
@@ -541,3 +620,5 @@ Frequently Asked Questions
     to actually authenticate the user. You can continue doing that (see previous
     question) or use the ``User`` object from FOSUserBundle and create your own
     authenticator(s) (just like in this article).
+
+.. _`must be quoted with backticks`: http://docs.doctrine-project.org/projects/doctrine-orm/en/latest/reference/basic-mapping.html#quoting-reserved-words

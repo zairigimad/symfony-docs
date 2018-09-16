@@ -21,9 +21,7 @@ Basic Usage
 
 In the following example, create two classes ``Author`` and ``Address``
 that both have constraints on their properties. Furthermore, ``Author``
-stores an ``Address`` instance in the ``$address`` property.
-
-.. code-block:: php
+stores an ``Address`` instance in the ``$address`` property::
 
     // src/Entity/Address.php
     namespace App\Entity;
@@ -64,7 +62,7 @@ stores an ``Address`` instance in the ``$address`` property.
 
             /**
              * @Assert\NotBlank
-             * @Assert\Length(max = 5)
+             * @Assert\Length(max=5)
              */
             protected $zipCode;
         }
@@ -78,7 +76,7 @@ stores an ``Address`` instance in the ``$address`` property.
         {
             /**
              * @Assert\NotBlank
-             * @Assert\Length(min = 4)
+             * @Assert\Length(min=4)
              */
             protected $firstName;
 
@@ -92,7 +90,7 @@ stores an ``Address`` instance in the ``$address`` property.
 
     .. code-block:: yaml
 
-        # src/Resources/config/validation.yaml
+        # config/validator/validation.yaml
         App\Entity\Address:
             properties:
                 street:
@@ -113,7 +111,7 @@ stores an ``Address`` instance in the ``$address`` property.
 
     .. code-block:: xml
 
-        <!-- src/Resources/config/validation.xml -->
+        <!-- config/validator/validation.xml -->
         <?xml version="1.0" encoding="UTF-8" ?>
         <constraint-mapping xmlns="http://symfony.com/schema/dic/constraint-mapping"
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -208,7 +206,7 @@ an invalid address. To prevent that, add the ``Valid`` constraint to the
 
     .. code-block:: yaml
 
-        # src/Resources/config/validation.yaml
+        # config/validator/validation.yaml
         App\Entity\Author:
             properties:
                 address:
@@ -216,7 +214,7 @@ an invalid address. To prevent that, add the ``Valid`` constraint to the
 
     .. code-block:: xml
 
-        <!-- src/Resources/config/validation.xml -->
+        <!-- config/validator/validation.xml -->
         <?xml version="1.0" encoding="UTF-8" ?>
         <constraint-mapping xmlns="http://symfony.com/schema/dic/constraint-mapping"
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"

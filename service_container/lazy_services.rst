@@ -6,7 +6,7 @@ Lazy Services
 
 .. seealso::
 
-    Another way to inject services lazily is via a :doc:`service locator </service_container/service_locators>`.
+    Another way to inject services lazily is via a :doc:`service subscriber </service_container/service_subscribers_locators>`.
 
 Why Lazy Services?
 ------------------
@@ -26,21 +26,12 @@ until you interact with the proxy in some way.
 Installation
 ------------
 
-In order to use the lazy service instantiation, you will first need to install
-the ``ocramius/proxy-manager`` package:
+In order to use the lazy service instantiation, you will need to install the
+``symfony/proxy-manager-bridge`` package:
 
 .. code-block:: terminal
 
-    $ composer require ocramius/proxy-manager
-
-.. note::
-
-    If you're not using the full-stack framework, you also have to install the
-    `ProxyManager bridge`_
-
-    .. code-block:: terminal
-
-        $ composer require symfony/proxy-manager-bridge
+    $ composer require symfony/proxy-manager-bridge
 
 Configuration
 -------------
@@ -51,12 +42,14 @@ You can mark the service as ``lazy`` by manipulating its definition:
 
     .. code-block:: yaml
 
+        # config/services.yaml
         services:
-           App\Twig\AppExtension:
-             lazy:  true
+            App\Twig\AppExtension:
+                lazy:  true
 
     .. code-block:: xml
 
+        <!-- config/services.xml -->
         <?xml version="1.0" encoding="UTF-8" ?>
         <container xmlns="http://symfony.com/schema/dic/services"
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -70,6 +63,7 @@ You can mark the service as ``lazy`` by manipulating its definition:
 
     .. code-block:: php
 
+        // config/services.php
         use App\Twig\AppExtension;
 
         $container->register(AppExtension::class)

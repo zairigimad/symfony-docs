@@ -24,6 +24,7 @@ accuracy.
 +-------------+------------------------------------------------------------------------+
 | Inherited   | - `data`_                                                              |
 | options     | - `error_mapping`_                                                     |
+|             | - `help`_                                                              |
 |             | - `invalid_message`_                                                   |
 |             | - `invalid_message_parameters`_                                        |
 |             | - `mapped`_                                                            |
@@ -68,30 +69,17 @@ The repeated field type is actually two underlying fields, which you can
 render all at once, or individually. To render all at once, use something
 like:
 
-.. configuration-block::
+.. code-block:: twig
 
-    .. code-block:: twig
-
-        {{ form_row(form.password) }}
-
-    .. code-block:: php
-
-        <?php echo $view['form']->row($form['password']) ?>
+    {{ form_row(form.password) }}
 
 To render each field individually, use something like this:
 
-.. configuration-block::
+.. code-block:: twig
 
-    .. code-block:: twig
-
-        {# .first and .second may vary in your use - see the note below #}
-        {{ form_row(form.password.first) }}
-        {{ form_row(form.password.second) }}
-
-    .. code-block:: php
-
-        <?php echo $view['form']->row($form['password']['first']) ?>
-        <?php echo $view['form']->row($form['password']['second']) ?>
+    {# .first and .second may vary in your use - see the note below #}
+    {{ form_row(form.password.first) }}
+    {{ form_row(form.password.second) }}
 
 .. note::
 
@@ -193,6 +181,8 @@ These options inherit from the :doc:`FormType </reference/forms/types/form>`:
 .. include:: /reference/forms/types/options/data.rst.inc
 
 .. include:: /reference/forms/types/options/error_mapping.rst.inc
+
+.. include:: /reference/forms/types/options/help.rst.inc
 
 .. include:: /reference/forms/types/options/invalid_message.rst.inc
 

@@ -71,6 +71,7 @@ your class as a service and using the  ``form.type_extension`` tag:
 
     .. code-block:: yaml
 
+        # config/services.yaml
         services:
             # ...
 
@@ -80,6 +81,7 @@ your class as a service and using the  ``form.type_extension`` tag:
 
     .. code-block:: xml
 
+        <!-- config/services.xml -->
         <?xml version="1.0" encoding="UTF-8" ?>
         <container xmlns="http://symfony.com/schema/dic/services"
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -95,6 +97,7 @@ your class as a service and using the  ``form.type_extension`` tag:
 
     .. code-block:: php
 
+        // config/services.php
         use App\Form\Extension\ImageTypeExtension;
         use Symfony\Component\Form\Extension\Core\Type\FileType;
 
@@ -195,7 +198,7 @@ For example::
                     $imageUrl = $accessor->getValue($parentData, $options['image_property']);
                 }
 
-                // set an "image_url" variable that will be available when rendering this field
+                // sets an "image_url" variable that will be available when rendering this field
                 $view->vars['image_url'] = $imageUrl;
             }
         }
@@ -213,31 +216,21 @@ In your extension class, you added a new variable (``image_url``), but
 you still need to take advantage of this new variable in your templates.
 Specifically, you need to override the ``file_widget`` block:
 
-.. configuration-block::
+.. code-block:: html+twig
 
-    .. code-block:: html+twig
+    {# templates/form/fields.html.twig #}
+    {% extends 'form_div_layout.html.twig' %}
 
-        {# app/Resources/fields.html.twig #}
-        {% extends 'form_div_layout.html.twig' %}
+    {% block file_widget %}
+        {% spaceless %}
 
-        {% block file_widget %}
-            {% spaceless %}
+        {{ block('form_widget') }}
+        {% if image_url is not null %}
+            <img src="{{ asset(image_url) }}"/>
+        {% endif %}
 
-            {{ block('form_widget') }}
-            {% if image_url is not null %}
-                <img src="{{ asset(image_url) }}"/>
-            {% endif %}
-
-            {% endspaceless %}
-        {% endblock %}
-
-    .. code-block:: html+php
-
-        <!-- app/Resources/file_widget.html.php -->
-        <?php echo $view['form']->widget($form) ?>
-        <?php if (null !== $image_url): ?>
-            <img src="<?php echo $view['assets']->getUrl($image_url) ?>"/>
-        <?php endif ?>
+        {% endspaceless %}
+    {% endblock %}
 
 Be sure to :ref:`configure this form theme template <forms-theming-global>` so that
 the form system sees it.

@@ -25,9 +25,9 @@ before or after a method is executed, without interfering with other plugins.
 This is not an easy problem to solve with single inheritance, and even if
 multiple inheritance was possible with PHP, it comes with its own drawbacks.
 
-The Symfony EventDispatcher component implements the `Mediator`_ pattern
-in a simple and effective way to make all these things possible and to make
-your projects truly extensible.
+The Symfony EventDispatcher component implements the `Mediator`_ and `Observer`_
+design patterns to make all these things possible and to make your projects
+truly extensible.
 
 Take a simple example from :doc:`the HttpKernel component </components/http_kernel>`.
 Once a ``Response`` object has been created, it may be useful to allow other
@@ -52,16 +52,22 @@ event - ``kernel.response``. Here's how it works:
 Installation
 ------------
 
-You can install the component in 2 different ways:
+.. code-block:: terminal
 
-* :doc:`Install it via Composer </components/using_components>`
-  (``symfony/event-dispatcher`` on `Packagist`_);
-* Use the official Git repository (https://github.com/symfony/event-dispatcher).
+    $ composer require symfony/event-dispatcher
+
+Alternatively, you can clone the `<https://github.com/symfony/event-dispatcher>`_ repository.
 
 .. include:: /components/require_autoload.rst.inc
 
 Usage
 -----
+
+.. seealso::
+
+    This article explains how to use the EventDispatcher features as an
+    independent component in any PHP application. Read the :doc:`/event_dispatcher`
+    article to learn about how to use it in Symfony applications.
 
 Events
 ~~~~~~
@@ -207,14 +213,14 @@ determine which instance is passed.
 
         $containerBuilder->register('event_dispatcher', EventDispatcher::class);
 
-        // register an event listener
+        // registers an event listener
         $containerBuilder->register('listener_service_id', \AcmeListener::class)
             ->addTag('kernel.event_listener', array(
                 'event' => 'acme.foo.action',
                 'method' => 'onFooAction',
             ));
 
-        // register an event subscriber
+        // registers an event subscriber
         $containerBuilder->register('subscriber_service_id', \AcmeSubscriber::class)
             ->addTag('kernel.event_subscriber');
 
@@ -299,7 +305,7 @@ each listener of that event::
     $order = new Order();
     // ...
 
-    // create the OrderPlacedEvent and dispatch it
+    // creates the OrderPlacedEvent and dispatches it
     $event = new OrderPlacedEvent($order);
     $dispatcher->dispatch(OrderPlacedEvent::NAME, $event);
 
@@ -402,14 +408,14 @@ the dispatcher to stop all propagation of the event to future listeners
 inside a listener via the
 :method:`Symfony\\Component\\EventDispatcher\\Event::stopPropagation` method::
 
-   use Acme\Store\Event\OrderPlacedEvent;
+    use Acme\Store\Event\OrderPlacedEvent;
 
-   public function onStoreOrder(OrderPlacedEvent $event)
-   {
-       // ...
+    public function onStoreOrder(OrderPlacedEvent $event)
+    {
+        // ...
 
-       $event->stopPropagation();
-   }
+        $event->stopPropagation();
+    }
 
 Now, any listeners to ``order.placed`` that have not yet been called will
 *not* be called.
@@ -513,6 +519,7 @@ Learn More
 * :ref:`The kernel.event_subscriber tag <dic-tags-kernel-event-subscriber>`
 
 .. _Mediator: https://en.wikipedia.org/wiki/Mediator_pattern
-.. _Closures: http://php.net/manual/en/functions.anonymous.php
-.. _PHP callable: http://www.php.net/manual/en/language.pseudo-types.php#language.types.callback
+.. _Observer: https://en.wikipedia.org/wiki/Observer_pattern
+.. _Closures: https://php.net/manual/en/functions.anonymous.php
+.. _PHP callable: https://php.net/manual/en/language.pseudo-types.php#language.types.callback
 .. _Packagist: https://packagist.org/packages/symfony/event-dispatcher

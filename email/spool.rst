@@ -15,6 +15,8 @@ it somewhere such as a file. Another process can then read from the spool and
 take care of sending the emails in the spool. Currently only spooling to file or
 memory is supported.
 
+.. _email-spool-memory:
+
 Spool Using Memory
 ------------------
 
@@ -52,7 +54,7 @@ this spool, use the following configuration:
         // config/packages/swiftmailer.php
         $container->loadFromExtension('swiftmailer', array(
              // ...
-            'spool' => array('type' => 'memory')
+            'spool' => array('type' => 'memory'),
         ));
 
 .. _spool-using-a-file:

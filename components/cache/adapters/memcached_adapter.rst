@@ -51,6 +51,9 @@ helper method allows creating and configuring a `Memcached`_ class instance usin
     // pass a single DSN string to register a single server with the client
     $client = MemcachedAdapter::createConnection(
         'memcached://localhost'
+        // the DSN can include config options (pass them as a query string):
+        // 'memcached://localhost:11222?retry_timeout=10'
+        // 'memcached://localhost:11222?socket_recv_size=1&socket_send_size=2'
     );
 
     // pass an array of DSN strings to register multiple servers with the client
@@ -260,7 +263,7 @@ Available Options
     small outgoing messages and sending them all at once.
 
 ``use_udp`` (type: ``bool``, default: ``false``)
-    Enables or disabled the use of `User Datagram Protocol (UDP)`_ mode (instead
+    Enables or disables the use of `User Datagram Protocol (UDP)`_ mode (instead
     of `Transmission Control Protocol (TCP)`_ mode), where all operations are
     executed in a "fire-and-forget" manner; no attempt to ensure the operation
     has been received or acted on will be made once the client has executed it.

@@ -9,6 +9,16 @@ The Symfony framework provides lots of commands through the ``bin/console`` scri
 created with the :doc:`Console component </components/console>`. You can also
 use it to create your own commands.
 
+The Console: APP_ENV & APP_DEBUG
+---------------------------------
+
+Console commands run in the :ref:`environment <config-dot-env>` defined in the ``APP_ENV``
+variable of the ``.env`` file, which is ``dev`` by default. It also reads the ``APP_DEBUG``
+value to turn "debug" mode on or off (it defaults to ``1``, which is on).
+
+To run the command in another environment or debug mode, edit the value of ``APP_ENV``
+and ``APP_DEBUG``.
+
 Creating a Command
 ------------------
 
@@ -59,29 +69,59 @@ method. Then you can optionally define a help message and the
         ;
     }
 
+The ``configure()`` method is called automatically at the end of the command
+constructor. If your command defines its own constructor, set the properties
+first and then call to the parent constructor, to make those properties
+available in the ``configure()`` method::
+
+    class CreateUserCommand extends Command
+    {
+        // ...
+
+        public function __construct(bool $requirePassword = false)
+        {
+            // best practices recommend to call the parent constructor first and
+            // then set your own properties. That wouldn't work in this case
+            // because configure() needs the properties set in this constructor
+            $this->requirePassword = $requirePassword;
+
+            parent::__construct();
+        }
+
+        public function configure()
+        {
+            $this
+                // ...
+                ->addArgument('password', $this->requirePassword ? InputArgument::OPTIONAL : InputArgument::REQUIRED, 'User password')
+            ;
+        }
+    }
+
+Registering the Command
+-----------------------
+
+Symfony commands must be registered as services and :doc:`tagged </service_container/tags>`
+with the ``console.command`` tag. If you're using the
+:ref:`default services.yaml configuration <service-container-services-load-example>`,
+this is already done for you, thanks to :ref:`autoconfiguration <services-autoconfigure>`.
+
 Executing the Command
 ---------------------
 
-Symfony registers any PHP class extending :class:`Symfony\\Component\\Console\\Command\\Command`
-as a console command automatically. So you can now execute this command in the
-terminal:
+After configuring and registering the command, you can execute it in the terminal:
 
 .. code-block:: terminal
 
     $ php bin/console app:create-user
 
-.. note::
-
-    If you're using the :ref:`default services.yaml configuration <service-container-services-load-example>`,
-    your command classes are automatically registered as services.
-
-    You can also manually register your command as a service by configuring the service
-    and :doc:`tagging it </service_container/tags>` with ``console.command``.
-
 As you might expect, this command will do nothing as you didn't write any logic
-yet. Add your own logic inside the ``execute()`` method, which has access to the
-input stream (e.g. options and arguments) and the output stream (to write
-messages to the console)::
+yet. Add your own logic inside the ``execute()`` method.
+
+Console Output
+--------------
+
+The ``execute()`` method has access to the output stream to write messages to
+the console::
 
     // ...
     protected function execute(InputInterface $input, OutputInterface $output)
@@ -93,6 +133,10 @@ messages to the console)::
             '',
         ]);
 
+        // the value returned by someMethod() can be an iterator (https://secure.php.net/iterator)
+        // that generates and returns the messages with the 'yield' PHP keyword
+        $output->writeln($this->someMethod());
+
         // outputs a message followed by a "\n"
         $output->writeln('Whoa!');
 
@@ -100,6 +144,10 @@ messages to the console)::
         $output->write('You are about to ');
         $output->write('create a user.');
     }
+
+.. versionadded:: 4.1
+    The support of PHP iterators in the ``write()`` and ``writeln()`` methods
+    was introduced in Symfony 4.1.
 
 Now, try executing the command:
 
@@ -111,6 +159,57 @@ Now, try executing the command:
 
     Whoa!
     You are about to create a user.
+
+.. _console-output-sections:
+
+Output Sections
+~~~~~~~~~~~~~~~
+
+.. versionadded:: 4.1
+    Output sections were introduced in Symfony 4.1.
+
+The regular console output can be divided into multiple independent regions
+called "output sections". Create one or more of these sections when you need to
+clear and overwrite the output information.
+
+Sections are created with the
+:method:`Symfony\\Component\\Console\\Output\\ConsoleOutput::section` method,
+which returns an instance of
+:class:`Symfony\\Component\\Console\\Output\\ConsoleSectionOutput`::
+
+    class MyCommand extends Command
+    {
+        protected function execute(InputInterface $input, OutputInterface $output)
+        {
+            $section1 = $output->section();
+            $section2 = $output->section();
+            $section1->writeln('Hello');
+            $section2->writeln('World!');
+            // Output displays "Hello\nWorld!\n"
+
+            // overwrite() replaces all the existing section contents with the given content
+            $section1->overwrite('Goodbye');
+            // Output now displays "Goodbye\nWorld!\n"
+
+            // clear() deletes all the section contents...
+            $section2->clear();
+            // Output now displays "Goodbye\n"
+
+            // ...but you can also delete a given number of lines
+            // (this example deletes the last two lines of the section)
+            $section1->clear(2);
+            // Output is now completely empty!
+        }
+    }
+
+.. note::
+
+    A new line is appended automatically when displaying information in a section.
+
+Output sections let you manipulate the Console output in advanced ways, such as
+:ref:`displaying multiple progress bars <console-multiple-progress-bars>` which
+are updated independently and :ref:`appending rows to tables <console-modify-rendered-tables>`
+that have already been rendered.
 
 Console Input
 -------------
@@ -160,14 +259,14 @@ Now, you can pass the username to the command:
 Getting Services from the Service Container
 -------------------------------------------
 
-To actually create a new user, the command has to access to some
+To actually create a new user, the command has to access some
 :doc:`services </service_container>`. Since your command is already registered
 as a service, you can use normal dependency injection. Imagine you have a
-``AppBundle\Service\UserManager`` service that you want to access::
+``App\Service\UserManager`` service that you want to access::
 
     // ...
     use Symfony\Component\Console\Command\Command;
-    use AppBundle\Service\UserManager;
+    use App\Service\UserManager;
 
     class CreateUserCommand extends Command
     {
@@ -176,6 +275,8 @@ as a service, you can use normal dependency injection. Imagine you have a
         public function __construct(UserManager $userManager)
         {
             $this->userManager = $userManager;
+
+            parent::__construct();
         }
 
         // ...
@@ -287,7 +388,6 @@ you can extend your test from
             $kernel->boot();
 
             $application = new Application($kernel);
-            $application->add(new CreateUserCommand());
 
             $command = $application->find('app:create-user');
             $commandTester = new CommandTester($command);

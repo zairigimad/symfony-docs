@@ -14,23 +14,23 @@ looks like this::
     use Symfony\Component\Validator\Validator\ValidatorInterface;
 
     // ...
-    public function addEmailAction($email, ValidatorInterface $validator)
+    public function addEmail($email, ValidatorInterface $validator)
     {
         $emailConstraint = new Assert\Email();
         // all constraint "options" can be set this way
         $emailConstraint->message = 'Invalid email address';
 
         // use the validator to validate the value
-        $errorList = $validator->validate(
+        $errors = $validator->validate(
             $email,
             $emailConstraint
         );
 
-        if (0 === count($errorList)) {
+        if (0 === count($errors)) {
             // ... this IS a valid email address, do something
         } else {
             // this is *not* a valid email address
-            $errorMessage = $errorList[0]->getMessage();
+            $errorMessage = $errors[0]->getMessage();
 
             // ... do something with the error
         }

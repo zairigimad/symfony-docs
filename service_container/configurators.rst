@@ -131,7 +131,7 @@ all the classes are already loaded as services. All you need to do is specify th
 
             # Registers all 4 classes as services, including App\Mail\EmailConfigurator
             App\:
-                resource: '../../src/*'
+                resource: '../src/*'
                 # ...
 
             # override the services to set the configurator
@@ -151,7 +151,7 @@ all the classes are already loaded as services. All you need to do is specify th
                 http://symfony.com/schema/dic/services/services-1.0.xsd">
 
             <services>
-                <prototype namespace="App\" resource="../../src/*" />
+                <prototype namespace="App\" resource="../src/*" />
 
                 <service id="App\Mail\NewsletterManager">
                     <configurator service="App\Mail\EmailConfigurator" method="configure" />
@@ -176,7 +176,7 @@ all the classes are already loaded as services. All you need to do is specify th
 
         $definition->setAutowired(true);
 
-        $this->registerClasses($definition, 'App\\', '../../src/*');
+        $this->registerClasses($definition, 'App\\', '../src/*');
 
         $container->getDefinition(NewsletterManager::class)
             ->setConfigurator(array(new Reference(EmailConfigurator::class), 'configure'));
@@ -184,16 +184,16 @@ all the classes are already loaded as services. All you need to do is specify th
         $container->getDefinition(GreetingCardManager::class)
             ->setConfigurator(array(new Reference(EmailConfigurator::class), 'configure'));
 
-    The traditional configurator syntax in YAML files used an array to define
-    the service id and the method name:
+The traditional configurator syntax in YAML files used an array to define
+the service id and the method name:
 
-    .. code-block:: yaml
+.. code-block:: yaml
 
-        app.newsletter_manager:
-            # new syntax
-            configurator: 'App\Mail\EmailConfigurator:configure'
-            # old syntax
-            configurator: ['@App\Mail\EmailConfigurator', configure]
+    app.newsletter_manager:
+        # new syntax
+        configurator: 'App\Mail\EmailConfigurator:configure'
+        # old syntax
+        configurator: ['@App\Mail\EmailConfigurator', configure]
 
 That's it! When requesting the ``App\Mail\NewsletterManager`` or
 ``App\Mail\GreetingCardManager`` service, the created instance will first be

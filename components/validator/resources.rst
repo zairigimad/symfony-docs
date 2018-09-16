@@ -71,7 +71,7 @@ configure the locations of these files::
     use Symfony\Component\Validator\Validation;
 
     $validator = Validation::createValidatorBuilder()
-        ->addYamlMapping('config/validation.yml')
+        ->addYamlMapping('config/validation.yaml')
         ->getValidator();
 
 .. note::
@@ -119,10 +119,7 @@ method. It takes an optional annotation reader instance, which defaults to
 To disable the annotation loader after it was enabled, call
 :method:`Symfony\\Component\\Validator\\ValidatorBuilder::disableAnnotationMapping`.
 
-.. note::
-
-    In order to use the annotation loader, you should have installed the
-    ``doctrine/annotations`` and ``doctrine/cache`` packages from `Packagist`_.
+.. include:: /_includes/_annotation_loader_tip.rst.inc
 
 Using Multiple Loaders
 ----------------------
@@ -173,13 +170,13 @@ Using a Custom MetadataFactory
 ------------------------------
 
 All the loaders and the cache are passed to an instance of
-:class:`Symfony\\Component\\Validator\\Mapping\\Factory\\LazyLoadingMetadataFactory`. 
+:class:`Symfony\\Component\\Validator\\Mapping\\Factory\\LazyLoadingMetadataFactory`.
 This class is responsible for creating a ``ClassMetadata`` instance from all the
 configured resources.
 
 You can also use a custom metadata factory implementation by creating a class
 which implements
-:class:`Symfony\\Component\\Validator\\Mapping\\Factory\\MetadataFactoryInterface`. 
+:class:`Symfony\\Component\\Validator\\Mapping\\Factory\\MetadataFactoryInterface`.
 You can set this custom implementation using
 :method:`Symfony\\Component\\Validator\\ValidatorBuilder::setMetadataFactory`::
 

@@ -12,10 +12,11 @@ The OptionsResolver Component
 Installation
 ------------
 
-You can install the component in 2 different ways:
+.. code-block:: terminal
 
-* :doc:`Install it via Composer </components/using_components>` (``symfony/options-resolver`` on `Packagist`_);
-* Use the official Git repository (https://github.com/symfony/options-resolver).
+    $ composer require symfony/options-resolver
+
+Alternatively, you can clone the `<https://github.com/symfony/options-resolver>`_ repository.
 
 .. include:: /components/require_autoload.rst.inc
 
@@ -317,14 +318,23 @@ correctly. To validate the types of the options, call
         public function configureOptions(OptionsResolver $resolver)
         {
             // ...
+
+            // specify one allowed type
             $resolver->setAllowedTypes('host', 'string');
+
+            // specify multiple allowed types
             $resolver->setAllowedTypes('port', array('null', 'int'));
+
+            // check all items in an array recursively for a type
+            $resolver->setAllowedTypes('dates', 'DateTime[]');
+            $resolver->setAllowedTypes('ports', 'int[]');
         }
     }
 
-For each option, you can define either just one type or an array of acceptable
-types. You can pass any type for which an ``is_<type>()`` function is defined
-in PHP. Additionally, you may pass fully qualified class or interface names.
+You can pass any type for which an ``is_<type>()`` function is defined in PHP.
+You may also pass fully qualified class or interface names (which is checked
+using ``instanceof``). Additionally, you can validate all items in an array
+recursively by suffixing the type with ``[]``.
 
 If you pass an invalid option now, an
 :class:`Symfony\\Component\\OptionsResolver\\Exception\\InvalidOptionsException`
@@ -375,7 +385,6 @@ is thrown::
 
 For options with more complicated validation schemes, pass a closure which
 returns ``true`` for acceptable values and ``false`` for invalid values::
-
 
     // ...
     $resolver->setAllowedValues('transport', function ($value) {
@@ -624,6 +633,46 @@ let you find out which options are defined::
             $definedOptions = $resolver->getDefinedOptions();
         }
     }
+
+Deprecating the Option
+~~~~~~~~~~~~~~~~~~~~~~
+
+.. versionadded:: 4.2
+    The ``setDeprecated()`` method was introduced in Symfony 4.2.
+
+Once an option is outdated or you decided not to maintain it anymore, you can
+deprecate it using the :method:`Symfony\\Component\\OptionsResolver\\OptionsResolver::setDeprecated`
+method::
+
+    $resolver
+        ->setDefined(array('hostname', 'host'))
+        // this outputs the following generic deprecation message:
+        // The option "hostname" is deprecated.
+        ->setDeprecated('hostname')
+
+        // you can also pass a custom deprecation message
+        ->setDeprecated('hostname', 'The option "hostname" is deprecated, use "host" instead.')
+    ;
+
+Instead of passing the message, you may also pass a closure which returns
+a string (the deprecation message) or an empty string to ignore the deprecation.
+This closure is useful to only deprecate some of the allowed types or values of
+the option::
+
+    $resolver
+        ->setDefault('port', null)
+        ->setAllowedTypes('port', array('null', 'int'))
+        ->setDeprecated('port', function ($value) {
+            if (null === $value) {
+                return 'Passing "null" to option "port" is deprecated, pass an integer instead.';
+            }
+
+            return '';
+        })
+    ;
+
+This closure receives as argument the value of the option after validating it
+and before normalizing it when the option is being resolved.
 
 Performance Tweaks
 ~~~~~~~~~~~~~~~~~~

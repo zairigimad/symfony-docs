@@ -61,7 +61,7 @@ between all of the constraints in your user table:
 
     .. code-block:: yaml
 
-        # src/Resources/config/validation.yaml
+        # config/validator/validation.yaml
         App\Entity\Author:
             constraints:
                 - Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity: email
@@ -71,7 +71,7 @@ between all of the constraints in your user table:
 
     .. code-block:: xml
 
-        <!-- src/Resources/config/validation.xml -->
+        <!-- config/validator/validation.xml -->
         <?xml version="1.0" encoding="UTF-8" ?>
         <constraint-mapping xmlns="http://symfony.com/schema/dic/constraint-mapping"
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -108,6 +108,13 @@ between all of the constraints in your user table:
                 $metadata->addPropertyConstraint('email', new Assert\Email());
             }
         }
+
+.. caution::
+
+    This constraint doesn't provide any protection against `race conditions`_.
+    They may occur when another entity is persisted by an external process after
+    this validation has passed and before this entity is actually persisted in
+    the database.
 
 Options
 -------
@@ -215,7 +222,7 @@ Consider this example:
 
     .. code-block:: yaml
 
-        # src/Resources/config/validation.yaml
+        # config/validator/validation.yaml
         App\Entity\Service:
             constraints:
                 - Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity:
@@ -225,7 +232,7 @@ Consider this example:
 
     .. code-block:: xml
 
-        <!-- src/Resources/config/validation.xml -->
+        <!-- config/validator/validation.xml -->
         <?xml version="1.0" encoding="UTF-8" ?>
         <constraint-mapping xmlns="http://symfony.com/schema/dic/constraint-mapping"
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -280,3 +287,5 @@ If set to ``false``, only one ``null`` value is allowed - if a second entity
 also has a ``null`` value, validation would fail.
 
 .. include:: /reference/constraints/_payload-option.rst.inc
+
+.. _`race conditions`: https://en.wikipedia.org/wiki/Race_condition

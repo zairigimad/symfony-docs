@@ -17,7 +17,6 @@ an array of items is one of those valid choices.
 |                | - `multipleMessage`_                                                 |
 |                | - `minMessage`_                                                      |
 |                | - `maxMessage`_                                                      |
-|                | - `strict`_                                                          |
 |                | - `payload`_                                                         |
 +----------------+----------------------------------------------------------------------+
 | Class          | :class:`Symfony\\Component\\Validator\\Constraints\\Choice`          |
@@ -52,14 +51,14 @@ If your valid choice list is simple, you can pass them in directly via the
             protected $city;
 
             /**
-             * @Assert\Choice(choices = {"fiction", "non-fiction"}, message = "Choose a valid genre.")
+             * @Assert\Choice(choices={"fiction", "non-fiction"}, message="Choose a valid genre.")
              */
             protected $genre;
         }
 
     .. code-block:: yaml
 
-        # src/Resources/config/validation.yaml
+        # config/validator/validation.yaml
         App\Entity\Author:
             properties:
                 city:
@@ -71,7 +70,7 @@ If your valid choice list is simple, you can pass them in directly via the
 
     .. code-block:: xml
 
-        <!-- src/Resources/config/validation.xml -->
+        <!-- config/validator/validation.xml -->
         <?xml version="1.0" encoding="UTF-8" ?>
         <constraint-mapping xmlns="http://symfony.com/schema/dic/constraint-mapping"
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -129,9 +128,7 @@ Supplying the Choices with a Callback Function
 You can also use a callback function to specify your options. This is useful
 if you want to keep your choices in some central location so that, for example,
 you can easily access those choices for validation or for building a select
-form element.
-
-.. code-block:: php
+form element::
 
     // src/Entity/Author.php
     namespace App\Entity;
@@ -159,14 +156,14 @@ constraint.
         class Author
         {
             /**
-             * @Assert\Choice(callback = "getGenres")
+             * @Assert\Choice(callback="getGenres")
              */
             protected $genre;
         }
 
     .. code-block:: yaml
 
-        # src/Resources/config/validation.yaml
+        # config/validator/validation.yaml
         App\Entity\Author:
             properties:
                 genre:
@@ -174,7 +171,7 @@ constraint.
 
     .. code-block:: xml
 
-        <!-- src/Resources/config/validation.xml -->
+        <!-- config/validator/validation.xml -->
         <?xml version="1.0" encoding="UTF-8" ?>
         <constraint-mapping xmlns="http://symfony.com/schema/dic/constraint-mapping"
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -224,14 +221,14 @@ you can pass the class name and the method as an array.
         class Author
         {
             /**
-             * @Assert\Choice(callback = {"Util", "getGenres"})
+             * @Assert\Choice(callback={"Util", "getGenres"})
              */
             protected $genre;
         }
 
     .. code-block:: yaml
 
-        # src/Resources/config/validation.yaml
+        # config/validator/validation.yaml
         App\Entity\Author:
             properties:
                 genre:
@@ -239,7 +236,7 @@ you can pass the class name and the method as an array.
 
     .. code-block:: xml
 
-        <!-- src/Resources/config/validation.xml -->
+        <!-- config/validator/validation.xml -->
         <?xml version="1.0" encoding="UTF-8" ?>
         <constraint-mapping xmlns="http://symfony.com/schema/dic/constraint-mapping"
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -361,14 +358,5 @@ maxMessage
 
 This is the validation error message that's displayed when the user chooses
 too many options per the `max`_ option.
-
-strict
-~~~~~~
-
-**type**: ``boolean`` **default**: ``false``
-
-The validator will also check the type of the input value. Specifically,
-this value is passed to as the third argument to the PHP :phpfunction:`in_array`
-method when checking to see if a value is in the valid choices array.
 
 .. include:: /reference/constraints/_payload-option.rst.inc

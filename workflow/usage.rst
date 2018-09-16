@@ -12,7 +12,7 @@ install the workflow feature before using it:
 
 .. code-block:: terminal
 
-    $ composer require workflow
+    $ composer require symfony/workflow
 
 Creating a Workflow
 -------------------
@@ -40,12 +40,15 @@ like this:
             workflows:
                 blog_publishing:
                     type: 'workflow' # or 'state_machine'
+                    audit_trail:
+                        enabled: true
                     marking_store:
                         type: 'multiple_state' # or 'single_state'
                         arguments:
                             - 'currentPlace'
                     supports:
                         - App\Entity\BlogPost
+                    initial_place: draft
                     places:
                         - draft
                         - review
@@ -75,6 +78,8 @@ like this:
 
             <framework:config>
                 <framework:workflow name="blog_publishing" type="workflow">
+                    <framework:audit-trail enabled="true" />
+
                     <framework:marking-store type="single_state">
                       <framework:argument>currentPlace</framework:argument>
                     </framework:marking-store>
@@ -118,6 +123,9 @@ like this:
             'workflows' => array(
                 'blog_publishing' => array(
                     'type' => 'workflow', // or 'state_machine'
+                    'audit_trail' => array(
+                        'enabled' => true
+                    ),
                     'marking_store' => array(
                         'type' => 'multiple_state', // or 'single_state'
                         'arguments' => array('currentPlace')
@@ -169,6 +177,11 @@ like this:
     value ``marking``) attributes of the ``marking_store`` option are optional.
     If omitted, their default values will be used.
 
+.. tip::
+
+    Setting the ``audit_trail.enabled`` option to ``true`` makes the application
+    generate detailed log messages for the workflow activity.
+
 Using a Workflow
 ----------------
 
@@ -180,10 +193,10 @@ you can get the workflow by injecting the Workflow registry service::
     // ...
     use Symfony\Component\Workflow\Registry;
     use App\Entity\BlogPost;
-    use Symfony\Bundle\FrameworkBundle\Controller\Controller;
-    use Symfony\Component\Workflow\Exception\LogicException;
+    use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+    use Symfony\Component\Workflow\Exception\TransitionException;
 
-    class BlogController extends Controller
+    class BlogController extends AbstractController
     {
         public function edit(Registry $workflows)
         {
@@ -194,13 +207,17 @@ you can get the workflow by injecting the Workflow registry service::
             // pass the workflow name as the second argument
             // $workflow = $workflows->get($post, 'blog_publishing');
 
+            // you can also get all workflows associated with an object, which is useful
+            // for example to show the status of all those workflows in a backend
+            $postWorkflows = $workflows->all($post);
+
             $workflow->can($post, 'publish'); // False
             $workflow->can($post, 'to_review'); // True
 
             // Update the currentState on the post
             try {
                 $workflow->apply($post, 'to_review');
-            } catch (LogicException $e) {
+            } catch (TransitionException $exception) {
                 // ... if the transition is not allowed
             }
 
@@ -208,6 +225,14 @@ you can get the workflow by injecting the Workflow registry service::
             $transitions = $workflow->getEnabledTransitions($post);
         }
     }
+
+.. versionadded:: 4.1
+    The :class:`Symfony\\Component\\Workflow\\Exception\\TransitionException`
+    class was introduced in Symfony 4.1.
+
+.. versionadded:: 4.1
+    The :method:`Symfony\\Component\\Workflow\\Registry::all` method was
+    introduced in Symfony 4.1.
 
 Using Events
 ------------
@@ -237,7 +262,7 @@ order:
     * ``workflow.[workflow name].guard.[transition name]``
 
 ``workflow.leave``
-    The object is about to leave a place.
+    The subject is about to leave a place.
 
     The three events being dispatched are:
 
@@ -246,7 +271,7 @@ order:
     * ``workflow.[workflow name].leave.[place name]``
 
 ``workflow.transition``
-    The object is going through this transition.
+    The subject is going through this transition.
 
     The three events being dispatched are:
 
@@ -255,8 +280,9 @@ order:
     * ``workflow.[workflow name].transition.[transition name]``
 
 ``workflow.enter``
-    The object entered a new place. This is the first event where the object
-    is marked as being in the new place.
+    The subject is about to enter a new place. This event is triggered just
+    before the subject places are updated, which means that the marking of the
+    subject is not yet updated with the new places.
 
     The three events being dispatched are:
 
@@ -265,9 +291,8 @@ order:
     * ``workflow.[workflow name].enter.[place name]``
 
 ``workflow.entered``
-
-    Similar to ``workflow.enter``, except the marking store is updated before this
-    event (making it a good place to flush data in Doctrine).
+    The subject has entered in the places and the marking is updated (making it a good
+    place to flush data in Doctrine).
 
     The three events being dispatched are:
 
@@ -275,14 +300,29 @@ order:
     * ``workflow.[workflow name].entered``
     * ``workflow.[workflow name].entered.[place name]``
 
+``workflow.completed``
+    The object has completed this transition.
+
+    The three events being dispatched are:
+
+    * ``workflow.completed``
+    * ``workflow.[workflow name].completed``
+    * ``workflow.[workflow name].completed.[transition name]``
+
+
 ``workflow.announce``
-    Triggered for each transition that now is accessible for the object.
+    Triggered for each transition that now is accessible for the subject.
 
     The three events being dispatched are:
 
     * ``workflow.announce``
     * ``workflow.[workflow name].announce``
     * ``workflow.[workflow name].announce.[transition name]``
+
+.. note::
+
+    The leaving and entering events are triggered even for transitions that stay
+    in same place.
 
 Here is an example of how to enable logging for every time the ``blog_publishing``
 workflow leaves a place::
@@ -359,7 +399,6 @@ See example to make sure no blog post without title is moved to "review"::
         }
     }
 
-
 Event Methods
 ~~~~~~~~~~~~~
 
@@ -369,7 +408,7 @@ This means that each event has access to the following information:
 :method:`Symfony\\Component\\Workflow\\Event\\Event::getMarking`
     Returns the :class:`Symfony\\Component\\Workflow\\Marking` of the workflow.
 
-:method:`Symfony\\Component\\Worflow\\Event\\Event::getSubject`
+:method:`Symfony\\Component\\Workflow\\Event\\Event::getSubject`
     Returns the object that dispatches the event.
 
 :method:`Symfony\\Component\\Workflow\\Event\\Event::getTransition`

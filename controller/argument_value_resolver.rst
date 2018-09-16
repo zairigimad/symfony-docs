@@ -45,10 +45,9 @@ Symfony ships with five value resolvers in the HttpKernel component:
 Adding a Custom Value Resolver
 ------------------------------
 
-Adding a new value resolver requires creating one class and one service
-definition. In the next example, you'll create a value resolver to inject the
-``User`` object from the security system. Given you write the following
-controller::
+In the next example, you'll create a value resolver to inject the object that
+represents the current user whenever a controller method type-hints an argument
+with the ``User`` class::
 
     namespace App\Controller;
 
@@ -63,10 +62,49 @@ controller::
         }
     }
 
-Somehow you will have to get the ``User`` object and inject it into the controller.
-This can be done by implementing the
-:class:`Symfony\\Component\\HttpKernel\\Controller\\ArgumentValueResolverInterface`.
-This interface specifies that you have to implement two methods:
+Beware that this feature is already provided by the `@ParamConverter`_
+annotation from the SensioFrameworkExtraBundle. If you have that bundle
+installed in your project, add this config to disable the auto-conversion of
+type-hinted method arguments:
+
+.. configuration-block::
+
+    .. code-block:: yaml
+
+        # config/packages/sensio_framework_extra.yaml
+        sensio_framework_extra:
+            request:
+                converters: true
+                auto_convert: false
+
+    .. code-block:: xml
+
+        <!-- config/packages/sensio_framework_extra.xml -->
+        <?xml version="1.0" encoding="UTF-8" ?>
+        <container xmlns="http://symfony.com/schema/dic/services"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xmlns:sensio-framework-extra="http://symfony.com/schema/dic/symfony_extra"
+            xsi:schemaLocation="http://symfony.com/schema/dic/services
+                http://symfony.com/schema/dic/services/services-1.0.xsd">
+
+            <sensio-framework-extra:config>
+                <request converters="true" auto-convert="false" />
+            </sensio-framework-extra:config>
+        </container>
+
+    .. code-block:: php
+
+        // config/packages/sensio_framework_extra.php
+        $container->loadFromExtension('sensio_framework_extra', array(
+            'request' => array(
+                'converters' => true,
+                'auto_convert' => false,
+            ),
+        ));
+
+Adding a new value resolver requires creating a class that implements
+:class:`Symfony\\Component\\HttpKernel\\Controller\\ArgumentValueResolverInterface`
+and defining a service for it. The interface defines two methods:
 
 ``supports()``
     This method is used to check whether the value resolver supports the
@@ -88,16 +126,18 @@ retrieved from the token storage::
     namespace App\ArgumentResolver;
 
     use App\Entity\User;
+    use Symfony\Component\HttpFoundation\Request;
     use Symfony\Component\HttpKernel\Controller\ArgumentValueResolverInterface;
-    use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
+    use Symfony\Component\HttpKernel\ControllerMetadata\ArgumentMetadata;
+    use Symfony\Component\Security\Core\Security;
 
     class UserValueResolver implements ArgumentValueResolverInterface
     {
-        private $tokenStorage;
+        private $security;
 
-        public function __construct(TokenStorageInterface $tokenStorage)
+        public function __construct(Security $security)
         {
-            $this->tokenStorage = $tokenStorage;
+            $this->security = $security;
         }
 
         public function supports(Request $request, ArgumentMetadata $argument)
@@ -106,18 +146,12 @@ retrieved from the token storage::
                 return false;
             }
 
-            $token = $this->tokenStorage->getToken();
-
-            if (!$token instanceof TokenInterface) {
-                return false;
-            }
-
-            return $token->getUser() instanceof User;
+            return $this->security->getUser() instanceof User;
         }
 
         public function resolve(Request $request, ArgumentMetadata $argument)
         {
-            yield $this->tokenStorage->getToken()->getUser();
+            yield $this->security->getUser();
         }
     }
 
@@ -125,8 +159,7 @@ In order to get the actual ``User`` object in your argument, the given value
 must fulfill the following requirements:
 
 * An argument must be type-hinted as ``User`` in your action method signature;
-* A security token must be present;
-* The value must be an instance of the ``User``.
+* The value must be an instance of the ``User`` class.
 
 When all those requirements are met and ``true`` is returned, the
 ``ArgumentResolver`` calls ``resolve()`` with the same values as it called
@@ -198,4 +231,5 @@ subrequests.
     $user = null``). The ``DefaultValueResolver`` is executed as the last
     resolver and will use the default value if no value was already resolved.
 
+.. _`@ParamConverter`: https://symfony.com/doc/current/bundles/SensioFrameworkExtraBundle/annotations/converters.html
 .. _`yield`: http://php.net/manual/en/language.generators.syntax.php

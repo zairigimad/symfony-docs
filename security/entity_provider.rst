@@ -12,15 +12,6 @@ you how to load your users from the database via a Doctrine entity.
 Introduction
 ------------
 
-.. tip::
-
-    Before you start, you should check out `FOSUserBundle`_. This external
-    bundle allows you to load users from the database (like you'll learn here)
-    *and* gives you built-in routes & controllers for things like login,
-    registration and forgot password. But, if you need to heavily customize
-    your user system *or* if you want to learn how things work, this tutorial
-    is even better.
-
 Loading users via a Doctrine entity has 2 basic steps:
 
 #. :ref:`Create your User entity <security-crete-user-entity>`
@@ -36,8 +27,14 @@ and :ref:`user serialization to the session <security-serialize-equatable>`
 1) Create your User Entity
 --------------------------
 
-For this entry, suppose that you already have a ``User`` entity inside an
-``AppBundle`` with the following fields: ``id``, ``username``, ``password``,
+Before you begin, run this command to add support for the Symfony security:
+
+.. code-block:: terminal
+
+    $ composer require symfony/security-bundle
+
+For this article, suppose that you already have a ``User`` entity
+with the following fields: ``id``, ``username``, ``password``,
 ``email`` and ``isActive``::
 
     // src/Entity/User.php
@@ -70,7 +67,7 @@ For this entry, suppose that you already have a ``User`` entity inside an
         private $password;
 
         /**
-         * @ORM\Column(type="string", length=60, unique=true)
+         * @ORM\Column(type="string", length=254, unique=true)
          */
         private $email;
 
@@ -133,12 +130,19 @@ For this entry, suppose that you already have a ``User`` entity inside an
                 $this->password,
                 // see section on salt below
                 // $this->salt
-            ) = unserialize($serialized);
+            ) = unserialize($serialized, array('allowed_classes' => false));
         }
     }
 
 To make things shorter, some of the getter and setter methods aren't shown.
 But you can generate these manually or with your own IDE.
+
+.. caution::
+
+    In the example above, the User entity's table name is "app_users" because
+    "USER" is a SQL reserved word. If you wish to call your table name "user",
+    `it must be quoted with backticks`_ to avoid errors. The annotation should
+    look like ``@ORM\Table(name="`user`")``.
 
 Next, make sure to :ref:`create the database table <doctrine-creating-the-database-tables-schema>`:
 
@@ -176,10 +180,9 @@ What do the serialize and unserialize Methods do?
 At the end of each request, the User object is serialized to the session.
 On the next request, it's unserialized. To help PHP do this correctly, you
 need to implement ``Serializable``. But you don't need to serialize everything:
-you only need a few fields (the ones shown above plus a few extra if you
-decide to implement :ref:`AdvancedUserInterface <security-advanced-user-interface>`).
-On each request, the ``id`` is used to query for a fresh ``User`` object
-from the database.
+you only need a few fields (the ones shown above plus a few extra if you added
+other important fields to your user entity). On each request, the ``id`` is used
+to query for a fresh ``User`` object from the database.
 
 Want to know more? See :ref:`security-serialize-equatable`.
 
@@ -317,17 +320,23 @@ and password ``admin`` (which has been encoded).
 
 .. sidebar:: Do you need to use a Salt property?
 
-    If you use ``bcrypt``, no. Otherwise, yes. All passwords must be hashed
-    with a salt, but ``bcrypt`` does this internally. Since this tutorial
-    *does* use ``bcrypt``, the ``getSalt()`` method in ``User`` can just
-    return ``null`` (it's not used). If you use a different algorithm, you'll
-    need to uncomment the ``salt`` lines in the ``User`` entity and add a
-    persisted ``salt`` property.
+    If you use ``bcrypt`` or ``argon2i``, no. Otherwise, yes. All passwords must
+    be hashed with a salt, but ``bcrypt`` and ``argon2i`` do this internally.
+    Since this tutorial *does* use ``bcrypt``, the ``getSalt()`` method in
+    ``User`` can just return ``null`` (it's not used). If you use a different
+    algorithm, you'll need to uncomment the ``salt`` lines in the ``User``
+    entity and add a persisted ``salt`` property.
 
 .. _security-advanced-user-interface:
 
 Forbid Inactive Users (AdvancedUserInterface)
 ---------------------------------------------
+
+.. versionadded:: 4.1
+    The ``AdvancedUserInterface`` class was deprecated in Symfony 4.1 and no
+    alternative is provided. If you need this functionality in your application,
+    implement :doc:`a custom user checker </security/user_checkers>` that
+    performs the needed checks.
 
 If a User's ``isActive`` property is set to ``false`` (i.e. ``is_active``
 is 0 in the database), the user will still be able to login to the site
@@ -372,14 +381,14 @@ so you only need the new interface::
         {
             return serialize(array(
                 // ...
-                $this->isActive
+                $this->isActive,
             ));
         }
         public function unserialize($serialized)
         {
             list (
                 // ...
-                $this->isActive
+                $this->isActive,
             ) = unserialize($serialized);
         }
     }
@@ -412,7 +421,7 @@ template to customize them further).
     not be deserialized correctly from the session on each request.
 
 Congrats! Your database-loading security system is all setup! Next, add a
-true :doc:`login form </security/form_login>` instead of HTTP Basic
+true :doc:`login form </security/form_login_setup>` instead of HTTP Basic
 or keep reading for other topics.
 
 .. _authenticating-someone-with-a-custom-entity-provider:
@@ -542,3 +551,4 @@ or worry about it.
 
 .. _fixtures: https://symfony.com/doc/master/bundles/DoctrineFixturesBundle/index.html
 .. _FOSUserBundle: https://github.com/FriendsOfSymfony/FOSUserBundle
+.. _`it must be quoted with backticks`: http://docs.doctrine-project.org/projects/doctrine-orm/en/latest/reference/basic-mapping.html#quoting-reserved-words

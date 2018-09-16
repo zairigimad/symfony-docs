@@ -27,7 +27,7 @@ firewall, but only in the configuration file used by tests:
 
     .. code-block:: yaml
 
-        # app/config/config_test.yml
+        # config/packages/test/security.yaml
         security:
             firewalls:
                 # replace 'main' by the name of your own firewall
@@ -36,7 +36,7 @@ firewall, but only in the configuration file used by tests:
 
     .. code-block:: xml
 
-        <!-- app/config/config_test.xml -->
+        <!-- config/packages/test/security.xml -->
         <security:config>
             <!-- replace 'main' by the name of your own firewall -->
             <security:firewall name="main">
@@ -46,7 +46,7 @@ firewall, but only in the configuration file used by tests:
 
     .. code-block:: php
 
-        // app/config/config_test.php
+        // config/packages/test/security.php
         $container->loadFromExtension('security', array(
             'firewalls' => array(
                 // replace 'main' by the name of your own firewall
@@ -113,10 +113,14 @@ needs::
         {
             $session = $this->client->getContainer()->get('session');
 
-            // the firewall context defaults to the firewall name
+            $firewallName = 'secure_area';
+            // if you don't define multiple connected firewalls, the context defaults to the firewall name
+            // See https://symfony.com/doc/current/reference/configuration/security.html#firewall-context
             $firewallContext = 'secured_area';
 
-            $token = new UsernamePasswordToken('admin', null, $firewallContext, array('ROLE_ADMIN'));
+            // you may need to use a different token class depending on your application.
+            // for example, when using Guard authentication you must instantiate PostAuthenticationGuardToken
+            $token = new UsernamePasswordToken('admin', null, $firewallName, array('ROLE_ADMIN'));
             $session->set('_security_'.$firewallContext, serialize($token));
             $session->save();
 

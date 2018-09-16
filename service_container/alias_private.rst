@@ -32,6 +32,7 @@ You can also control the ``public`` option on a service-by-service basis:
 
     .. code-block:: yaml
 
+        # config/services.yaml
         services:
             # ...
 
@@ -40,6 +41,7 @@ You can also control the ``public`` option on a service-by-service basis:
 
     .. code-block:: xml
 
+        <!-- config/services.xml -->
         <?xml version="1.0" encoding="UTF-8" ?>
         <container xmlns="http://symfony.com/schema/dic/services"
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -52,6 +54,7 @@ You can also control the ``public`` option on a service-by-service basis:
 
     .. code-block:: php
 
+        // config/services.php
         use App\Service\Foo;
 
         $container->register(Foo::class)
@@ -65,25 +68,18 @@ gives you better errors: if you try to reference a non-existent service, you wil
 get a clear error when you refresh *any* page, even if the problematic code would
 not have run on that page.
 
-Now that the service is private, you *should not* fetch the service directly
+Now that the service is private, you *must not* fetch the service directly
 from the container::
 
     use App\Service\Foo;
 
     $container->get(Foo::class);
 
-This *may or may not work*, depending on how the container has optimized the
-service instantiation and, even in the cases where it works, this possibility is
-deprecated. Simply said: A service should be marked as private if you do not want
-to access it directly from your code.
+Simply said: A service can be marked as private if you do not want to access
+it directly from your code.
 
 However, if a service has been marked as private, you can still alias it
 (see below) to access this service (via the alias).
-
-.. note::
-
-    Services are by default public, but it's considered a good practice to mark
-    as many services private as possible.
 
 .. _services-alias:
 
@@ -98,6 +94,7 @@ services.
 
     .. code-block:: yaml
 
+        # config/services.yaml
         services:
             # ...
             App\Mail\PhpMailer:
@@ -109,6 +106,7 @@ services.
 
     .. code-block:: xml
 
+        <!-- config/services.xml -->
         <?xml version="1.0" encoding="UTF-8" ?>
         <container xmlns="http://symfony.com/schema/dic/services"
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -116,7 +114,7 @@ services.
                 http://symfony.com/schema/dic/services/services-1.0.xsd">
 
             <services>
-                <service class="App\Mail\PhpMailer" public="false" />
+                <service id="App\Mail\PhpMailer" public="false" />
 
                 <service id="app.mailer" alias="App\Mail\PhpMailer" />
             </services>
@@ -124,6 +122,7 @@ services.
 
     .. code-block:: php
 
+        // config/services.php
         use App\Mail\PhpMailer;
 
         $container->register(PhpMailer::class)
@@ -142,9 +141,85 @@ This means that when using the container directly, you can access the
 
     .. code-block:: yaml
 
+        # config/services.yaml
         services:
             # ...
             app.mailer: '@App\Mail\PhpMailer'
+
+Anonymous Services
+------------------
+
+.. note::
+
+    Anonymous services are only supported by the XML and YAML configuration formats.
+
+.. versionadded:: 3.3
+    The feature to configure anonymous services in YAML was introduced in Symfony 3.3.
+
+In some cases, you may want to prevent a service being used as a dependency of
+other services. This can be achieved by creating an anonymous service. These
+services are like regular services but they don't define an ID and they are
+created where they are used.
+
+The following example shows how to inject an anonymous service into another service:
+
+.. configuration-block::
+
+    .. code-block:: yaml
+
+        # app/config/services.yaml
+        services:
+            App\Foo:
+                arguments:
+                    - !service
+                        class: App\AnonymousBar
+
+    .. code-block:: xml
+
+        <!-- app/config/services.xml -->
+        <?xml version="1.0" encoding="UTF-8" ?>
+        <container xmlns="http://symfony.com/schema/dic/services"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xsi:schemaLocation="http://symfony.com/schema/dic/services
+                http://symfony.com/schema/dic/services/services-1.0.xsd">
+
+            <services>
+                <service id="foo" class="App\Foo">
+                    <argument type="service">
+                        <service class="App\AnonymousBar" />
+                    </argument>
+                </service>
+            </services>
+        </container>
+
+Using an anonymous service as a factory looks like this:
+
+.. configuration-block::
+
+    .. code-block:: yaml
+
+        # app/config/services.yaml
+        services:
+            App\Foo:
+                factory: [ !service { class: App\FooFactory }, 'constructFoo' ]
+
+    .. code-block:: xml
+
+        <!-- app/config/services.xml -->
+        <?xml version="1.0" encoding="UTF-8" ?>
+        <container xmlns="http://symfony.com/schema/dic/services"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xsi:schemaLocation="http://symfony.com/schema/dic/services
+                http://symfony.com/schema/dic/services/services-1.0.xsd">
+
+            <services>
+                <service id="foo" class="App\Foo">
+                    <factory method="constructFoo">
+                        <service class="App\FooFactory"/>
+                    </factory>
+                </service>
+            </services>
+        </container>
 
 Deprecating Services
 --------------------
@@ -156,11 +231,13 @@ or you decided not to maintain it anymore), you can deprecate its definition:
 
     .. code-block:: yaml
 
-       App\Service\OldService:
-           deprecated: The "%service_id%" service is deprecated since 2.8 and will be removed in 3.0.
+        # config/services.yaml
+        App\Service\OldService:
+            deprecated: The "%service_id%" service is deprecated since 2.8 and will be removed in 3.0.
 
     .. code-block:: xml
 
+        <!-- config/services.xml -->
         <?xml version="1.0" encoding="UTF-8" ?>
         <container xmlns="http://symfony.com/schema/dic/services"
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-Instance"
@@ -175,6 +252,7 @@ or you decided not to maintain it anymore), you can deprecate its definition:
 
     .. code-block:: php
 
+        // config/services.php
         use App\Service\OldService;
 
         $container

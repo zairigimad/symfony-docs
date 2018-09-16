@@ -37,14 +37,14 @@ instead. No problem! The Cache component provides the
 this use-case::
 
     use Symfony\Component\Cache\Simple\FilesystemCache;
-    use Symfony\Component\Cache\Adapter\SimpleCacheAdapter
+    use Symfony\Component\Cache\Adapter\SimpleCacheAdapter;
 
     // the PSR-16 cache object that you want to use
     $psr16Cache = new FilesystemCache();
 
     // a PSR-6 cache that uses your cache internally!
     $psr6Cache = new SimpleCacheAdapter($psr16Cache);
-    
+
     // now use this wherever you want
     $githubApiClient = new GitHubApiClient($psr6Cache);
 
@@ -81,6 +81,6 @@ this use-case::
 
     // a PSR-16 cache that uses your cache internally!
     $psr16Cache = new Psr6Cache($psr6Cache);
-    
+
     // now use this wherever you want
     $githubApiClient = new GitHubApiClient($psr16Cache);

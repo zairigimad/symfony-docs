@@ -17,7 +17,7 @@ The **key** of a cache item is a plain string which acts as its
 identifier, so it must be unique for each cache pool. You can freely choose the
 keys, but they should only contain letters (A-Z, a-z), numbers (0-9) and the
 ``_`` and ``.`` symbols. Other common symbols (such as ``{``, ``}``, ``(``,
-``)``, ``/``, ``\`` and ``@``) are reserved by the PSR-6 standard for future
+``)``, ``/``, ``\``, ``@`` and ``:``) are reserved by the PSR-6 standard for future
 uses.
 
 The **value** of a cache item can be any data represented by a type which is
@@ -31,21 +31,21 @@ Cache items are created with the ``getItem($key)`` method of the cache pool. The
 argument is the key of the item::
 
     // $cache pool object was created before
-    $numProducts = $cache->getItem('stats.num_products');
+    $productsCount = $cache->getItem('stats.products_count');
 
-Then, use the :method:`Psr\\Cache\\CacheItemInterface::set` method to set
+Then, use the ``Psr\\Cache\\CacheItemInterface::set`` method to set
 the data stored in the cache item::
 
     // storing a simple integer
-    $numProducts->set(4711);
-    $cache->save($numProducts);
+    $productsCount->set(4711);
+    $cache->save($productsCount);
 
     // storing an array
-    $numProducts->set(array(
+    $productsCount->set(array(
         'category1' => 4711,
         'category2' => 2387,
     ));
-    $cache->save($numProducts);
+    $cache->save($productsCount);
 
 The key and the value of any given cache item can be obtained with the
 corresponding *getter* methods::

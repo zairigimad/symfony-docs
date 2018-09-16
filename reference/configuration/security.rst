@@ -1,298 +1,29 @@
 .. index::
     single: Security; Configuration reference
 
-SecurityBundle Configuration ("security")
-=========================================
+Security Configuration Reference (SecurityBundle)
+=================================================
 
-The security system is one of the most powerful parts of Symfony and can
-largely be controlled via its configuration.
+The SecurityBundle integrates the :doc:`Security component </components/security>`
+in Symfony applications. All these options are configured under the ``security``
+key in your application configuration.
 
-Full Default Configuration
---------------------------
+.. code-block:: terminal
 
-The following is the full default configuration for the security system.
-Each part will be explained in the next section.
+    # displays the default config values defined by Symfony
+    $ php bin/console config:dump-reference security
 
-.. configuration-block::
+    # displays the actual config values used by your application
+    $ php bin/console debug:config security
 
-    .. code-block:: yaml
+.. note::
 
-        # config/packages/security.yaml
-        security:
-            access_denied_url:    ~ # Example: /foo/error403
+    When using XML, you must use the ``http://symfony.com/schema/dic/security``
+    namespace and the related XSD schema is available at:
+    ``http://symfony.com/schema/dic/services/services-1.0.xsd``
 
-            # strategy can be: none, migrate, invalidate
-            session_fixation_strategy:  migrate
-            hide_user_not_found:  true
-            always_authenticate_before_granting:  false
-            erase_credentials:    true
-            access_decision_manager:
-                strategy:             affirmative # One of affirmative, consensus, unanimous
-                allow_if_all_abstain:  false
-                allow_if_equal_granted_denied:  true
-
-            encoders:
-                # Examples:
-                App\Entity\User1: sha512
-                App\Entity\User2:
-                    algorithm:           sha512
-                    encode_as_base64:    true
-                    iterations:          5000
-
-                # PBKDF2 encoder
-                # see the note about PBKDF2 below for details on security and speed
-                App\Entity\User3:
-                    algorithm:            pbkdf2
-                    hash_algorithm:       sha512
-                    encode_as_base64:     true
-                    iterations:           1000
-                    key_length:           40
-
-                # Example options/values for what a custom encoder might look like
-                App\Entity\User4:
-                    id:                   App\Security\MyPasswordEncoder
-
-                # BCrypt encoder
-                # see the note about bcrypt below for details on specific dependencies
-                App\Entity\User5:
-                    algorithm:            bcrypt
-                    cost:                 13
-
-                # Plaintext encoder
-                # it does not do any encoding
-                App\Entity\User6:
-                    algorithm:            plaintext
-                    ignore_case:          false
-
-            providers:            # Required
-                # Examples:
-                my_in_memory_provider:
-                    memory:
-                        users:
-                            foo:
-                                password:           foo
-                                roles:              ROLE_USER
-                            bar:
-                                password:           bar
-                                roles:              [ROLE_USER, ROLE_ADMIN]
-
-                my_entity_provider:
-                    entity:
-                        class:              App\Entity\User7
-                        property:           username
-                        # name of a non-default entity manager
-                        manager_name:       ~
-
-                my_ldap_provider:
-                    ldap:
-                        service:            ~
-                        base_dn:            ~
-                        search_dn:          ~
-                        search_password:    ~
-                        default_roles:      'ROLE_USER'
-                        uid_key:            'sAMAccountName'
-                        filter:             '({uid_key}={username})'
-
-                # Example custom provider
-                my_some_custom_provider:
-                    id:                   ~
-
-                # Chain some providers
-                my_chain_provider:
-                    chain:
-                        providers:          [ my_in_memory_provider, my_entity_provider ]
-
-            firewalls:            # Required
-                # Examples:
-                somename:
-                    pattern: .*
-                    # restrict the firewall to a specific host
-                    host: admin\.example\.com
-                    # restrict the firewall to specific HTTP methods
-                    methods: [GET, POST]
-                    request_matcher: some.service.id
-                    access_denied_url: /foo/error403
-                    access_denied_handler: some.service.id
-                    entry_point: some.service.id
-                    provider: some_key_from_above
-                    # manages where each firewall stores session information
-                    # See "Firewall Context" below for more details
-                    context: context_key
-                    stateless: false
-                    x509:
-                        provider: some_key_from_above
-                    remote_user:
-                        provider: some_key_from_above
-                    http_basic:
-                        provider: some_key_from_above
-                    http_basic_ldap:
-                        provider:     some_key_from_above
-                        service:      ldap
-                        dn_string:    '{username}'
-                        query_string: ~
-                    http_digest:
-                        provider: some_key_from_above
-                    guard:
-                        # A key from the "providers" section of your security config, in case your user provider is different than the firewall
-                        provider:             ~
-
-                        # A service id (of one of your authenticators) whose start() method should be called when an anonymous user hits a page that requires authentication
-                        entry_point:          null
-
-                        # An array of service ids for all of your "authenticators"
-                        authenticators:       []
-                    form_login:
-                        # submit the login form here
-                        check_path: /login_check
-
-                        # the user is redirected here when they need to log in
-                        login_path: /login
-
-                        # if true, forward the user to the login form instead of redirecting
-                        use_forward: false
-
-                        # login success redirecting options (read further below)
-                        always_use_default_target_path: false
-                        default_target_path:            /
-                        target_path_parameter:          _target_path
-                        use_referer:                    false
-
-                        # login failure redirecting options (read further below)
-                        failure_path:    /foo
-                        failure_forward: false
-                        failure_path_parameter: _failure_path
-                        failure_handler: some.service.id
-                        success_handler: some.service.id
-
-                        # field names for the username and password fields
-                        username_parameter: _username
-                        password_parameter: _password
-
-                        # csrf token options
-                        csrf_parameter:       _csrf_token
-                        csrf_token_id:        authenticate
-                        csrf_token_generator: my.csrf_token_generator.id
-
-                        # by default, the login form *must* be a POST, not a GET
-                        post_only:      true
-                        remember_me:    false
-
-                        # by default, a session must exist before submitting an authentication request
-                        # if false, then Request::hasPreviousSession is not called during authentication
-                        require_previous_session: true
-
-                    form_login_ldap:
-                        # submit the login form here
-                        check_path: /login_check
-
-                        # the user is redirected here when they need to log in
-                        login_path: /login
-
-                        # if true, forward the user to the login form instead of redirecting
-                        use_forward: false
-
-                        # login success redirecting options (read further below)
-                        always_use_default_target_path: false
-                        default_target_path:            /
-                        target_path_parameter:          _target_path
-                        use_referer:                    false
-
-                        # login failure redirecting options (read further below)
-                        failure_path:    /foo
-                        failure_forward: false
-                        failure_path_parameter: _failure_path
-                        failure_handler: some.service.id
-                        success_handler: some.service.id
-
-                        # field names for the username and password fields
-                        username_parameter: _username
-                        password_parameter: _password
-
-                        # csrf token options
-                        csrf_parameter:       _csrf_token
-                        csrf_token_id:        authenticate
-                        csrf_token_generator: my.csrf_token_generator.id
-
-                        # by default, the login form *must* be a POST, not a GET
-                        post_only:      true
-                        remember_me:    false
-
-                        # by default, a session must exist before submitting an authentication request
-                        # if false, then Request::hasPreviousSession is not called during authentication
-                        # new in Symfony 2.3
-                        require_previous_session: true
-
-                        service:      ~
-                        dn_string:    '{username}'
-                        query_string: ~
-
-                    remember_me:
-                        token_provider: name
-                        secret: "%secret%"
-                        name: NameOfTheCookie
-                        lifetime: 3600 # in seconds
-                        path: /foo
-                        domain: somedomain.foo
-                        secure: false
-                        httponly: true
-                        always_remember_me: false
-                        remember_me_parameter: _remember_me
-                    logout:
-                        path:   /logout
-                        target: /
-                        invalidate_session: false
-                        delete_cookies:
-                            a: { path: null, domain: null }
-                            b: { path: null, domain: null }
-                        handlers: [some.service.id, another.service.id]
-                        success_handler: some.service.id
-                    anonymous: ~
-
-                # Default values and options for any firewall
-                some_firewall_listener:
-                    pattern:              ~
-                    security:             true
-                    request_matcher:      ~
-                    access_denied_url:    ~
-                    access_denied_handler:  ~
-                    entry_point:          ~
-                    provider:             ~
-                    stateless:            false
-                    context:              ~
-                    logout:
-                        csrf_parameter:       _csrf_token
-                        csrf_token_generator: ~
-                        csrf_token_id:        logout
-                        path:                 /logout
-                        target:               /
-                        success_handler:      ~
-                        invalidate_session:   true
-                        delete_cookies:
-
-                            # Prototype
-                            name:
-                                path:                 ~
-                                domain:               ~
-                        handlers:             []
-                    anonymous:
-                        secret:               "%secret%"
-                    switch_user:
-                        provider:             ~
-                        parameter:            _switch_user
-                        role:                 ROLE_ALLOWED_TO_SWITCH
-
-            access_control:
-                requires_channel:     ~
-
-                # use the urldecoded format
-                path:                 ~ # Example: ^/path to resource/
-                host:                 ~
-                ips:                  []
-                methods:              []
-                roles:                []
-            role_hierarchy:
-                ROLE_ADMIN:      [ROLE_ORGANIZER, ROLE_USER]
-                ROLE_SUPERADMIN: [ROLE_ADMIN]
+.. versionadded:: 4.1
+    The ``providers`` option is optional starting from Symfony 4.1.
 
 .. _reference-security-firewall-form-login:
 
@@ -427,13 +158,31 @@ The ``invalidate_session`` option allows to redefine this behavior. Set this
 option to ``false`` in every firewall and the user will only be logged out from
 the current firewall and not the other ones.
 
+logout_on_user_change
+~~~~~~~~~~~~~~~~~~~~~
+
+**type**: ``boolean`` **default**: ``false``
+
+.. versionadded:: 3.4
+    The ``logout_on_user_change`` option was introduced in Symfony 3.4.
+
+If ``true`` this option makes Symfony to trigger a logout when the user has
+changed. Not doing that is deprecated, so this option should be set to ``true``
+to avoid getting deprecation messages.
+
+The user is considered to have changed when the user class implements
+:class:`Symfony\\Component\\Security\\Core\\User\\EquatableInterface` and the
+``isEqualTo()`` method returns ``false``. Also, when any of the properties
+required by the :class:`Symfony\\Component\\Security\\Core\\User\\UserInterface`
+(like the username, password or salt) changes.
+
 .. _reference-security-ldap:
 
 LDAP functionality
 ------------------
 
 There are several options for connecting against an LDAP server,
-using the ``form_login_ldap`` and ``http_basic_ldap`` authentication
+using the ``form_login_ldap``, ``http_basic_ldap`` and ``json_login_ldap`` authentication
 providers or the ``ldap`` user provider.
 
 For even more details, see :doc:`/security/ldap`.
@@ -442,9 +191,12 @@ Authentication
 ~~~~~~~~~~~~~~
 
 You can authenticate to an LDAP server using the LDAP variants of the
-``form_login`` and ``http_basic`` authentication providers. Simply use
-``form_login_ldap`` and ``http_basic_ldap``, which will attempt to
+``form_login``, ``http_basic`` and ``json_login`` authentication providers. Simply use
+``form_login_ldap``, ``http_basic_ldap`` and ``json_login_ldap``, which will attempt to
 ``bind`` against a LDAP server instead of using password comparison.
+
+.. versionadded:: 4.2
+    The ``json_login_ldap`` authentication provider was introduced in Symfony 4.2.
 
 Both authentication providers have the same arguments as their normal
 counterparts, with the addition of two configuration keys:
@@ -482,8 +234,8 @@ User provider
 
 Users will still be fetched from the configured user provider. If you
 wish to fetch your users from a LDAP server, you will need to use the
-``ldap`` user provider, in addition to one of the two authentication
-providers (``form_login_ldap`` or ``http_basic_ldap``).
+``ldap`` user provider, in addition to one of the three authentication
+providers (``form_login_ldap`` or ``http_basic_ldap`` or ``json-login-ldap``).
 
 .. configuration-block::
 
@@ -540,7 +292,7 @@ Using the BCrypt Password Encoder
 
     .. code-block:: xml
 
-        <!-- app/config/security.xml -->
+        <!-- config/packages/security.xml -->
         <?xml version="1.0" charset="UTF-8" ?>
         <srv:container xmlns="http://symfony.com/schema/dic/security"
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -593,10 +345,81 @@ persisting the encoded password alone is enough.
 
 .. note::
 
-    All the encoded passwords are ``60`` characters long, so make sure to
+    BCrypt encoded passwords are ``60`` characters long, so make sure to
     allocate enough space for them to be persisted.
 
-    .. _reference-security-firewall-context:
+.. tip::
+
+    A simple technique to make tests much faster when using BCrypt is to set
+    the cost to ``4``, which is the minimum value allowed, in the ``test``
+    environment configuration.
+
+.. _reference-security-argon2i:
+
+Using the Argon2i Password Encoder
+----------------------------------
+
+.. caution::
+
+    To use this encoder, you either need to use PHP version 7.2 or install
+    the `libsodium`_ extension.
+
+.. configuration-block::
+
+    .. code-block:: yaml
+
+        # config/packages/security.yaml
+        security:
+            # ...
+
+            encoders:
+                Symfony\Component\Security\Core\User\User:
+                    algorithm: argon2i
+                    memory_cost:          16384 # Amount in KiB. 16 MiB
+                    time_cost:            2 # Number of iterations
+                    threads:              4 # Number of parallel threads
+
+    .. code-block:: xml
+
+        <!-- config/packages/security.xml -->
+        <config>
+            <!-- ... -->
+            <encoder
+                class="Symfony\Component\Security\Core\User\User"
+                algorithm="argon2i"
+                memory_cost="16384"
+                time_cost="2"
+                threads="4"
+            />
+        </config>
+
+    .. code-block:: php
+
+        // config/packages/security.php
+        use Symfony\Component\Security\Core\User\User;
+
+        $container->loadFromExtension('security', array(
+            // ...
+            'encoders' => array(
+                User::class => array(
+                    'algorithm' => 'argon2i',
+                    'memory_cost' => 16384,
+                    'time_cost' => 2,
+                    'threads' => 4,
+                ),
+            ),
+        ));
+
+A salt for each new password is generated automatically and need not be
+persisted. Since an encoded password contains the salt used to encode it,
+persisting the encoded password alone is enough.
+
+.. note::
+
+    Argon2i encoded passwords are ``96`` characters long, but due to the hashing
+    requirements saved in the resulting hash this may change in the future.
+
+.. _reference-security-firewall-context:
 
 Firewall Context
 ----------------
@@ -655,11 +478,11 @@ multiple firewalls, the "context" could actually be shared:
             'firewalls' => array(
                 'somename' => array(
                     // ...
-                    'context' => 'my_context'
+                    'context' => 'my_context',
                 ),
                 'othername' => array(
                     // ...
-                    'context' => 'my_context'
+                    'context' => 'my_context',
                 ),
             ),
         ));
@@ -673,3 +496,4 @@ multiple firewalls, the "context" could actually be shared:
 
 .. _`PBKDF2`: https://en.wikipedia.org/wiki/PBKDF2
 .. _`ircmaxell/password-compat`: https://packagist.org/packages/ircmaxell/password-compat
+.. _`libsodium`: https://pecl.php.net/package/libsodium

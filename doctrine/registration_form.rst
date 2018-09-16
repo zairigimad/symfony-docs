@@ -14,7 +14,7 @@ First, make sure you have all the dependencies you need installed:
 
 .. code-block:: terminal
 
-    $ composer require doctrine form security
+    $ composer require symfony/orm-pack symfony/form symfony/security-bundle symfony/validator
 
 .. tip::
 
@@ -94,6 +94,16 @@ With some validation added, your class may look something like this::
          */
         private $password;
 
+        /**
+         * @ORM\Column(type="array")
+         */
+        private $roles;
+
+        public function __construct()
+        {
+            $this->roles = array('ROLE_USER');
+        }
+
         // other properties and methods
 
         public function getEmail()
@@ -138,16 +148,23 @@ With some validation added, your class may look something like this::
 
         public function getSalt()
         {
-            // The bcrypt algorithm doesn't require a separate salt.
+            // The bcrypt and argon2i algorithms don't require a separate salt.
             // You *may* need a real salt if you choose a different encoder.
             return null;
         }
 
-        // other methods, including security methods like getRoles()
+        public function getRoles()
+        {
+            return $this->roles;
+        }
+
+        public function eraseCredentials()
+        {
+        }
     }
 
 The :class:`Symfony\\Component\\Security\\Core\\User\\UserInterface` requires
-a few other methods and your ``security.yml`` file needs to be configured
+a few other methods and your ``security.yaml`` file needs to be configured
 properly to work with the ``User`` entity. For a more complete example, see
 the :ref:`Entity Provider <security-crete-user-entity>` article.
 
@@ -228,17 +245,17 @@ into the database::
 
     use App\Form\UserType;
     use App\Entity\User;
-    use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+    use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
     use Symfony\Component\HttpFoundation\Request;
     use Symfony\Component\Routing\Annotation\Route;
     use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 
-    class RegistrationController extends Controller
+    class RegistrationController extends AbstractController
     {
         /**
          * @Route("/register", name="user_registration")
          */
-        public function registerAction(Request $request, UserPasswordEncoderInterface $passwordEncoder)
+        public function register(Request $request, UserPasswordEncoderInterface $passwordEncoder)
         {
             // 1) build the form
             $user = new User();
@@ -253,9 +270,9 @@ into the database::
                 $user->setPassword($password);
 
                 // 4) save the User!
-                $em = $this->getDoctrine()->getManager();
-                $em->persist($user);
-                $em->flush();
+                $entityManager = $this->getDoctrine()->getManager();
+                $entityManager->persist($user);
+                $entityManager->flush();
 
                 // ... do any other work - like sending them an email, etc
                 // maybe set a "flash" success message for the user
@@ -277,7 +294,7 @@ encoder in the security configuration:
 
     .. code-block:: yaml
 
-        # config/packages/security.yml
+        # config/packages/security.yaml
         security:
             encoders:
                 App\Entity\User: bcrypt
@@ -335,8 +352,8 @@ your database schema using this command:
 
 .. code-block:: terminal
 
-   $ php bin/console doctrine:migrations:diff
-   $ php bin/console doctrine:migrations:migrate
+    $ php bin/console doctrine:migrations:diff
+    $ php bin/console doctrine:migrations:migrate
 
 That's it! Head to ``/register`` to try things out!
 
@@ -364,7 +381,7 @@ return the ``email`` property::
         // ...
     }
 
-Next, just update the ``providers`` section of your ``security.yml`` file
+Next, just update the ``providers`` section of your ``security.yaml`` file
 so that Symfony knows how to load your users via the ``email`` property on
 login. See :ref:`authenticating-someone-with-a-custom-entity-provider`.
 

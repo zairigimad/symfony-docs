@@ -2,7 +2,7 @@
     single: Cache Pool
     single: PDO Cache, Doctrine DBAL Cache
 
-.. _`pdo-doctrine-adapter`:
+.. _pdo-doctrine-adapter:
 
 PDO & Doctrine DBAL Cache Adapter
 =================================
@@ -27,14 +27,29 @@ third, and forth parameters::
         // until the database table is truncated or its rows are otherwise deleted)
         $defaultLifetime = 0,
 
-        // an array of options for configuring the database connection
+        // an array of options for configuring the database table and connection
         $options = array()
     );
+
+.. versionadded:: 4.2
+    Automatic table creation was introduced in Symfony 4.2.
+
+The table where values are stored is created automatically on the first call to
+the :method:`Symfony\\Component\\Cache\\Adapter\\PdoAdapter::save` method.
+You can also create this table explicitly by calling the
+:method:`Symfony\\Component\\Cache\\Adapter\\PdoAdapter::createTable` method in
+your code.
 
 .. tip::
 
     When passed a `Data Source Name (DSN)`_ string (instead of a database connection
     class instance), the connection will be lazy-loaded when needed.
+
+.. note::
+
+    Since Symfony 3.4, this adapter implements :class:`Symfony\\Component\\Cache\\PruneableInterface`,
+    allowing for manual :ref:`pruning of expired cache entries <component-cache-cache-pool-prune>` by
+    calling its ``prune()`` method.
 
 .. _`PDO`: http://php.net/manual/en/class.pdo.php
 .. _`Doctrine DBAL Connection`: https://github.com/doctrine/dbal/blob/master/lib/Doctrine/DBAL/Connection.php

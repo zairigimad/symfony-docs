@@ -18,20 +18,21 @@ be a boolean value"):
 
 .. code-block:: yaml
 
-    auto_connect: true
-    default_connection: mysql
-    connections:
-        mysql:
-            host:     localhost
-            driver:   mysql
-            username: user
-            password: pass
-        sqlite:
-            host:     localhost
-            driver:   sqlite
-            memory:   true
-            username: user
-            password: pass
+    database:
+        auto_connect: true
+        default_connection: mysql
+        connections:
+            mysql:
+                host:     localhost
+                driver:   mysql
+                username: user
+                password: pass
+            sqlite:
+                host:     localhost
+                driver:   sqlite
+                memory:   true
+                username: user
+                password: pass
 
 When loading multiple configuration files, it should be possible to merge
 and overwrite some values. Other values should not be merged and stay as
@@ -452,9 +453,7 @@ Documenting the Option
 
 All options can be documented using the
 :method:`Symfony\\Component\\Config\\Definition\\Builder\\NodeDefinition::info`
-method.
-
-.. code-block:: php
+method::
 
     $rootNode
         ->children()
@@ -565,8 +564,8 @@ tree with ``append()``::
 
     public function addParametersNode()
     {
-        $builder = new TreeBuilder();
-        $node = $builder->root('parameters');
+        $treeBuilder = new TreeBuilder();
+        $node = $treeBuilder->root('parameters');
 
         $node
             ->isRequired()
@@ -757,7 +756,7 @@ The builder is used for adding advanced validation rules to node definitions, li
                     ->scalarNode('driver')
                         ->isRequired()
                         ->validate()
-                        ->ifNotInArray(array('mysql', 'sqlite', 'mssql'))
+                            ->ifNotInArray(array('mysql', 'sqlite', 'mssql'))
                             ->thenInvalid('Invalid database driver %s')
                         ->end()
                     ->end()
@@ -788,6 +787,48 @@ A validation rule also requires a "then" part:
 Usually, "then" is a closure. Its return value will be used as a new value
 for the node, instead of the node's original value.
 
+Configuring the Node Path Separator
+-----------------------------------
+
+.. versionadded:: 4.1
+    The option to configure the node path separator was introduced in Symfony 4.1.
+
+Consider the following config builder example::
+
+    $treeBuilder = new TreeBuilder();
+    $rootNode = $treeBuilder->root('database');
+
+    $rootNode
+        ->children()
+            ->arrayNode('connection')
+                ->children()
+                    ->scalarNode('driver')->end()
+                ->end()
+            ->end()
+        ->end()
+    ;
+
+By default, the hierarchy of nodes in a config path is defined with a dot
+character (``.``)::
+
+    // ...
+
+    $node = $treeBuilder->buildTree();
+    $children = $node->getChildren();
+    $path = $children['driver']->getPath();
+    // $path = 'database.connection.driver'
+
+Use the ``setPathSeparator()`` method on the config builder to change the path
+separator::
+
+    // ...
+
+    $treeBuilder->setPathSeparator('/');
+    $node = $treeBuilder->buildTree();
+    $children = $node->getChildren();
+    $path = $children['driver']->getPath();
+    // $path = 'database/connection/driver'
+
 Processing Configuration Values
 -------------------------------
 
@@ -803,18 +844,18 @@ Otherwise the result is a clean array of configuration values::
     use Symfony\Component\Config\Definition\Processor;
     use Acme\DatabaseConfiguration;
 
-    $config1 = Yaml::parse(
-        file_get_contents(__DIR__.'/src/Matthias/config/config.yml')
+    $config = Yaml::parse(
+        file_get_contents(__DIR__.'/src/Matthias/config/config.yaml')
     );
-    $config2 = Yaml::parse(
-        file_get_contents(__DIR__.'/src/Matthias/config/config_extra.yml')
+    $extraConfig = Yaml::parse(
+        file_get_contents(__DIR__.'/src/Matthias/config/config_extra.yaml')
     );
 
-    $configs = array($config1, $config2);
+    $configs = array($config, $extraConfig);
 
     $processor = new Processor();
-    $configuration = new DatabaseConfiguration();
+    $databaseConfiguration = new DatabaseConfiguration();
     $processedConfiguration = $processor->processConfiguration(
-        $configuration,
+        $databaseConfiguration,
         $configs
     );

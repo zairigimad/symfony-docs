@@ -9,7 +9,7 @@ Want to use `TypeScript`_? No problem! First, install the dependencies:
 
 Then, activate the ``ts-loader`` in ``webpack.config.js``:
 
-.. code-block:: diff
+.. code-block:: javascript
 
     // webpack.config.js
     // ...
@@ -28,7 +28,7 @@ also configure the `ts-loader options`_ via a callback:
 
     .enableTypeScriptLoader(function (typeScriptConfigOptions) {
         typeScriptConfigOptions.transpileOnly = true;
-        typeScriptConfigOptions.configFileName = '/path/to/tsconfig.json';
+        typeScriptConfigOptions.configFile = '/path/to/tsconfig.json';
     });
 
 If React assets are enabled (``.enableReactPreset()``), any ``.tsx`` file will be
@@ -48,13 +48,13 @@ process, which can speedup compile time. To enable it, install the plugin:
 
 Then enable it by calling:
 
-.. code-block:: diff
+.. code-block:: javascript
 
     // webpack.config.js
 
     Encore
         // ...
-        enableForkedTypeScriptTypesChecking()
+        .enableForkedTypeScriptTypesChecking()
     ;
 
 This plugin requires that you have a `tsconfig.json`_ file that is setup correctly.

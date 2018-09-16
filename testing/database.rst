@@ -6,7 +6,7 @@ How to Test Code that Interacts with the Database
 
 If your code interacts with the database, e.g. reads data from or stores data
 into it, you need to adjust your tests to take this into account. There are
-many ways how to deal with this. In a unit test, you can create a mock for
+many ways to deal with this. In a unit test, you can create a mock for
 a ``Repository`` and use it to return expected objects. In a functional test,
 you may need to prepare a test database with predefined values to ensure that
 your test always has the same data to work with.
@@ -14,6 +14,14 @@ your test always has the same data to work with.
 .. note::
 
     If you want to test your queries directly, see :doc:`/testing/doctrine`.
+
+.. tip::
+
+    A popular technique to improve the performance of tests that interact with
+    the database is to begin a transaction before every test and roll it back
+    after the test has finished. This makes it unnecessary to recreate the
+    database or reload fixtures before every test. A community bundle called
+    `DoctrineTestBundle`_ provides this feature.
 
 Mocking the ``Repository`` in a Unit Test
 -----------------------------------------
@@ -75,7 +83,7 @@ it's easy to pass a mock object within a test::
         public function testCalculateTotalSalary()
         {
             $employee = new Employee();
-            $employee->setSalaray(1000);
+            $employee->setSalary(1000);
             $employee->setBonus(1100);
 
             // Now, mock the repository so it returns the mock of the employee
@@ -113,7 +121,7 @@ not to overwrite data you entered when developing the application and also
 to be able to clear the database before every test.
 
 To do this, you can override the value of the ``DATABASE_URL`` env var in the
-``phpunit.xml.dist`` to use a diferent database for your tests:
+``phpunit.xml.dist`` to use a different database for your tests:
 
 .. code-block:: xml
 
@@ -121,7 +129,9 @@ To do this, you can override the value of the ``DATABASE_URL`` env var in the
     <phpunit>
         <php>
             <!-- the value is the Doctrine connection string in DSN format -->
-            <env name="DATABASE_URL" value="mysql://USERNAME:PASSWORD@127.0.0.1/DB_NAME?charset=utf8mb4&serverVersion=5.7" />
+            <env name="DATABASE_URL" value="mysql://USERNAME:PASSWORD@127.0.0.1/DB_NAME" />
         </php>
         <!-- ... -->
     </phpunit>
+
+.. _`DoctrineTestBundle`: https://github.com/dmaicher/doctrine-test-bundle

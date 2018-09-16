@@ -31,7 +31,7 @@ whatever component you want.
 
 .. tip::
 
-    `Install composer`_ if you don't have it already present on your system.
+    `Install Composer`_ if you don't have it already present on your system.
     Depending on how you install, you may end up with a ``composer.phar``
     file in your directory. In that case, no worries! Just run
     ``php composer.phar require symfony/finder``.
@@ -56,19 +56,6 @@ immediately::
 
     // ...
 
-Using all of the Components
----------------------------
-
-If you want to use all of the Symfony Components, then instead of adding
-them one by one, you can include the ``symfony/symfony`` package:
-
-.. code-block:: terminal
-
-    $ composer require symfony/symfony
-
-This will also include the Bundle and Bridge libraries, which you may or
-may not actually need.
-
 Now what?
 ---------
 
@@ -78,4 +65,4 @@ documentation to find out more about how to use it.
 And have fun!
 
 .. _Composer: https://getcomposer.org
-.. _Install composer: https://getcomposer.org/download/
+.. _Install Composer: https://getcomposer.org/download/

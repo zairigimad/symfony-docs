@@ -41,7 +41,7 @@ First, enable the JSON login under your firewall:
 
     .. code-block:: php
 
-        // app/config/security.php
+        // config/packages/security.php
         $container->loadFromExtension('security', array(
             'firewalls' => array(
                 'main' => array(
@@ -69,10 +69,11 @@ path:
         // src/Controller/SecurityController.php
 
         // ...
+        use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
         use Symfony\Component\HttpFoundation\Request;
         use Symfony\Component\Routing\Annotation\Route;
 
-        class SecurityController extends Controller
+        class SecurityController extends AbstractController
         {
             /**
              * @Route("/login", name="login")
@@ -109,12 +110,12 @@ path:
         use Symfony\Component\Routing\RouteCollection;
         use Symfony\Component\Routing\Route;
 
-        $collection = new RouteCollection();
-        $collection->add('login', new Route('/login', array(
+        $routes = new RouteCollection();
+        $routes->add('login', new Route('/login', array(
             '_controller' => 'App\Controller\SecurityController::login',
         )));
 
-        return $collection;
+        return $routes;
 
 Don't let this empty controller confuse you. When you submit a ``POST`` request
 to the ``/login`` URL with the following JSON document as the body, the security
@@ -185,7 +186,7 @@ The security configuration should be:
 
     .. code-block:: php
 
-        // app/config/security.php
+        // config/packages/security.php
         $container->loadFromExtension('security', array(
             'firewalls' => array(
                 'main' => array(

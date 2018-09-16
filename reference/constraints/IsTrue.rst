@@ -55,7 +55,7 @@ Then you can constrain this method with ``IsTrue``.
             protected $token;
 
             /**
-             * @Assert\IsTrue(message = "The token is invalid")
+             * @Assert\IsTrue(message="The token is invalid")
              */
             public function isTokenValid()
             {
@@ -65,7 +65,7 @@ Then you can constrain this method with ``IsTrue``.
 
     .. code-block:: yaml
 
-        # src/Resources/config/validation.yaml
+        # config/validator/validation.yaml
         App\Entity\Author:
             getters:
                 tokenValid:

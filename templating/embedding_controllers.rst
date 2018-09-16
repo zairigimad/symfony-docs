@@ -4,27 +4,34 @@
 How to Embed Controllers in a Template
 ======================================
 
-In some cases, you need to do more than include a simple template. Suppose
-you have a sidebar in your layout that contains the three most recent articles.
-Retrieving the three articles may include querying the database or performing
-other heavy logic that can't be done from within a template.
-
 .. note::
 
     Rendering embedded controllers is "heavier" than including a template or calling
     a custom Twig function. Unless you're planning on :doc:`caching the fragment </http_cache/esi>`,
     avoid embedding many controllers.
 
-The solution is to simply embed the result of an entire controller from your
-template. First, create a controller that renders a certain number of recent
-articles::
+:ref:`Including template fragments <including-other-templates>` is useful to
+reuse the same content on several pages. However, this technique is not the best
+solution in some cases.
+
+Consider a website that displays on its sidebar the most recently published
+articles. This list of articles is dynamic and it's probably the result of a
+database query. In other words, the controller of any page that displays that
+sidebar must make the same database query and pass the list of articles to the
+included template fragment.
+
+The alternative solution proposed by Symfony is to create a controller that only
+displays the list of recent articles and then call to that controller from any
+template that needs to display that content.
+
+First, create a controller that renders a certain number of recent articles::
 
     // src/Controller/ArticleController.php
     namespace App\Controller;
 
     // ...
 
-    class ArticleController extends Controller
+    class ArticleController extends AbstractController
     {
         public function recentArticles($max = 3)
         {
@@ -39,63 +46,29 @@ articles::
         }
     }
 
-The ``recent_list`` template is perfectly straightforward:
+Then, create a ``recent_list`` template fragment to list the articles given by
+the controller:
 
-.. configuration-block::
+.. code-block:: html+twig
 
-    .. code-block:: html+twig
+    {# templates/article/recent_list.html.twig #}
+    {% for article in articles %}
+        <a href="{{ path('article_show', {slug: article.slug}) }}">
+            {{ article.title }}
+        </a>
+    {% endfor %}
 
-        {# templates/article/recent_list.html.twig #}
-        {% for article in articles %}
-            <a href="/article/{{ article.slug }}">
-                {{ article.title }}
-            </a>
-        {% endfor %}
+Finally, call the controller from any template using the ``render()`` function
+and the standard string syntax for controllers (i.e. **controllerNamespace**::**action**):
 
-    .. code-block:: html+php
+.. code-block:: html+twig
 
-        <!-- templates/article/recent_list.html.php -->
-        <?php foreach ($articles as $article): ?>
-            <a href="/article/<?php echo $article->getSlug() ?>">
-                <?php echo $article->getTitle() ?>
-            </a>
-        <?php endforeach ?>
+    {# templates/base.html.twig #}
 
-.. note::
-
-    Notice that the article URL is hardcoded in this example
-    (e.g. ``/article/*slug*``). This is a bad practice. In the next section,
-    you'll learn how to do this correctly.
-
-To include the controller, you'll need to refer to it using the standard
-string syntax for controllers (i.e. **controllerNamespace**::**action**):
-
-.. configuration-block::
-
-    .. code-block:: html+twig
-
-        {# templates/base.html.twig #}
-
-        {# ... #}
-        <div id="sidebar">
-            {{ render(controller(
-                'App\\Controller\\ArticleController::recentArticles',
-                { 'max': 3 }
-            )) }}
-        </div>
-
-    .. code-block:: html+php
-
-        <!-- templates/base.html.php -->
-
-        <!-- ... -->
-        <div id="sidebar">
-            <?php echo $view['actions']->render(
-                new \Symfony\Component\HttpKernel\Controller\ControllerReference(
-                    'App\\Controller\\ArticleController::recentArticles',
-                    array('max' => 3)
-                )
-            ) ?>
-        </div>
-
-The result of an embedded controller can also be :doc:`cached </http_cache/esi>`
+    {# ... #}
+    <div id="sidebar">
+        {{ render(controller(
+            'App\\Controller\\ArticleController::recentArticles',
+            { 'max': 3 }
+        )) }}
+    </div>

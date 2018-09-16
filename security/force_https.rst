@@ -39,7 +39,7 @@ to use HTTPS then you could use the following configuration:
 
         .. code-block:: php
 
-            // app/config/security.php
+            // config/packages/security.php
             $container->loadFromExtension('security', array(
                 // ...
 
@@ -90,7 +90,7 @@ role:
 
     .. code-block:: php
 
-        // app/config/security.php
+        // config/packages/security.php
         $container->loadFromExtension('security', array(
             // ...
 
@@ -105,3 +105,9 @@ role:
 
 It is also possible to specify using HTTPS in the routing configuration,
 see :doc:`/routing/scheme` for more details.
+
+.. note::
+
+    Forcing HTTPS while using a reverse proxy or load balancer requires a proper
+    configuration to avoid infinite redirect loops; see :doc:`/deployment/proxies`
+    for more details.

@@ -28,15 +28,15 @@ Run this command from inside your controller via::
     namespace App\Controller;
 
     use Symfony\Bundle\FrameworkBundle\Console\Application;
-    use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+    use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
     use Symfony\Component\Console\Input\ArrayInput;
     use Symfony\Component\Console\Output\BufferedOutput;
     use Symfony\Component\HttpFoundation\Response;
     use Symfony\Component\HttpKernel\KernelInterface;
 
-    class SpoolController extends Controller
+    class SpoolController extends AbstractController
     {
-        public function sendSpoolAction($messages = 10, KernelInterface $kernel)
+        public function sendSpool($messages = 10, KernelInterface $kernel)
         {
             $application = new Application($kernel);
             $application->setAutoExit(false);
@@ -55,7 +55,7 @@ Run this command from inside your controller via::
 
             // return the output, don't use if you used NullOutput()
             $content = $output->fetch();
-            
+
             // return new Response(""), if you used NullOutput()
             return new Response($content);
         }
@@ -85,9 +85,9 @@ Now, use it in your controller::
     use Symfony\Component\HttpFoundation\Response;
     // ...
 
-    class SpoolController extends Controller
+    class SpoolController extends AbstractController
     {
-        public function sendSpoolAction($messages = 10)
+        public function sendSpool($messages = 10)
         {
             // ...
             $output = new BufferedOutput(

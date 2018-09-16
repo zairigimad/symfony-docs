@@ -10,7 +10,7 @@ How to Create a Custom Form Password Authenticator
     flexible way to accomplish custom authentication tasks like this.
 
 Imagine you want to allow access to your website only between 2pm and 4pm
-UTC. In this entry, you'll learn how to do this for a login form (i.e. where
+UTC. In this article, you'll learn how to do this for a login form (i.e. where
 your user submits their username and password).
 
 The Password Authenticator
@@ -28,6 +28,7 @@ the user::
     use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
     use Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken;
     use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
+    use Symfony\Component\Security\Core\Exception\BadCredentialsException;
     use Symfony\Component\Security\Core\Exception\CustomUserMessageAuthenticationException;
     use Symfony\Component\Security\Core\Exception\UsernameNotFoundException;
     use Symfony\Component\Security\Core\User\UserProviderInterface;
@@ -46,15 +47,28 @@ the user::
         {
             try {
                 $user = $userProvider->loadUserByUsername($token->getUsername());
-            } catch (UsernameNotFoundException $e) {
+            } catch (UsernameNotFoundException $exception) {
                 // CAUTION: this message will be returned to the client
                 // (so don't put any un-trusted messages / error strings here)
                 throw new CustomUserMessageAuthenticationException('Invalid username or password');
             }
 
-            $passwordValid = $this->encoder->isPasswordValid($user, $token->getCredentials());
+            $currentUser = $token->getUser();
 
-            if ($passwordValid) {
+            if ($currentUser instanceof UserInterface) {
+                if ($currentUser->getPassword() !== $user->getPassword()) {
+                    throw new BadCredentialsException('The credentials were changed from another session.');
+                }
+            } else {
+                if ('' === ($givenPassword = $token->getCredentials())) {
+                    throw new BadCredentialsException('The given password cannot be empty.');
+                }
+                if (!$this->encoder->isPasswordValid($user, $givenPassword)) {
+                    throw new BadCredentialsException('The given password is invalid.');
+                }
+            }
+
+            if ($isPasswordValid) {
                 $currentHour = date('G');
                 if ($currentHour < 14 || $currentHour > 16) {
                     // CAUTION: this message will be returned to the client
@@ -132,7 +146,7 @@ inside of it.
 
 Inside this method, the password encoder is needed to check the password's validity::
 
-    $passwordValid = $this->encoder->isPasswordValid($user, $token->getCredentials());
+    $isPasswordValid = $this->encoder->isPasswordValid($user, $token->getCredentials());
 
 This is a service that is already available in Symfony and it uses the password algorithm
 that is configured in the security configuration (e.g. ``security.yaml``) under
@@ -192,7 +206,7 @@ using the ``simple_form`` key:
 
     .. code-block:: php
 
-        // app/config/security.php
+        // config/packages/security.php
 
         // ...
         use App\Security\TimeAuthenticator;

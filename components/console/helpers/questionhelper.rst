@@ -79,7 +79,7 @@ if you want to know a bundle name, you can add this to your command::
         // ...
         $question = new Question('Please enter the name of the bundle', 'AcmeDemoBundle');
 
-        $bundle = $helper->ask($input, $output, $question);
+        $bundleName = $helper->ask($input, $output, $question);
     }
 
 The user will be asked "Please enter the name of the bundle". They can type
@@ -175,7 +175,7 @@ will be autocompleted as the user types::
         $question = new Question('Please enter the name of a bundle', 'FooBundle');
         $question->setAutocompleterValues($bundles);
 
-        $name = $helper->ask($input, $output, $question);
+        $bundleName = $helper->ask($input, $output, $question);
     }
 
 Hiding the User's Response
@@ -247,15 +247,14 @@ method::
         // ...
         $helper = $this->getHelper('question');
 
-        $question = new Question('Please enter the name of the bundle', 'AppBundle');
+        $question = new Question('Please enter the name of the bundle', 'AcmeDemoBundle');
         $question->setNormalizer(function ($value) {
             // $value can be null here
             return $value ? trim($value) : '';
         });
 
-        $name = $helper->ask($input, $output, $question);
+        $bundleName = $helper->ask($input, $output, $question);
     }
-
 
 .. caution::
 
@@ -292,7 +291,7 @@ method::
         });
         $question->setMaxAttempts(2);
 
-        $name = $helper->ask($input, $output, $question);
+        $bundleName = $helper->ask($input, $output, $question);
     }
 
 The ``$validator`` is a callback which handles the validation. It should
@@ -377,3 +376,9 @@ This way you can test any user interaction (even complex ones) by passing the ap
     The :class:`Symfony\\Component\\Console\\Tester\\CommandTester` automatically
     simulates a user hitting ``ENTER`` after each input, no need for passing
     an additional input.
+
+.. caution::
+
+    On Windows systems Symfony uses a special binary to implement hidden
+    questions. This means that those questions don't use the default ``Input``
+    console object and therefore you can't test them on Windows.

@@ -47,15 +47,20 @@ The simplest ``TypeTestCase`` implementation looks like the following::
                 'test2' => 'test2',
             );
 
-            $form = $this->factory->create(TestedType::class);
+            $objectToCompare = new TestObject();
+            // $objectToCompare will retrieve data from the form submission; pass it as the second argument
+            $form = $this->factory->create(TestedType::class, $objectToCompare);
 
-            $object = TestObject::fromArray($formData);
+            $object = new TestObject();
+            // ...populate $object properties with the data stored in $formData
 
             // submit the data to the form directly
             $form->submit($formData);
 
             $this->assertTrue($form->isSynchronized());
-            $this->assertEquals($object, $form->getData());
+
+            // check that $objectToCompare was modified as expected when the form was submitted
+            $this->assertEquals($object, $objectToCompare);
 
             $view = $form->createView();
             $children = $view->children;
@@ -72,7 +77,7 @@ First you verify if the ``FormType`` compiles. This includes basic class
 inheritance, the ``buildForm()`` function and options resolution. This should
 be the first test you write::
 
-    $form = $this->factory->create(TestedType::class);
+    $form = $this->factory->create(TestedType::class, $objectToCompare);
 
 This test checks that none of your data transformers used by the form
 failed. The :method:`Symfony\\Component\\Form\\FormInterface::isSynchronized`
@@ -90,7 +95,7 @@ method is only set to ``false`` if a data transformer throws an exception::
 Next, verify the submission and mapping of the form. The test below
 checks if all the fields are correctly specified::
 
-    $this->assertEquals($object, $form->getData());
+    $this->assertEquals($object, $objectToCompare);
 
 Finally, check the creation of the ``FormView``. You should check if all
 widgets you want to display are available in the children property::
@@ -101,6 +106,11 @@ widgets you want to display are available in the children property::
     foreach (array_keys($formData) as $key) {
         $this->assertArrayHasKey($key, $children);
     }
+
+.. tip::
+
+    Use :ref:`PHPUnit data providers <testing-data-providers>` to test multiple
+    form conditions using the same test code.
 
 Testings Types from the Service Container
 -----------------------------------------
@@ -114,7 +124,7 @@ To solve this, you have to mock the injected dependencies, instantiate your own
 form type and use the :class:`Symfony\\Component\\Form\\PreloadedExtension` to
 make sure the ``FormRegistry`` uses the created instance::
 
-    // tests/Form/Type/TestedTypeTests.php
+    // tests/Form/Type/TestedTypeTest.php
     namespace App\Tests\Form\Type;
 
     use App\Form\Type\TestedType;
@@ -125,12 +135,12 @@ make sure the ``FormRegistry`` uses the created instance::
 
     class TestedTypeTest extends TypeTestCase
     {
-        private $entityManager;
+        private $objectManager;
 
         protected function setUp()
         {
             // mock any dependencies
-            $this->entityManager = $this->createMock(ObjectManager::class);
+            $this->objectManager = $this->createMock(ObjectManager::class);
 
             parent::setUp();
         }
@@ -138,7 +148,7 @@ make sure the ``FormRegistry`` uses the created instance::
         protected function getExtensions()
         {
             // create a type instance with the mocked dependencies
-            $type = new TestedType($this->entityManager);
+            $type = new TestedType($this->objectManager);
 
             return array(
                 // register the type instances with the PreloadedExtension
@@ -168,7 +178,7 @@ will be raised if you try to test a class that depends on other extensions.
 The :method:`Symfony\\Component\\Form\\Test\\TypeTestCase::getExtensions` method
 allows you to return a list of extensions to register::
 
-    // tests/Form/Type/TestedTypeTests.php
+    // tests/Form/Type/TestedTypeTest.php
     namespace App\Tests\Form\Type;
 
     // ...
@@ -205,59 +215,6 @@ allows you to return a list of extensions to register::
 
 It is also possible to load custom form types, form type extensions or type
 guessers using the :method:`Symfony\\Component\\Form\\Test\\FormIntegrationTestCase::getTypes`,
-`:method:`Symfony\\Component\\Form\\Test\\FormIntegrationTestCase::`getTypeExtensions`
+:method:`Symfony\\Component\\Form\\Test\\FormIntegrationTestCase::getTypeExtensions`
 and :method:`Symfony\\Component\\Form\\Test\\FormIntegrationTestCase::getTypeGuessers`
 methods.
-
-Testing against Different Sets of Data
---------------------------------------
-
-If you are not familiar yet with PHPUnit's `data providers`_, this might be
-a good opportunity to use them::
-
-    // tests/Form/Type/TestedTypeTests.php
-    namespace App\Tests\Form\Type;
-
-    use App\Form\Type\TestedType;
-    use Symfony\Component\Form\Test\TypeTestCase;
-
-    class TestedTypeTest extends TypeTestCase
-    {
-        /**
-         * @dataProvider getValidTestData
-         */
-        public function testForm($data)
-        {
-            // ... your test
-        }
-
-        public function getValidTestData()
-        {
-            return array(
-                array(
-                    'data' => array(
-                        'test' => 'test',
-                        'test2' => 'test2',
-                    ),
-                ),
-                array(
-                    'data' => array(),
-                ),
-                array(
-                    'data' => array(
-                        'test' => null,
-                        'test2' => null,
-                    ),
-                ),
-            );
-        }
-    }
-
-The code above will run your test three times with 3 different sets of
-data. This allows for decoupling the test fixtures from the tests and
-easily testing against multiple sets of data.
-
-You can also pass another argument, such as a boolean if the form has to
-be synchronized with the given set of data or not etc.
-
-.. _`data providers`: https://phpunit.de/manual/current/en/writing-tests-for-phpunit.html#writing-tests-for-phpunit.data-providers

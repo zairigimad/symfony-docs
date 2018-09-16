@@ -15,13 +15,13 @@ a routing ``{wildcard}`` to only match some regular expression:
         // src/Controller/BlogController.php
         namespace App\Controller;
 
-        use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+        use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
         use Symfony\Component\Routing\Annotation\Route;
 
-        class BlogController extends Controller
+        class BlogController extends AbstractController
         {
             /**
-             * @Route("/blog/{page}", name="blog_list", requirements={"page": "\d+"})
+             * @Route("/blog/{page}", name="blog_list", requirements={"page"="\d+"})
              */
             public function list($page)
             {
@@ -61,16 +61,16 @@ a routing ``{wildcard}`` to only match some regular expression:
         use Symfony\Component\Routing\RouteCollection;
         use Symfony\Component\Routing\Route;
 
-        $collection = new RouteCollection();
-        $collection->add('blog_list', new Route('/blog/{page}', array(
+        $routes = new RouteCollection();
+        $routes->add('blog_list', new Route('/blog/{page}', array(
             '_controller' => 'App\Controller\BlogController::list',
         ), array(
-            'page' => '\d+'
+            'page' => '\d+',
         )));
 
         // ...
 
-        return $collection;
+        return $routes;
 
 Thanks to the ``\d+`` requirement (i.e. a "digit" of any length), ``/blog/2`` will
 match this route but ``/blog/some-string`` will *not* match.
@@ -94,11 +94,11 @@ URL:
         // src/Controller/MainController.php
 
         // ...
-        class MainController extends Controller
+        class MainController extends AbstractController
         {
             /**
-             * @Route("/{_locale}", defaults={"_locale": "en"}, requirements={
-             *     "_locale": "en|fr"
+             * @Route("/{_locale}", defaults={"_locale"="en"}, requirements={
+             *     "_locale"="en|fr"
              * })
              */
             public function homepage($_locale)
@@ -138,15 +138,15 @@ URL:
         use Symfony\Component\Routing\RouteCollection;
         use Symfony\Component\Routing\Route;
 
-        $collection = new RouteCollection();
-        $collection->add('homepage', new Route('/{_locale}', array(
+        $routes = new RouteCollection();
+        $routes->add('homepage', new Route('/{_locale}', array(
             '_controller' => 'App\Controller\MainController::homepage',
             '_locale'     => 'en',
         ), array(
             '_locale' => 'en|fr',
         )));
 
-        return $collection;
+        return $routes;
 
 For incoming requests, the ``{_locale}`` portion of the URL is matched against
 the regular expression ``(en|fr)``.
@@ -196,7 +196,7 @@ accomplished with the following route configuration:
 
         // ...
 
-        class BlogApiController extends Controller
+        class BlogApiController extends AbstractController
         {
             /**
              * @Route("/api/posts/{id}", methods={"GET","HEAD"})
@@ -207,7 +207,7 @@ accomplished with the following route configuration:
             }
 
             /**
-             * @Route("/api/posts/{id}", methods="PUT")
+             * @Route("/api/posts/{id}", methods={"PUT"})
              */
             public function edit($id)
             {
@@ -252,16 +252,16 @@ accomplished with the following route configuration:
         use Symfony\Component\Routing\RouteCollection;
         use Symfony\Component\Routing\Route;
 
-        $collection = new RouteCollection();
-        $collection->add('api_post_show', new Route('/api/posts/{id}', array(
+        $routes = new RouteCollection();
+        $routes->add('api_post_show', new Route('/api/posts/{id}', array(
             '_controller' => 'App\Controller\BlogApiController::show',
         ), array(), array(), '', array(), array('GET', 'HEAD')));
 
-        $collection->add('api_post_edit', new Route('/api/posts/{id}', array(
+        $routes->add('api_post_edit', new Route('/api/posts/{id}', array(
             '_controller' => 'App\Controller\BlogApiController::edit',
         ), array(), array(), '', array(), array('PUT')));
 
-        return $collection;
+        return $routes;
 
 Despite the fact that these two routes have identical paths
 (``/api/posts/{id}``), the first route will match only GET or HEAD requests and

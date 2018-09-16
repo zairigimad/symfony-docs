@@ -47,7 +47,7 @@ on an object that will contain an ISBN.
 
     .. code-block:: yaml
 
-        # src/Resources/config/validation.yaml
+        # config/validator/validation.yaml
         App\Entity\Book:
             properties:
                 isbn:
@@ -55,10 +55,9 @@ on an object that will contain an ISBN.
                         type: isbn10
                         message: This value is not  valid.
 
-
     .. code-block:: xml
 
-        <!-- src/Resources/config/validation.xml -->
+        <!-- config/validator/validation.xml -->
         <?xml version="1.0" encoding="UTF-8" ?>
         <constraint-mapping xmlns="http://symfony.com/schema/dic/constraint-mapping"
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -90,7 +89,7 @@ on an object that will contain an ISBN.
             {
                 $metadata->addPropertyConstraint('isbn', new Assert\Isbn(array(
                     'type'    => 'isbn10',
-                    'message' => 'This value is not valid.'
+                    'message' => 'This value is not valid.',
                 )));
             }
         }

@@ -54,7 +54,7 @@ firewall listener:
 
     .. code-block:: php
 
-        // app/config/security.php
+        // config/packages/security.php
         $container->loadFromExtension('security', array(
             // ...
 
@@ -83,50 +83,41 @@ During impersonation, the user is provided with a special role called
 ``ROLE_PREVIOUS_ADMIN``. In a template, for instance, this role can be used
 to show a link to exit impersonation:
 
-.. configuration-block::
+.. code-block:: html+twig
 
-    .. code-block:: html+twig
-
-        {% if is_granted('ROLE_PREVIOUS_ADMIN') %}
-            <a href="{{ path('homepage', {'_switch_user': '_exit'}) }}">Exit impersonation</a>
-        {% endif %}
-
-    .. code-block:: html+php
-
-        <?php if ($view['security']->isGranted('ROLE_PREVIOUS_ADMIN')): ?>
-            <a href="<?php echo $view['router']->path('homepage', array(
-                '_switch_user' => '_exit',
-            )) ?>">
-                Exit impersonation
-            </a>
-        <?php endif ?>
+    {% if is_granted('ROLE_PREVIOUS_ADMIN') %}
+        <a href="{{ path('homepage', {'_switch_user': '_exit'}) }}">Exit impersonation</a>
+    {% endif %}
 
 In some cases you may need to get the object that represents the impersonator
 user rather than the impersonated user. Use the following snippet to iterate
-over the user's roles until you find one that a ``SwitchUserRole`` object::
+over the user's roles until you find one that is a ``SwitchUserRole`` object::
 
     use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
     use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
     use Symfony\Component\Security\Core\Role\SwitchUserRole;
+    use Symfony\Component\Security\Core\Security;
+    // ...
 
-    private $authChecker;
-    private $tokenStorage;
-
-    public function __construct(AuthorizationCheckerInterface $authChecker, TokenStorageInterface $tokenStorage)
+    public class SomeService
     {
-        $this->authChecker = $authChecker;
-        $this->tokenStorage = $tokenStorage;
-    }
+        private $security;
 
-    public function someMethod()
-    {
-        // ...
+        public function __construct(Security $security)
+        {
+            $this->security = $security;
+        }
 
-        if ($authChecker->isGranted('ROLE_PREVIOUS_ADMIN')) {
-            foreach ($tokenStorage->getToken()->getRoles() as $role) {
-                if ($role instanceof SwitchUserRole) {
-                    $impersonatorUser = $role->getSource()->getUser();
-                    break;
+        public function someMethod()
+        {
+            // ...
+
+            if ($this->security->isGranted('ROLE_PREVIOUS_ADMIN')) {
+                foreach ($this->security->getToken()->getRoles() as $role) {
+                    if ($role instanceof SwitchUserRole) {
+                        $impersonatorUser = $role->getSource()->getUser();
+                        break;
+                    }
                 }
             }
         }
@@ -172,7 +163,7 @@ setting:
 
     .. code-block:: php
 
-        // app/config/security.php
+        // config/packages/security.php
         $container->loadFromExtension('security', array(
             // ...
 
@@ -198,32 +189,36 @@ The :doc:`/session/locale_sticky_session` article does not update the locale
 when you impersonate a user. If you *do* want to be sure to update the locale when
 you switch users, add an event subscriber on this event::
 
-        // src/EventListener/SwitchUserListener.php
-        namespace App\EventListener;
+    // src/EventListener/SwitchUserSubscriber.php
+    namespace App\EventListener;
 
-        use Symfony\Component\Security\Http\Event\SwitchUserEvent;
-        use Symfony\Component\EventDispatcher\EventSubscriberInterface;
-        use Symfony\Component\Security\Http\SecurityEvents;
+    use Symfony\Component\Security\Http\Event\SwitchUserEvent;
+    use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+    use Symfony\Component\Security\Http\SecurityEvents;
 
-        class SwitchUserSubscriber implements EventSubscriberInterface
+    class SwitchUserSubscriber implements EventSubscriberInterface
+    {
+        public function onSwitchUser(SwitchUserEvent $event)
         {
-            public function onSwitchUser(SwitchUserEvent $event)
-            {
-                $event->getRequest()->getSession()->set(
+            $request = $event->getRequest();
+
+            if ($request->hasSession() && ($session = $request->getSession)) {
+                $session->set(
                     '_locale',
                     // assuming your User has some getLocale() method
                     $event->getTargetUser()->getLocale()
                 );
             }
-
-            public static function getSubscribedEvents()
-            {
-                return array(
-                    // constant for security.switch_user
-                    SecurityEvents::SWITCH_USER => 'onSwitchUser',
-                );
-            }
         }
+
+        public static function getSubscribedEvents()
+        {
+            return array(
+                // constant for security.switch_user
+                SecurityEvents::SWITCH_USER => 'onSwitchUser',
+            );
+        }
+    }
 
 That's it! If you're using the :ref:`default services.yaml configuration <service-container-services-load-example>`,
 Symfony will automatically discover your service and call ``onSwitchUser`` whenever

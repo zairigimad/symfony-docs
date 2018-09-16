@@ -10,7 +10,7 @@ the configured user provider to return a user object for a given username.
 Symfony then checks whether the password of this user is correct and generates
 a security token so the user stays authenticated during the current session.
 Out of the box, Symfony has four user providers: ``memory``, ``entity``,
-``ldap`` and ``chain``. In this entry you'll see how you can create your
+``ldap`` and ``chain``. In this article you'll see how you can create your
 own user provider, which could be useful if your users are accessed via a
 custom database, a file, or - as shown in this example - a web service.
 
@@ -133,6 +133,29 @@ Here's an example of how this might look::
     {
         public function loadUserByUsername($username)
         {
+            return $this->fetchUser($username);
+        }
+
+        public function refreshUser(UserInterface $user)
+        {
+            if (!$user instanceof WebserviceUser) {
+                throw new UnsupportedUserException(
+                    sprintf('Instances of "%s" are not supported.', get_class($user))
+                );
+            }
+
+            $username = $user->getUsername();
+
+            return $this->fetchUser($username);
+        }
+
+        public function supportsClass($class)
+        {
+            return WebserviceUser::class === $class;
+        }
+
+        private function fetchUser($username)
+        {
             // make a call to your webservice here
             $userData = ...
             // pretend it returns an array on success, false if there is no user
@@ -148,22 +171,6 @@ Here's an example of how this might look::
             throw new UsernameNotFoundException(
                 sprintf('Username "%s" does not exist.', $username)
             );
-        }
-
-        public function refreshUser(UserInterface $user)
-        {
-            if (!$user instanceof WebserviceUser) {
-                throw new UnsupportedUserException(
-                    sprintf('Instances of "%s" are not supported.', get_class($user))
-                );
-            }
-
-            return $this->loadUserByUsername($user->getUsername());
-        }
-
-        public function supportsClass($class)
-        {
-            return WebserviceUser::class === $class;
         }
     }
 
@@ -212,7 +219,7 @@ to the list of providers in the "security" config. Choose a name for the user pr
 
     .. code-block:: php
 
-        // app/config/security.php
+        // config/packages/security.php
         use App\Security\User\WebserviceUserProvider;
 
         $container->loadFromExtension('security', array(
@@ -260,7 +267,7 @@ users, e.g. by filling in a login form. You can do this by adding a line to the
 
     .. code-block:: php
 
-        // app/config/security.php
+        // config/packages/security.php
         use App\Security\User\WebserviceUser;
 
         $container->loadFromExtension('security', array(
@@ -289,7 +296,7 @@ is compared to the hashed password returned by your ``getPassword()`` method.
 
     If your external users have their passwords salted via a different method,
     then you'll need to do a bit more work so that Symfony properly encodes
-    the password. That is beyond the scope of this entry, but would include
+    the password. That is beyond the scope of this article, but would include
     sub-classing ``MessageDigestPasswordEncoder`` and overriding the
     ``mergePasswordAndSalt()`` method.
 
@@ -331,7 +338,7 @@ is compared to the hashed password returned by your ``getPassword()`` method.
 
         .. code-block:: php
 
-            // app/config/security.php
+            // config/packages/security.php
             use App\Security\User\WebserviceUser;
 
             $container->loadFromExtension('security', array(

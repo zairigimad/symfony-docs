@@ -50,7 +50,7 @@ This will check if ``firstName`` is of type ``string`` and that ``age`` is an
 
     .. code-block:: yaml
 
-        # src/Resources/config/validation.yaml
+        # config/validator/validation.yaml
         App\Entity\Author:
             properties:
                 firstName:
@@ -63,7 +63,7 @@ This will check if ``firstName`` is of type ``string`` and that ``age`` is an
 
     .. code-block:: xml
 
-        <!-- src/Resources/config/validation.xml -->
+        <!-- config/validator/validation.xml -->
         <?xml version="1.0" encoding="UTF-8" ?>
         <constraint-mapping xmlns="http://symfony.com/schema/dic/constraint-mapping"
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -125,6 +125,7 @@ datatypes as determined by PHP's ``is_()`` functions.
 * :phpfunction:`double <is_double>`
 * :phpfunction:`int <is_int>`
 * :phpfunction:`integer <is_integer>`
+* :phpfunction:`iterable <is_iterable>`
 * :phpfunction:`long <is_long>`
 * :phpfunction:`null <is_null>`
 * :phpfunction:`numeric <is_numeric>`
@@ -161,5 +162,5 @@ The message if the underlying data is not of the given type.
 
 .. include:: /reference/constraints/_payload-option.rst.inc
 
-.. _built-in PHP extension: http://php.net/book.ctype.php
-.. _a list of ctype functions: http://php.net/ref.ctype.php
+.. _built-in PHP extension: https://php.net/book.ctype.php
+.. _a list of ctype functions: https://php.net/ref.ctype.php

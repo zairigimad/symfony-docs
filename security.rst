@@ -4,6 +4,11 @@
 Security
 ========
 
+.. admonition:: Screencast
+    :class: screencast
+
+    Do you prefer video tutorials? Check out the `Symfony Security screencast series`_.
+
 Symfony's security system is incredibly powerful, but it can also be confusing
 to set up. In this article you'll learn how to set up your application's security
 step-by-step, from configuring your firewall and how you load users, to denying
@@ -26,21 +31,24 @@ These are followed by a number of small (but still captivating) sections,
 like :ref:`logging out <security-logging-out>` and
 :doc:`encoding user passwords </security/password_encoding>`.
 
-Installation
-------------
+.. _installation:
+
+1) Installation
+---------------
 
 In applications using :doc:`Symfony Flex </setup/flex>`, run this command to
 install the security feature before using it:
 
 .. code-block:: terminal
 
-    $ composer require security
+    $ composer require symfony/security-bundle
 
 .. _security-firewalls:
 .. _firewalls-authentication:
 .. _initial-security-yml-setup-authentication:
+.. _initial-security-yaml-setup-authentication:
 
-1) Initial security.yaml Setup (Authentication)
+2) Initial security.yaml Setup (Authentication)
 -----------------------------------------------
 
 The security system is configured in ``config/packages/security.yaml``. The
@@ -129,6 +137,15 @@ be fooled by the "Yes" next to Authenticated, you're just an anonymous user:
 
 You'll learn later how to deny access to certain URLs or controllers.
 
+.. note::
+
+    If you do not see toolbar, make sure you installed the :doc:`profiler </profiler>`
+    using this command:
+
+    .. code-block:: terminal
+
+        $ composer require --dev symfony/profiler-pack
+
 .. tip::
 
     Security is *highly* configurable and there's a
@@ -199,11 +216,11 @@ example, if you use annotations, create something like this::
     // src/Controller/DefaultController.php
     // ...
 
-    use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+    use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
     use Symfony\Component\HttpFoundation\Response;
     use Symfony\Component\Routing\Annotation\Route;
 
-    class DefaultController extends Controller
+    class DefaultController extends AbstractController
     {
         /**
          * @Route("/admin")
@@ -467,8 +484,8 @@ C) Encoding the User's Password
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Whether your users are stored in ``security.yaml``, in a database or somewhere
-else, you'll want to encode their passwords. The best algorithm to use is
-``bcrypt``:
+else, you'll want to encode their passwords. The most suitable algorithm to use
+is ``bcrypt``:
 
 .. configuration-block::
 
@@ -603,8 +620,8 @@ before inserting them into the database? Don't worry, see
 
     Supported algorithms for this method depend on your PHP version, but
     include the algorithms returned by the PHP function :phpfunction:`hash_algos`
-    as well as a few others (e.g. bcrypt). See the ``encoders`` key in the
-    :doc:`Security Reference Section </reference/configuration/security>`
+    as well as a few others (e.g. bcrypt and argon2i). See the ``encoders`` key
+    in the :doc:`Security Reference Section </reference/configuration/security>`
     for examples.
 
     It's also possible to use different hashing algorithms on a user-by-user
@@ -628,8 +645,9 @@ Your next steps depend on your setup:
   :ref:`Authorization <security-authorization>` section.
 
 .. _`security-authorization`:
+.. _denying-access-roles-and-other-authorization:
 
-2) Denying Access, Roles and other Authorization
+3) Denying Access, Roles and other Authorization
 ------------------------------------------------
 
 Users can now login to your app using ``http_basic`` or some other method.
@@ -883,7 +901,7 @@ using annotations::
     use Sensio\Bundle\FrameworkExtraBundle\Configuration\Security;
 
     /**
-     * @Security("has_role('ROLE_ADMIN')")
+     * @Security("is_granted('ROLE_ADMIN')")
      */
     public function hello($name)
     {
@@ -900,19 +918,11 @@ Access Control in Templates
 If you want to check if the current user has a role inside a template, use
 the built-in ``is_granted()`` helper function:
 
-.. configuration-block::
+.. code-block:: html+twig
 
-    .. code-block:: html+twig
-
-        {% if is_granted('ROLE_ADMIN') %}
-            <a href="...">Delete</a>
-        {% endif %}
-
-    .. code-block:: html+php
-
-        <?php if ($view['security']->isGranted('ROLE_ADMIN')): ?>
-            <a href="...">Delete</a>
-        <?php endif ?>
+    {% if is_granted('ROLE_ADMIN') %}
+        <a href="...">Delete</a>
+    {% endif %}
 
 Securing other Services
 .......................
@@ -971,7 +981,7 @@ You can also use expressions inside your templates:
     .. code-block:: html+jinja
 
         {% if is_granted(expression(
-            '"ROLE_ADMIN" in roles or (user and user.isSuperAdmin())'
+            '"ROLE_ADMIN" in roles or (not is_anonymous() and user.isSuperAdmin())'
         )) %}
             <a href="...">Delete</a>
         {% endif %}
@@ -979,7 +989,7 @@ You can also use expressions inside your templates:
     .. code-block:: html+php
 
         <?php if ($view['security']->isGranted(new Expression(
-            '"ROLE_ADMIN" in roles or (user and user.isSuperAdmin())'
+            '"ROLE_ADMIN" in roles or (not is_anonymous() and user.isSuperAdmin())'
         ))): ?>
             <a href="...">Delete</a>
         <?php endif; ?>
@@ -1003,20 +1013,20 @@ security systems.
 
 If you still prefer to use traditional ACLs, refer to the `Symfony ACL bundle`_.
 
-3) Retrieving the User Object
+.. _retrieving-the-user-object:
+
+4) Retrieving the User Object
 -----------------------------
 
 After authentication, the ``User`` object of the current user can be accessed
-via the ``security.token_storage`` service. From inside a controller, this will
-look like::
+via the ``getUser()`` shortcut (which uses the ``security.token_storage``
+service). From inside a controller, this will look like::
 
     public function index()
     {
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
 
         $user = $this->getUser();
-        // or you can also type-hint a method argument with this class:
-        // Symfony\Component\Security\Core\User\UserInterface (e.g. "UserInterface $user")
     }
 
 .. tip::
@@ -1044,14 +1054,7 @@ It's important to check if the user is authenticated first. If they're not,
 ``$user`` will either be ``null`` or the string ``anon.``. Wait, what? Yes,
 this is a quirk. If you're not logged in, the user is technically the string
 ``anon.``, though the ``getUser()`` controller shortcut converts this to
-``null`` for convenience. When type-hinting the
-:class:`Symfony\\Component\\Security\\Core\\User\\UserInterface\\UserInterface`
-and being logged-in is optional, you can allow a null value for the argument::
-
-    public function index(UserInterface $user = null)
-    {
-        // $user is null when not logged-in or anon.
-    }
+``null`` for convenience.
 
 The point is this: always check to see if the user is logged in before using
 the User object, and use the ``isGranted()`` method (or
@@ -1065,25 +1068,38 @@ the User object, and use the ``isGranted()`` method (or
         // ...
     }
 
+.. note::
+
+    An alternative way to get the current user in a controller is to type-hint
+    the controller argument with
+    :class:`Symfony\\Component\\Security\\Core\\Security`::
+
+        use Symfony\Component\Security\Core\Security;
+
+        public function indexAction(Security $security)
+        {
+            $user = $security->getUser();
+        }
+
+    .. versionadded:: 3.4
+        The ``Security`` utility class was introduced in Symfony 3.4.
+
+    This is only recommended for experienced developers who don't extend from the
+    :ref:`Symfony base controller <the-base-controller-class-services>` and
+    don't use the :class:`Symfony\\Bundle\\FrameworkBundle\\Controller\\ControllerTrait`
+    either. Otherwise, it's recommended to keep using the ``getUser()`` shortcut.
+
 Retrieving the User in a Template
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In a Twig Template this object can be accessed via the :ref:`app.user <reference-twig-global-app>`
 key:
 
-.. configuration-block::
+.. code-block:: html+twig
 
-    .. code-block:: html+twig
-
-        {% if is_granted('IS_AUTHENTICATED_FULLY') %}
-            <p>Username: {{ app.user.username }}</p>
-        {% endif %}
-
-    .. code-block:: html+php
-
-        <?php if ($view['security']->isGranted('IS_AUTHENTICATED_FULLY')): ?>
-            <p>Username: <?php echo $app->getUser()->getUsername() ?></p>
-        <?php endif; ?>
+    {% if is_granted('IS_AUTHENTICATED_FULLY') %}
+        <p>Username: {{ app.user.username }}</p>
+    {% endif %}
 
 .. _security-logging-out:
 
@@ -1179,10 +1195,10 @@ Next, you'll need to create a route for this URL (but not a controller):
         use Symfony\Component\Routing\RouteCollection;
         use Symfony\Component\Routing\Route;
 
-        $collection = new RouteCollection();
-        $collection->add('logout', new Route('/logout'));
+        $routes = new RouteCollection();
+        $routes->add('logout', new Route('/logout'));
 
-        return $collection;
+        return $routes;
 
 And that's it! By sending a user to ``/logout`` (or whatever you configure
 the ``path`` to be), Symfony will un-authenticate the current user.
@@ -1255,6 +1271,13 @@ In the above configuration, users with ``ROLE_ADMIN`` role will also have the
 ``ROLE_USER`` role. The ``ROLE_SUPER_ADMIN`` role has ``ROLE_ADMIN``, ``ROLE_ALLOWED_TO_SWITCH``
 and ``ROLE_USER`` (inherited from ``ROLE_ADMIN``).
 
+.. note::
+
+    The value of the ``role_hierarchy`` option is defined statically, so you
+    can't for example store the role hierarchy in a database. If you need that,
+    create a custom :doc:`security voter </security/voters>` that looks for the
+    user roles in the database.
+
 Final Words
 -----------
 
@@ -1291,7 +1314,7 @@ Authentication (Identifying/Logging in the User)
     security/api_key_authentication
     security/custom_authentication_provider
     security/pre_authenticated
-    security/csrf_in_login_form
+    security/csrf
     security/named_encoders
     security/multiple_user_providers
     security/multiple_guard_authenticators
@@ -1325,3 +1348,4 @@ Other Security Related Topics
 .. _`frameworkextrabundle documentation`: https://symfony.com/doc/current/bundles/SensioFrameworkExtraBundle/index.html
 .. _`HWIOAuthBundle`: https://github.com/hwi/HWIOAuthBundle
 .. _`Symfony ACL bundle`: https://github.com/symfony/acl-bundle
+.. _`Symfony Security screencast series`: https://knpuniversity.com/screencast/symfony-security

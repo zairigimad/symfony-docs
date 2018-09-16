@@ -4,6 +4,11 @@
 Databases and the Doctrine ORM
 ==============================
 
+.. admonition:: Screencast
+    :class: screencast
+
+    Do you prefer video tutorials? Check out the `Doctrine screencast series`_.
+
 Symfony doesn't provide a component to work with the database, but it *does* provide
 tight integration with a third-party library called `Doctrine`_.
 
@@ -18,12 +23,13 @@ tight integration with a third-party library called `Doctrine`_.
 Installing Doctrine
 -------------------
 
-First, install Doctrine, as well as the MakerBundle, which will help generate some
-code:
+First, install Doctrine support via the ORM pack, as well as the MakerBundle,
+which will help generate some code:
 
 .. code-block:: terminal
 
-    composer require doctrine maker
+    $ composer require symfony/orm-pack
+    $ composer require symfony/maker-bundle --dev
 
 Configuring the Database
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -39,7 +45,14 @@ The database connection information is stored as an environment variable called
     DATABASE_URL="mysql://db_user:db_password@127.0.0.1:3306/db_name"
 
     # to use sqlite:
-    # DATABASE_URL="sqlite://%kernel.project_dir%/var/app.db"
+    # DATABASE_URL="sqlite:///%kernel.project_dir%/var/app.db"
+
+.. caution::
+
+    If the username, password or database name contain any character considered
+    special in a URI (such as ``!``, ``@``, ``$``, ``#``), you must encode them.
+    See `RFC 3986`_ for the full list of reserved characters or use the
+    :phpfunction:`urlencode` function to encode them.
 
 Now that your connection parameters are setup, Doctrine can create the ``db_name``
 database for you:
@@ -62,14 +75,50 @@ Creating an Entity Class
 
 Suppose you're building an application where products need to be displayed.
 Without even thinking about Doctrine or databases, you already know that
-you need a ``Product`` object to represent those products. Use the ``make:entity``
-command to create this class for you:
+you need a ``Product`` object to represent those products.
+
+.. _doctrine-adding-mapping:
+
+You can use the ``make:entity`` command to create this class and any fields you
+need. The command will ask you some questions - answer them like done below:
 
 .. code-block:: terminal
 
-    $ php bin/console make:entity Product
+    $ php bin/console make:entity
 
-You now have a new ``src/Entity/Product.php`` file::
+    Class name of the entity to create or update:
+    > Product
+
+    New property name (press <return> to stop adding fields):
+    > name
+
+    Field type (enter ? to see all types) [string]:
+    > string
+
+    Field length [255]:
+    > 255
+
+    Can this field be null in the database (nullable) (yes/no) [no]:
+    > no
+
+    New property name (press <return> to stop adding fields):
+    > price
+
+    Field type (enter ? to see all types) [string]:
+    > integer
+
+    Can this field be null in the database (nullable) (yes/no) [no]:
+    > no
+
+    New property name (press <return> to stop adding fields):
+    >
+    (press enter again to finish)
+
+.. versionadded:: 1.3
+    The interactive behavior of the ``make:entity`` command was introduced
+    in MakerBundle 1.3.
+
+Woh! You now have a new ``src/Entity/Product.php`` file::
 
     // src/Entity/Product.php
     namespace App\Entity;
@@ -88,105 +137,60 @@ You now have a new ``src/Entity/Product.php`` file::
          */
         private $id;
 
-        // add your own fields
+        /**
+         * @ORM\Column(type="string", length=255)
+         */
+        private $name;
+
+        /**
+         * @ORM\Column(type="integer")
+         */
+        private $price;
+
+        public function getId()
+        {
+            return $this->id;
+        }
+
+        // ... getter and setter methods
     }
 
-This class is called an "entity". And soon, you will be able to save and query Product
-objects to a ``product`` table in your database.
+.. note::
 
-.. _doctrine-adding-mapping:
+    Confused why the price is an integer? Don't worry: this is just an example.
+    But, storing prices as integers (e.g. 100 = $1 USD) can avoid rounding issues.
 
-Mapping More Fields / Columns
------------------------------
+.. caution::
 
-Each property in the ``Product`` entity can be mapped to a column in the ``product``
-table. By adding some mapping configuration, Doctrine will be able to save a Product
-object to the ``product`` table *and* query from the ``product`` table and turn
-that data into ``Product`` objects:
+    MySQL sets a `limit of 767 bytes for the index key prefix`_. When using
+    ``utf8mb4``, string columns with 255 character length surpass that limit.
+    This means that any column of type ``string`` and ``unique=true`` must
+    set its maximum ``length`` to ``190``. Otherwise, you'll see this error:
+    *"[PDOException] SQLSTATE[42000]: Syntax error or access violation:
+    1071 Specified key was too long; max key length is 767 bytes"*.
+
+This class is called an "entity". And soon, you'll be able to save and query Product
+objects to a ``product`` table in your database. Each property in the ``Product``
+entity can be mapped to a column in that table. This is usually done with annotations:
+the ``@ORM\...`` comments that you see above each property:
 
 .. image:: /_images/doctrine/mapping_single_entity.png
    :align: center
 
-Let's give the ``Product`` entity class three more properties and map them to columns
-in the database. This is usually done with annotations:
+The ``make:entity`` command is a tool to make life easier. But this is *your* code:
+add/remove fields, add/remove methods or update configuration.
 
-.. configuration-block::
-
-    .. code-block:: php-annotations
-
-        // src/Entity/Product.php
-        // ...
-
-        // this use statement is needed for the annotations
-        use Doctrine\ORM\Mapping as ORM;
-
-        class Product
-        {
-            /**
-             * @ORM\Id
-             * @ORM\GeneratedValue
-             * @ORM\Column(type="integer")
-             */
-            private $id;
-
-            /**
-             * @ORM\Column(type="string", length=100)
-             */
-            private $name;
-
-            /**
-             * @ORM\Column(type="decimal", scale=2, nullable=true)
-             */
-            private $price;
-        }
-
-    .. code-block:: yaml
-
-        # config/doctrine/Product.orm.yml
-        App\Entity\Product:
-            type: entity
-            id:
-                id:
-                    type: integer
-                    generator: { strategy: AUTO }
-            fields:
-                name:
-                    type: string
-                    length: 100
-                price:
-                    type: decimal
-                    scale: 2
-                    nullable: true
-
-    .. code-block:: xml
-
-        <!-- config/doctrine/Product.orm.xml -->
-        <?xml version="1.0" encoding="UTF-8" ?>
-        <doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
-            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-            xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
-                http://doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
-
-            <entity name="App\Entity\Product">
-                <id name="id" type="integer">
-                    <generator strategy="AUTO" />
-                </id>
-                <field name="name" type="string" length="100" />
-                <field name="price" type="decimal" scale="2" nullable="true" />
-            </entity>
-        </doctrine-mapping>
-
-Doctrine supports a wide variety of different field types, each with their own options.
-To see a full list of types and options, see `Doctrine's Mapping Types documentation`_.
+Doctrine supports a wide variety of field types, each with their own options.
+To see a full list, check out `Doctrine's Mapping Types documentation`_.
 If you want to use XML instead of annotations, add ``type: xml`` and
-``dir: '%kernel.project_dir%/config/doctrine`` to the entity mappings in your
+``dir: '%kernel.project_dir%/config/doctrine'`` to the entity mappings in your
 ``config/packages/doctrine.yaml`` file.
 
 .. caution::
 
     Be careful not to use reserved SQL keywords as your table or column names
     (e.g. ``GROUP`` or ``USER``). See Doctrine's `Reserved SQL keywords documentation`_
-    for details on how to escape these. Or, configure the table name with
+    for details on how to escape these. Or, change the table name with
     ``@ORM\Table(name="groups")`` above the class or configure the column name with
     the ``name="group_name"`` option.
 
@@ -197,17 +201,18 @@ Migrations: Creating the Database Tables/Schema
 
 The ``Product`` class is fully-configured and ready to save to a ``product`` table.
 Of course, your database doesn't actually have the ``product`` table yet. To add
-the table, you can leverage the `DoctrineMigrationsBundle`_, which is already installed:
+it, you can leverage the `DoctrineMigrationsBundle`_, which is already installed:
 
 .. code-block:: terminal
 
-    $ php bin/console doctrine:migrations:diff
+    $ php bin/console make:migration
 
 If everything worked, you should see something like this:
 
-    Generated new migration class to
-    "/path/to/project/doctrine/src/Migrations/Version20171122151511.php"
-    from schema differences.
+    SUCCESS!
+
+    Next: Review the new migration "src/Migrations/Version20180207231217.php"
+    Then: Run the migration with php bin/console doctrine:migrations:migrate
 
 If you open this file, it contains the SQL needed to update your database! To run
 that SQL, execute your migrations:
@@ -217,12 +222,38 @@ that SQL, execute your migrations:
     $ php bin/console doctrine:migrations:migrate
 
 This command executes all migration files that have not already been run against
-your database.
+your database. You should run this command on production when you deploy to keep
+your production database up-to-date.
 
 Migrations & Adding more Fields
 -------------------------------
 
 But what if you need to add a new field property to ``Product``, like a ``description``?
+It's easy to add the new property by hand. But, you can also use ``make:entity``
+again:
+
+.. code-block:: terminal
+
+    $ php bin/console make:entity
+
+    Class name of the entity to create or update
+    > Product
+
+    New property name (press <return> to stop adding fields):
+    > description
+
+    Field type (enter ? to see all types) [string]:
+    > text
+
+    Can this field be null in the database (nullable) (yes/no) [no]:
+    > no
+
+    New property name (press <return> to stop adding fields):
+    >
+    (press enter again to finish)
+
+This adds the new ``description`` property and ``getDescription()`` and ``setDescription()``
+methods:
 
 .. code-block:: diff
 
@@ -237,6 +268,8 @@ But what if you need to add a new field property to ``Product``, like a ``descri
     +      * @ORM\Column(type="text")
     +      */
     +     private $description;
+
+        // getDescription() & setDescription() were also added
     }
 
 The new property is mapped, but it doesn't exist yet in the ``product`` table. No
@@ -244,7 +277,7 @@ problem! Just generate a new migration:
 
 .. code-block:: terminal
 
-    $ php bin/console doctrine:migrations:diff
+    $ php bin/console make:migration
 
 This time, the SQL in the generated file will look like this:
 
@@ -262,55 +295,25 @@ before, execute your migrations:
 
 This will only execute the *one* new migration file, because DoctrineMigrationsBundle
 knows that the first migration was already executed earlier. Behind the scenes, it
-automatically manages a ``migration_versions`` table to track this.
+manages a ``migration_versions`` table to track this.
 
 Each time you make a change to your schema, run these two commands to generate the
-migration and then execute it. Be sure to commit the migration files and run execute
+migration and then execute it. Be sure to commit the migration files and execute
 them when you deploy.
 
 .. _doctrine-generating-getters-and-setters:
 
-Generating Getters and Setters
-------------------------------
-
-Doctrine now knows how to persist a ``Product`` object to the database. But the class
-itself isn't useful yet. All of the properties are ``private``, so there's no way
-to set data on them!
-
-For that reason, you should create public getters and setters for all the fields
-you need to modify from outside of the class. If you use an IDE like PhpStorm, it
-can generate these for you. In PhpStorm, put your cursor anywhere in the class,
-then go to the Code -> Generate menu and select "Getters and Setters"::
-
-    // src/Entity/Product
-    // ...
-
-    class Product
-    {
-        // all of your properties
-
-        public function getId()
-        {
-            return $this->id;
-        }
-
-        public function getName()
-        {
-            return $this->name;
-        }
-
-        public function setName($name)
-        {
-            $this->name = $name;
-        }
-
-        // ... getters & setters for price & description
-    }
-
 .. tip::
 
-    Typically you won't need a ``setId()`` method: Doctrine will set this for you
-    automatically.
+    If you prefer to add new properties manually, the ``make:entity`` command can
+    generate the getter & setter methods for you:
+
+    .. code-block:: terminal
+
+        $ php bin/console make:entity --regenerate
+
+    If you make some changes and want to regenerate *all* getter/setter methods,
+    also pass ``--overwrite``.
 
 Persisting Objects to the Database
 ----------------------------------
@@ -328,13 +331,12 @@ and save it!
 .. code-block:: php
 
     // src/Controller/ProductController.php
-
     namespace App\Controller;
 
     // ...
     use App\Entity\Product;
 
-    class ProductController extends Controller
+    class ProductController extends AbstractController
     {
         /**
          * @Route("/product", name="product")
@@ -342,19 +344,19 @@ and save it!
         public function index()
         {
             // you can fetch the EntityManager via $this->getDoctrine()
-            // or you can add an argument to your action: index(EntityManagerInterface $em)
-            $em = $this->getDoctrine()->getManager();
+            // or you can add an argument to your action: index(EntityManagerInterface $entityManager)
+            $entityManager = $this->getDoctrine()->getManager();
 
             $product = new Product();
             $product->setName('Keyboard');
-            $product->setPrice(19.99);
+            $product->setPrice(1999);
             $product->setDescription('Ergonomic and stylish!');
 
             // tell Doctrine you want to (eventually) save the Product (no queries yet)
-            $em->persist($product);
+            $entityManager->persist($product);
 
             // actually executes the queries (i.e. the INSERT query)
-            $em->flush();
+            $entityManager->flush();
 
             return new Response('Saved new product with id '.$product->getId());
         }
@@ -371,21 +373,24 @@ you can query the database directly:
 
     $ php bin/console doctrine:query:sql 'SELECT * FROM product'
 
+    # on Windows systems not using Powershell, run this command instead:
+    # php bin/console doctrine:query:sql "SELECT * FROM product"
+
 Take a look at the previous example in more detail:
 
 .. _doctrine-entity-manager:
 
-* **line 17** The ``$this->getDoctrine()->getManager()`` method gets Doctrine's
+* **line 16** The ``$this->getDoctrine()->getManager()`` method gets Doctrine's
   *entity manager* object, which is the most important object in Doctrine. It's
   responsible for saving objects to, and fetching objects from, the database.
 
-* **lines 19-22** In this section, you instantiate and work with the ``$product``
+* **lines 18-21** In this section, you instantiate and work with the ``$product``
   object like any other normal PHP object.
 
-* **line 25** The ``persist($product)`` call tells Doctrine to "manage" the
+* **line 24** The ``persist($product)`` call tells Doctrine to "manage" the
   ``$product`` object. This does **not** cause a query to be made to the database.
 
-* **line 28** When the ``flush()`` method is called, Doctrine looks through
+* **line 27** When the ``flush()`` method is called, Doctrine looks through
   all of the objects that it's managing to see if they need to be persisted
   to the database. In this example, the ``$product`` object's data doesn't
   exist in the database, so the entity manager executes an ``INSERT`` query,
@@ -397,7 +402,7 @@ Take a look at the previous example in more detail:
     is thrown. See `Transactions and Concurrency`_.
 
 Whether you're creating or updating objects, the workflow is always the same: Doctrine
-is smart enough to know if it should INSERT of UPDATE your entity.
+is smart enough to know if it should INSERT or UPDATE your entity.
 
 Fetching Objects from the Database
 ----------------------------------
@@ -411,7 +416,7 @@ be able to go to ``/product/1`` to see your new product::
     /**
      * @Route("/product/{id}", name="product_show")
      */
-    public function showAction($id)
+    public function show($id)
     {
         $product = $this->getDoctrine()
             ->getRepository(Product::class)
@@ -442,24 +447,24 @@ Once you have a repository object, you have many helper methods::
 
     $repository = $this->getDoctrine()->getRepository(Product::class);
 
-    // query for a single Product by its primary key (usually "id")
+    // look for a single Product by its primary key (usually "id")
     $product = $repository->find($id);
 
-    // query for a single Product by name
+    // look for a single Product by name
     $product = $repository->findOneBy(['name' => 'Keyboard']);
     // or find by name and price
     $product = $repository->findOneBy([
         'name' => 'Keyboard',
-        'price' => 19.99,
+        'price' => 1999,
     ]);
 
-    // query for multiple Product objects matching the name, ordered by price
+    // look for multiple Product objects matching the name, ordered by price
     $products = $repository->findBy(
         ['name' => 'Keyboard'],
         ['price' => 'ASC']
     );
 
-    // find *all* Product objects
+    // look for *all* Product objects
     $products = $repository->findAll();
 
 You can also add *custom* methods for more complex queries! More on that later in
@@ -477,8 +482,8 @@ the :ref:`doctrine-queries` section.
     If the number of database queries is too high, the icon will turn yellow to
     indicate that something may not be correct. Click on the icon to open the
     Symfony Profiler and see the exact queries that were executed. If you don't
-    see the web debug toolbar, try running ``composer require profiler`` to install
-    it.
+    see the web debug toolbar, try running ``composer require --dev symfony/profiler-pack``
+    to install it.
 
 Automatically Fetching Objects (ParamConverter)
 -----------------------------------------------
@@ -488,7 +493,7 @@ for you automatically! First, install the bundle in case you don't have it:
 
 .. code-block:: terminal
 
-    $ composer require annotations
+    $ composer require sensio/framework-extra-bundle
 
 Now, simplify your controller::
 
@@ -500,7 +505,7 @@ Now, simplify your controller::
     /**
      * @Route("/product/{id}", name="product_show")
      */
-    public function showAction(Product $product)
+    public function show(Product $product)
     {
         // use the Product!
         // ...
@@ -519,10 +524,10 @@ Once you've fetched an object from Doctrine, updating it is easy::
     /**
      * @Route("/product/edit/{id}")
      */
-    public function updateAction($id)
+    public function update($id)
     {
-        $em = $this->getDoctrine()->getManager();
-        $product = $em->getRepository(Product::class)->find($id);
+        $entityManager = $this->getDoctrine()->getManager();
+        $product = $entityManager->getRepository(Product::class)->find($id);
 
         if (!$product) {
             throw $this->createNotFoundException(
@@ -531,7 +536,7 @@ Once you've fetched an object from Doctrine, updating it is easy::
         }
 
         $product->setName('New product name!');
-        $em->flush();
+        $entityManager->flush();
 
         return $this->redirectToRoute('product_show', [
             'id' => $product->getId()
@@ -544,8 +549,8 @@ Updating an object involves just three steps:
 #. modifying the object;
 #. calling ``flush()`` on the entity manager.
 
-You *can* call ``$em->persist($product)``, but it isn't necessary: Doctrine is already
-"watching" your object for changes.
+You *can* call ``$entityManager->persist($product)``, but it isn't necessary:
+Doctrine is already "watching" your object for changes.
 
 Deleting an Object
 ------------------
@@ -553,8 +558,8 @@ Deleting an Object
 Deleting an object is very similar, but requires a call to the ``remove()``
 method of the entity manager::
 
-    $em->remove($product);
-    $em->flush();
+    $entityManager->remove($product);
+    $entityManager->flush();
 
 As you might expect, the ``remove()`` method notifies Doctrine that you'd
 like to remove the given object from the database. The ``DELETE`` query isn't
@@ -581,6 +586,7 @@ But what if you need a more complex query? When you generated your entity with
 
     use App\Entity\Product;
     use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+    use Symfony\Bridge\Doctrine\RegistryInterface;
 
     class ProductRepository extends ServiceEntityRepository
     {
@@ -613,7 +619,7 @@ a new method for this to your repository::
          */
         public function findAllGreaterThanPrice($price): array
         {
-            // automatically knows to selects Products
+            // automatically knows to select Products
             // the "p" is an alias you'll use in the rest of the query
             $qb = $this->createQueryBuilder('p')
                 ->andWhere('p.price > :price')
@@ -624,7 +630,7 @@ a new method for this to your repository::
             return $qb->execute();
 
             // to get just one result:
-            // $product = $query->setMaxResults(1)->getOneOrNullResult();
+            // $product = $qb->setMaxResults(1)->getOneOrNullResult();
         }
     }
 
@@ -632,7 +638,7 @@ This uses Doctrine's `Query Builder`_: a very powerful and user-friendly way to
 write custom queries. Now, you can call this method on the repository::
 
     // from inside a controller
-    $minPrice = 10;
+    $minPrice = 1000;
 
     $products = $this->getDoctrine()
         ->getRepository(Product::class)
@@ -655,12 +661,14 @@ In addition to the query builder, you can also query with `Doctrine Query Langua
 
     public function findAllGreaterThanPrice($price): array
     {
-        $query = $em->createQuery(
+        $entityManager = $this->getEntityManager();
+
+        $query = $entityManager->createQuery(
             'SELECT p
             FROM App\Entity\Product p
             WHERE p.price > :price
             ORDER BY p.price ASC'
-        )->setParameter('price', 10);
+        )->setParameter('price', 1000);
 
         // returns an array of Product objects
         return $query->execute();
@@ -681,7 +689,7 @@ Or directly with SQL if you need to::
             ORDER BY p.price ASC
             ';
         $stmt = $conn->prepare($sql);
-        $stmt->execute(['price' => 10]);
+        $stmt->execute(['price' => 1000]);
 
         // returns an array of arrays (i.e. a raw data set)
         return $stmt->fetchAll();
@@ -733,6 +741,7 @@ Learn more
 * `DoctrineFixturesBundle`_
 
 .. _`Doctrine`: http://www.doctrine-project.org/
+.. _`RFC 3986`: https://www.ietf.org/rfc/rfc3986.txt
 .. _`MongoDB`: https://www.mongodb.org/
 .. _`Doctrine's Mapping Types documentation`: http://docs.doctrine-project.org/projects/doctrine-orm/en/latest/reference/basic-mapping.html
 .. _`Query Builder`: http://docs.doctrine-project.org/projects/doctrine-orm/en/latest/reference/query-builder.html
@@ -746,3 +755,5 @@ Learn more
 .. _`NativeQuery`: http://docs.doctrine-project.org/projects/doctrine-orm/en/latest/reference/native-sql.html
 .. _`SensioFrameworkExtraBundle`: http://symfony.com/doc/current/bundles/SensioFrameworkExtraBundle/index.html
 .. _`ParamConverter`: http://symfony.com/doc/current/bundles/SensioFrameworkExtraBundle/annotations/converters.html
+.. _`limit of 767 bytes for the index key prefix`: https://dev.mysql.com/doc/refman/5.6/en/innodb-restrictions.html
+.. _`Doctrine screencast series`: https://knpuniversity.com/screencast/symfony-doctrine

@@ -13,11 +13,11 @@ Consider for example the code used to display the title of the following command
     // src/Command/GreetCommand.php
     namespace App\Command;
 
-    use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
+    use Symfony\Component\Console\Command\Command;
     use Symfony\Component\Console\Input\InputInterface;
     use Symfony\Component\Console\Output\OutputInterface;
 
-    class GreetCommand extends ContainerAwareCommand
+    class GreetCommand extends Command
     {
         // ...
 
@@ -53,12 +53,12 @@ title of the command::
     // src/Command/GreetCommand.php
     namespace App\Command;
 
-    use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
+    use Symfony\Component\Console\Command\Command;
     use Symfony\Component\Console\Style\SymfonyStyle;
     use Symfony\Component\Console\Input\InputInterface;
     use Symfony\Component\Console\Output\OutputInterface;
 
-    class GreetCommand extends ContainerAwareCommand
+    class GreetCommand extends Command
     {
         // ...
 
@@ -235,11 +235,11 @@ User Input Methods
     the third argument::
 
         $io->ask('Number of workers to start', 1, function ($number) {
-            if (!is_integer($number)) {
-                throw new \RuntimeException('You must type an integer.');
+            if (!is_numeric($number)) {
+                throw new \RuntimeException('You must type a number.');
             }
 
-            return $number;
+            return (int) $number;
         });
 
 :method:`Symfony\\Component\\Console\\Style\\SymfonyStyle::askHidden`
@@ -355,10 +355,11 @@ of your commands to change their appearance::
     namespace App\Console;
 
     use App\Console\CustomStyle;
+    use Symfony\Component\Console\Command\Command;
     use Symfony\Component\Console\Input\InputInterface;
     use Symfony\Component\Console\Output\OutputInterface;
 
-    class GreetCommand extends ContainerAwareCommand
+    class GreetCommand extends Command
     {
         // ...
 
@@ -369,7 +370,6 @@ of your commands to change their appearance::
 
             // After
             $io = new CustomStyle($input, $output);
-
             // ...
         }
     }

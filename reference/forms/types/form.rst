@@ -19,6 +19,7 @@ on all types for which ``FormType`` is the parent.
 |           | - `error_bubbling`_                                                |
 |           | - `error_mapping`_                                                 |
 |           | - `extra_fields_message`_                                          |
+|           | - `help`_                                                          |
 |           | - `inherit_data`_                                                  |
 |           | - `invalid_message`_                                               |
 |           | - `invalid_message_parameters`_                                    |
@@ -49,6 +50,8 @@ Field Options
 .. _form-option-action:
 
 .. include:: /reference/forms/types/options/action.rst.inc
+
+.. _form-option-allow-extra-fields:
 
 allow_extra_fields
 ~~~~~~~~~~~~~~~~~~
@@ -95,6 +98,8 @@ The actual default value of this option depends on other field options:
 .. include:: /reference/forms/types/options/error_mapping.rst.inc
 
 .. include:: /reference/forms/types/options/extra_fields_message.rst.inc
+
+.. include:: /reference/forms/types/options/help.rst.inc
 
 .. include:: /reference/forms/types/options/inherit_data.rst.inc
 

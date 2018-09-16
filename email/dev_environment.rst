@@ -207,13 +207,13 @@ the report with details of the sent emails.
 
     .. code-block:: yaml
 
-        # config/packages/dev/swiftmailer.yaml
+        # config/packages/dev/web_profiler.yaml
         web_profiler:
             intercept_redirects: true
 
     .. code-block:: xml
 
-        <!-- config/packages/dev/swiftmailer.xml -->
+        <!-- config/packages/dev/web_profiler.xml -->
         <?xml version="1.0" encoding="UTF-8" ?>
         <container xmlns="http://symfony.com/schema/dic/services"
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -230,7 +230,7 @@ the report with details of the sent emails.
 
     .. code-block:: php
 
-        // config/packages/dev/swiftmailer.php
+        // config/packages/dev/web_profiler.php
         $container->loadFromExtension('web_profiler', array(
             'intercept_redirects' => 'true',
         ));
@@ -241,3 +241,12 @@ the report with details of the sent emails.
     by the submit URL used on the previous request (e.g. ``/contact/handle``).
     The profiler's search feature allows you to load the profiler information
     for any past requests.
+
+.. tip::
+
+    In addition to the features provided by Symfony, there are applications that
+    can help you test emails during application development, like `MailCatcher`_
+    and `MailHog`_.
+
+.. _`MailCatcher`: https://github.com/sj26/mailcatcher
+.. _`MailHog`: https://github.com/mailhog/MailHog

@@ -65,8 +65,8 @@ logic to determine the template filename:
 
 .. _overriding-or-adding-templates:
 
-To override these templates, simply rely on the standard Symfony method for
-:doc:`overriding templates that live inside a bundle </templating/overriding>`:
+To override these templates, rely on the standard Symfony method for
+:ref:`overriding templates that live inside a bundle <override-templates>` and
 put them in the ``templates/bundles/TwigBundle/Exception/`` directory.
 
 A typical project that returns HTML and JSON pages, might look like this:
@@ -97,10 +97,6 @@ To override the 404 error template for HTML pages, create a new
 
     {% block body %}
         <h1>Page not found</h1>
-
-        {% if is_granted('IS_AUTHENTICATED_FULLY') %}
-            {# ... #}
-        {% endif %}
 
         <p>
             The requested page couldn't be located. Checkout for any URL
@@ -169,13 +165,13 @@ automatically when installing Twig support):
         // config/routes/dev/twig.php
         use Symfony\Component\Routing\RouteCollection;
 
-        $collection = new RouteCollection();
-        $collection->addCollection(
+        $routes = new RouteCollection();
+        $routes->addCollection(
             $loader->import('@TwigBundle/Resources/config/routing/errors.xml')
         );
-        $collection->addPrefix("/_error");
+        $routes->addPrefix("/_error");
 
-        return $collection;
+        return $routes;
 
 With this route added, you can use URLs like these to preview the *error* page
 for a given status code as HTML or for a given status code and format.

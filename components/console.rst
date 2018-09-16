@@ -15,15 +15,22 @@ other batch jobs.
 Installation
 ------------
 
-You can install the component in 2 different ways:
+.. code-block:: terminal
 
-* :doc:`Install it via Composer </components/using_components>` (``symfony/console`` on `Packagist`_);
-* Use the official Git repository (https://github.com/symfony/console).
+    $ composer require symfony/console
+
+Alternatively, you can clone the `<https://github.com/symfony/console>`_ repository.
 
 .. include:: /components/require_autoload.rst.inc
 
 Creating a Console Application
 ------------------------------
+
+.. seealso::
+
+    This article explains how to use the Console features as an independent
+    component in any PHP application. Read the :doc:`/console` article to
+    learn about how to use it in Symfony applications.
 
 First, you need to create a PHP script to define the console application::
 

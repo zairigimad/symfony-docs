@@ -1,27 +1,36 @@
 .. index::
     single: Configuration reference; Framework
 
-DebugBundle Configuration ("debug")
-===================================
+Debug Configuration Reference (DebugBundle)
+===========================================
 
-The DebugBundle allows greater integration of the
-:doc:`VarDumper component </components/var_dumper>` in the
-Symfony full-stack framework and can be configured under the ``debug`` key
-in your application configuration. When using XML, you must use the
-``http://symfony.com/schema/dic/debug`` namespace.
+The DebugBundle integrates the :doc:`VarDumper component </components/var_dumper>`
+in Symfony applications. All these options are configured under the ``debug``
+key in your application configuration.
 
-.. tip::
+.. code-block:: terminal
 
-   The XSD schema is available at
-   ``http://symfony.com/schema/dic/debug/debug-1.0.xsd``.
+    # displays the default config values defined by Symfony
+    $ php bin/console config:dump-reference debug
+
+    # displays the actual config values used by your application
+    $ php bin/console debug:config debug
+
+.. note::
+
+    When using XML, you must use the ``http://symfony.com/schema/dic/debug``
+    namespace and the related XSD schema is available at:
+    ``http://symfony.com/schema/dic/debug/debug-1.0.xsd``
 
 Configuration
 -------------
 
+.. class:: list-config-options
+
+* `dump_destination`_
 * `max_items`_
 * `min_depth`_
 * `max_string_length`_
-* `dump_destination`_
 
 max_items
 ~~~~~~~~~
@@ -48,6 +57,8 @@ max_string_length
 
 This option configures the maximum string length before truncating the
 string. The default value (``-1``) means that strings are never truncated.
+
+.. _configuration-debug-dump_destination:
 
 dump_destination
 ~~~~~~~~~~~~~~~~

@@ -11,13 +11,6 @@ application there could be more tags available provided by third-party bundles:
 ========================================  ========================================================================
 Tag Name                                  Usage
 ========================================  ========================================================================
-`assetic.asset`_                          Register an asset to the current asset manager
-`assetic.factory_worker`_                 Add a factory worker
-`assetic.filter`_                         Register a filter
-`assetic.formula_loader`_                 Add a formula loader to the current asset manager
-`assetic.formula_resource`_               Adds a resource to the current asset manager
-`assetic.templating.php`_                 Remove this service if PHP templating is disabled
-`assetic.templating.twig`_                Remove this service if Twig templating is disabled
 `auto_alias`_                             Define aliases based on the value of container parameters
 `console.command`_                        Add a command
 `controller.argument_value_resolver`_     Register a value resolver for controller arguments such as ``Request``
@@ -51,182 +44,6 @@ Tag Name                                  Usage
 `validator.constraint_validator`_         Create your own custom validation constraint
 `validator.initializer`_                  Register a service that initializes objects before validation
 ========================================  ========================================================================
-
-assetic.asset
--------------
-
-**Purpose**: Register an asset with the current asset manager
-
-assetic.factory_worker
-----------------------
-
-**Purpose**: Add a factory worker
-
-A Factory worker is a class implementing ``Assetic\Factory\Worker\WorkerInterface``.
-Its ``process($asset)`` method is called for each asset after asset creation.
-You can modify an asset or even return a new one.
-
-In order to add a new worker, first create a class::
-
-    use Assetic\Asset\AssetInterface;
-    use Assetic\Factory\Worker\WorkerInterface;
-
-    class MyWorker implements WorkerInterface
-    {
-        public function process(AssetInterface $asset)
-        {
-            // ... change $asset or return a new one
-        }
-
-    }
-
-And then register it as a tagged service:
-
-.. configuration-block::
-
-    .. code-block:: yaml
-
-        services:
-            App\Assetic\CustomWorker:
-                tags: [assetic.factory_worker]
-
-    .. code-block:: xml
-
-        <?xml version="1.0" encoding="UTF-8" ?>
-        <container xmlns="http://symfony.com/schema/dic/services"
-            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-            xsi:schemaLocation="http://symfony.com/schema/dic/services
-                http://symfony.com/schema/dic/services/services-1.0.xsd">
-
-            <services>
-                <service id="App\Assetic\CustomWorker">
-                    <tag name="assetic.factory_worker" />
-                </service>
-            </services>
-        </container>
-
-    .. code-block:: php
-
-        use App\Assetic\CustomWorker;
-
-        $container
-            ->register(CustomWorker::class)
-            ->addTag('assetic.factory_worker')
-        ;
-
-assetic.filter
---------------
-
-**Purpose**: Register a filter
-
-AsseticBundle uses this tag to register common filters. You can also use
-this tag to register your own filters.
-
-First, you need to create a filter::
-
-    use Assetic\Asset\AssetInterface;
-    use Assetic\Filter\FilterInterface;
-
-    class MyFilter implements FilterInterface
-    {
-        public function filterLoad(AssetInterface $asset)
-        {
-            $asset->setContent('alert("yo");' . $asset->getContent());
-        }
-
-        public function filterDump(AssetInterface $asset)
-        {
-            // ...
-        }
-    }
-
-Second, define a service:
-
-.. configuration-block::
-
-    .. code-block:: yaml
-
-        services:
-            App\Assetic\CustomFilter:
-                tags:
-                    - { name: assetic.filter, alias: my_filter }
-
-    .. code-block:: xml
-
-        <?xml version="1.0" encoding="UTF-8" ?>
-        <container xmlns="http://symfony.com/schema/dic/services"
-            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-            xsi:schemaLocation="http://symfony.com/schema/dic/services
-                http://symfony.com/schema/dic/services/services-1.0.xsd">
-
-            <services>
-                <service id="App\Assetic\CustomFilter">
-                    <tag name="assetic.filter" alias="my_filter" />
-                </service>
-            </services>
-        </container>
-
-    .. code-block:: php
-
-        use App\Assetic\CustomFilter;
-
-        $container
-            ->register(CustomFilter::class)
-            ->addTag('assetic.filter', array('alias' => 'my_filter'))
-        ;
-
-Finally, apply the filter:
-
-.. code-block:: twig
-
-    {% javascripts
-        '@AcmeBaseBundle/Resources/public/js/global.js'
-        filter='my_filter'
-    %}
-        <script src="{{ asset_url }}"></script>
-    {% endjavascripts %}
-
-You can also apply your filter via the ``assetic.filters.my_filter.apply_to``
-config option as it's described here: :doc:`/frontend/assetic/apply_to_option`.
-In order to do that, you must define your filter service in a separate xml
-config file and point to this file's path via the ``assetic.filters.my_filter.resource``
-configuration key.
-
-assetic.formula_loader
-----------------------
-
-**Purpose**: Add a formula loader to the current asset manager
-
-A Formula loader is a class implementing
-``Assetic\\Factory\Loader\\FormulaLoaderInterface`` interface. This class
-is responsible for loading assets from a particular kind of resources (for
-instance, twig template). Assetic ships loaders for PHP and Twig templates.
-
-An ``alias`` attribute defines the name of the loader.
-
-assetic.formula_resource
-------------------------
-
-**Purpose**: Adds a resource to the current asset manager
-
-A resource is something formulae can be loaded from. For instance, Twig
-templates are resources.
-
-assetic.templating.php
-----------------------
-
-**Purpose**: Remove this service if PHP templating is disabled
-
-The tagged service will be removed from the container if the
-``framework.templating.engines`` config section does not contain php.
-
-assetic.templating.twig
------------------------
-
-**Purpose**: Remove this service if Twig templating is disabled
-
-The tagged service will be removed from the container if
-``framework.templating.engines`` config section does not contain ``twig``.
 
 auto_alias
 ----------
@@ -450,7 +267,7 @@ service class::
 
     class MyClearer implements CacheClearerInterface
     {
-        public function clear($cacheDir)
+        public function clear($cacheDirectory)
         {
             // clear your cache
         }
@@ -516,7 +333,7 @@ the :class:`Symfony\\Component\\HttpKernel\\CacheWarmer\\CacheWarmerInterface` i
 
     class MyCustomWarmer implements CacheWarmerInterface
     {
-        public function warmUp($cacheDir)
+        public function warmUp($cacheDirectory)
         {
             // ... do some sort of operations to "warm" your cache
         }
@@ -653,7 +470,7 @@ channel when injecting the logger in a service.
             App\Log\CustomLogger:
                 arguments: ['@logger']
                 tags:
-                    - { name: monolog.logger, channel: acme }
+                    - { name: monolog.logger, channel: app }
 
     .. code-block:: xml
 
@@ -666,7 +483,7 @@ channel when injecting the logger in a service.
             <services>
                 <service id="App\Log\CustomLogger">
                     <argument type="service" id="logger" />
-                    <tag name="monolog.logger" channel="acme" />
+                    <tag name="monolog.logger" channel="app" />
                 </service>
             </services>
         </container>
@@ -678,7 +495,7 @@ channel when injecting the logger in a service.
 
         $container->register(CustomLogger::class)
             ->addArgument(new Reference('logger'))
-            ->addTag('monolog.logger', array('channel' => 'acme'));
+            ->addTag('monolog.logger', array('channel' => 'app'));
 
 .. tip::
 
@@ -893,7 +710,7 @@ If your custom authentication factory extends
 :class:`Symfony\\Bundle\\SecurityBundle\\DependencyInjection\\Security\\Factory\\AbstractFactory`
 and your custom authentication listener extends
 :class:`Symfony\\Component\\Security\\Http\\Firewall\\AbstractAuthenticationListener`,
-then your custom authentication listener will automatically have this tagged
+then your custom authentication listener will automatically have this tag
 applied and it will function automatically.
 
 security.voter
@@ -1053,8 +870,7 @@ The ``alias`` option is required and very important: it defines the file
 "suffix" that will be used for the resource files that use this loader.
 For example, suppose you have some custom ``bin`` format that you need to
 load. If you have a ``bin`` file that contains French translations for
-the ``messages`` domain, then you might have a file
-``app/Resources/translations/messages.fr.bin``.
+the ``messages`` domain, then you might have a file ``translations/messages.fr.bin``.
 
 When Symfony tries to load the ``bin`` file, it passes the path to your
 custom loader as the ``$resource`` argument. You can then perform any logic
@@ -1064,6 +880,8 @@ If you're loading translations from a database, you'll still need a resource
 file, but it might either be blank or contain a little bit of information
 about loading those resources from the database. The file is key to trigger
 the ``load()`` method on your custom loader.
+
+.. _reference-dic-tags-translation-extractor:
 
 translation.extractor
 ---------------------
@@ -1145,9 +963,9 @@ translation.dumper
 
 **Purpose**: To register a custom service that dumps messages to a file
 
-After an `Extractor <translation.extractor>`_ has extracted all messages
-from the templates, the dumpers are executed to dump the messages to a
-translation file in a specific format.
+After a :ref:`translation extractor <reference-dic-tags-translation-extractor>`
+has extracted all messages from the templates, the dumpers are executed to dump
+the messages to a translation file in a specific format.
 
 Symfony already comes with many dumpers:
 
@@ -1222,6 +1040,12 @@ the service is auto-registered and auto-tagged. But, you can also register it ma
             App\Twig\AppExtension:
                 tags: [twig.extension]
 
+            # optionally you can define the priority of the extension (default = 0).
+            # Extensions with higher priorities are registered earlier. This is mostly
+            # useful to register late extensions that override other extensions.
+            App\Twig\AnotherExtension:
+                tags: [{ name: twig.extension, priority: -100 }]
+
     .. code-block:: xml
 
         <?xml version="1.0" encoding="UTF-8" ?>
@@ -1234,17 +1058,30 @@ the service is auto-registered and auto-tagged. But, you can also register it ma
                 <service id="App\Twig\AppExtension">
                     <tag name="twig.extension" />
                 </service>
+
+                <service id="App\Twig\AnotherExtension">
+                    <tag name="twig.extension" priority="-100" />
+                </service>
             </services>
         </container>
 
     .. code-block:: php
 
         use App\Twig\AppExtension;
+        use App\Twig\AnotherExtension;
 
         $container
             ->register(AppExtension::class)
             ->addTag('twig.extension')
         ;
+        $container
+            ->register(AnotherExtension::class)
+            ->addTag('twig.extension', array('priority' => -100))
+        ;
+
+.. versionadded:: 4.1
+    The ``priority`` attribute of the ``twig.extension`` tag was introduced in
+    Symfony 4.1.
 
 For information on how to create the actual Twig Extension class, see
 `Twig's documentation`_ on the topic or read the
@@ -1261,7 +1098,7 @@ also have to be added as regular services:
     .. code-block:: yaml
 
         services:
-            Twig_Extensions_Extension_Intl:
+            Twig\Extensions\IntlExtension:
                 tags: [twig.extension]
 
     .. code-block:: xml
@@ -1273,7 +1110,7 @@ also have to be added as regular services:
                 http://symfony.com/schema/dic/services/services-1.0.xsd">
 
             <services>
-                <service id="Twig_Extensions_Extension_Intl">
+                <service id="Twig\Extensions\IntlExtension">
                     <tag name="twig.extension" />
                 </service>
             </services>
@@ -1282,7 +1119,7 @@ also have to be added as regular services:
     .. code-block:: php
 
         $container
-            ->register('Twig_Extensions_Extension_Intl')
+            ->register('Twig\Extensions\IntlExtension')
             ->addTag('twig.extension')
         ;
 
@@ -1365,8 +1202,8 @@ Then, tag it with the ``validator.initializer`` tag (it has no options).
 For an example, see the ``DoctrineInitializer`` class inside the Doctrine
 Bridge.
 
-.. _`Twig's documentation`: http://twig.sensiolabs.org/doc/advanced.html#creating-an-extension
+.. _`Twig's documentation`: https://twig.symfony.com/doc/2.x/advanced.html#creating-an-extension
 .. _`Twig official extension repository`: https://github.com/fabpot/Twig-extensions
 .. _`KernelEvents`: https://github.com/symfony/symfony/blob/master/src/Symfony/Component/HttpKernel/KernelEvents.php
 .. _`SwiftMailer's Plugin Documentation`: http://swiftmailer.org/docs/plugins.html
-.. _`Twig Loader`: http://twig.sensiolabs.org/doc/api.html#loaders
+.. _`Twig Loader`: https://twig.symfony.com/doc/2.x/api.html#loaders

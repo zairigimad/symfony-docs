@@ -8,7 +8,7 @@ Usually, when you need to create a page, you need to create a controller
 and render a template from within that controller. But if you're rendering
 a simple template that doesn't need any data passed into it, you can avoid
 creating the controller entirely, by using the built-in
-``Symfony\Bundle\FrameworkBundle\Controller\TemplateController::templateAction``
+:class:`Symfony\\Bundle\\FrameworkBundle\\Controller\\TemplateController`
 controller.
 
 For example, suppose you want to render a ``static/privacy.html.twig``
@@ -22,7 +22,7 @@ can do this without creating a controller:
         # config/routes.yaml
         acme_privacy:
             path:         /privacy
-            controller:   Symfony\Bundle\FrameworkBundle\Controller\TemplateController::templateAction
+            controller:   Symfony\Bundle\FrameworkBundle\Controller\TemplateController
             defaults:
                 template: static/privacy.html.twig
 
@@ -35,7 +35,7 @@ can do this without creating a controller:
             xsi:schemaLocation="http://symfony.com/schema/routing http://symfony.com/schema/routing/routing-1.0.xsd">
 
             <route id="acme_privacy" path="/privacy">
-                <default key="_controller">Symfony\Bundle\FrameworkBundle\Controller\TemplateController::templateAction</default>
+                <default key="_controller">Symfony\Bundle\FrameworkBundle\Controller\TemplateController</default>
                 <default key="template">static/privacy.html.twig</default>
             </route>
         </routes>
@@ -46,13 +46,13 @@ can do this without creating a controller:
         use Symfony\Component\Routing\RouteCollection;
         use Symfony\Component\Routing\Route;
 
-        $collection = new RouteCollection();
-        $collection->add('acme_privacy', new Route('/privacy', array(
-            '_controller' => 'Symfony\Bundle\FrameworkBundle\Controller\TemplateController::templateAction',
+        $routes = new RouteCollection();
+        $routes->add('acme_privacy', new Route('/privacy', array(
+            '_controller' => 'Symfony\Bundle\FrameworkBundle\Controller\TemplateController',
             'template'    => 'static/privacy.html.twig',
         )));
 
-        return $collection;
+        return $routes;
 
 The ``TemplateController`` will simply render whatever template you've passed as
 the ``template`` default value.
@@ -63,21 +63,9 @@ within a template is typically to prepare some data in a custom controller,
 this is probably only useful if you'd like to cache this page partial (see
 :ref:`templating-no-controller-caching`).
 
-.. configuration-block::
+.. code-block:: html+twig
 
-    .. code-block:: html+twig
-
-        {{ render(url('acme_privacy')) }}
-
-    .. code-block:: html+php
-
-        <?php
-        use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
-        ?>
-
-        <?php echo $view['actions']->render(
-            $view['router']->url('acme_privacy', array())
-        ) ?>
+    {{ render(url('acme_privacy')) }}
 
 .. _templating-no-controller-caching:
 
@@ -95,7 +83,7 @@ other variables in your route, you can control exactly how your page is cached:
         # config/routes.yaml
         acme_privacy:
             path:          /privacy
-            controller:    Symfony\Bundle\FrameworkBundle\Controller\TemplateController::templateAction
+            controller:    Symfony\Bundle\FrameworkBundle\Controller\TemplateController
             defaults:
                 template:  'static/privacy.html.twig'
                 maxAge:    86400
@@ -110,7 +98,7 @@ other variables in your route, you can control exactly how your page is cached:
             xsi:schemaLocation="http://symfony.com/schema/routing http://symfony.com/schema/routing/routing-1.0.xsd">
 
             <route id="acme_privacy" path="/privacy">
-                <default key="_controller">Symfony\Bundle\FrameworkBundle\Controller\TemplateController::templateAction</default>
+                <default key="_controller">Symfony\Bundle\FrameworkBundle\Controller\TemplateController</default>
                 <default key="template">static/privacy.html.twig</default>
                 <default key="maxAge">86400</default>
                 <default key="sharedAge">86400</default>
@@ -123,15 +111,15 @@ other variables in your route, you can control exactly how your page is cached:
         use Symfony\Component\Routing\RouteCollection;
         use Symfony\Component\Routing\Route;
 
-        $collection = new RouteCollection();
-        $collection->add('acme_privacy', new Route('/privacy', array(
-            '_controller' => 'Symfony\Bundle\FrameworkBundle\Controller\TemplateController::templateAction',
+        $routes = new RouteCollection();
+        $routes->add('acme_privacy', new Route('/privacy', array(
+            '_controller' => 'Symfony\Bundle\FrameworkBundle\Controller\TemplateController',
             'template'    => 'static/privacy.html.twig',
             'maxAge'      => 86400,
             'sharedAge'   => 86400,
         )));
 
-        return $collection;
+        return $routes;
 
 The ``maxAge`` and ``sharedAge`` values are used to modify the Response
 object created in the controller. For more information on caching, see

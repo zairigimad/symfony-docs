@@ -24,13 +24,6 @@ in the session (perhaps the user went directly to the login page), then the user
 is redirected to ``/`` (i.e. the homepage). You can change this behavior in
 several ways.
 
-.. note::
-
-    Sometimes, redirecting to the originally requested page can cause problems,
-    like if a background Ajax request "appears" to be the last visited URL,
-    causing the user to be redirected there. For information on controlling this
-    behavior, see :doc:`/security`.
-
 Changing the default Page
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -73,7 +66,7 @@ a relative/absolute URL or a Symfony route name:
 
     .. code-block:: php
 
-        // app/config/security.php
+        // config/packages/security.php
         $container->loadFromExtension('security', array(
             // ...
 
@@ -131,7 +124,7 @@ previously requested URL and always redirect to the default page:
 
     .. code-block:: php
 
-        // app/config/security.php
+        // config/packages/security.php
         $container->loadFromExtension('security', array(
             // ...
 
@@ -164,27 +157,15 @@ Defining the redirect URL via GET using a query string parameter:
 
 Defining the redirect URL via POST using a hidden form field:
 
-.. configuration-block::
+.. code-block:: html+twig
 
-    .. code-block:: html+twig
+    {# templates/security/login.html.twig #}
+    <form action="{{ path('login') }}" method="post">
+        {# ... #}
 
-        {# templates/security/login.html.twig #}
-        <form action="{{ path('login') }}" method="post">
-            {# ... #}
-
-            <input type="hidden" name="_target_path" value="{{ path('account') }}" />
-            <input type="submit" name="login" />
-        </form>
-
-    .. code-block:: html+php
-
-        <!-- templates/security/login.html.php -->
-        <form action="<?php echo $view['router']->path('login') ?>" method="post">
-            // ...
-
-            <input type="hidden" name="_target_path" value="<?php echo $view['router']->path('account') ?>" />
-            <input type="submit" name="login" />
-        </form>
+        <input type="hidden" name="_target_path" value="{{ path('account') }}" />
+        <input type="submit" name="login" />
+    </form>
 
 Using the Referring URL
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -231,7 +212,7 @@ parameter is included in the request, you may use the value of the
 
     .. code-block:: php
 
-        // app/config/security.php
+        // config/packages/security.php
         $container->loadFromExtension('security', array(
             // ...
 
@@ -297,7 +278,7 @@ option to define a new target via a relative/absolute URL or a Symfony route nam
 
     .. code-block:: php
 
-        // app/config/security.php
+        // config/packages/security.php
         $container->loadFromExtension('security', array(
             // ...
 
@@ -318,27 +299,15 @@ This option can also be set via the ``_failure_path`` request parameter:
 
     http://example.com/some/path?_failure_path=/forgot-password
 
-.. configuration-block::
+.. code-block:: html+twig
 
-    .. code-block:: html+twig
+    {# templates/security/login.html.twig #}
+    <form action="{{ path('login') }}" method="post">
+        {# ... #}
 
-        {# templates/security/login.html.twig #}
-        <form action="{{ path('login') }}" method="post">
-            {# ... #}
-
-            <input type="hidden" name="_failure_path" value="{{ path('forgot_password') }}" />
-            <input type="submit" name="login" />
-        </form>
-
-    .. code-block:: html+php
-
-        <!-- templates/security/login.html.php -->
-        <form action="<?php echo $view['router']->path('login') ?>" method="post">
-            <!-- ... -->
-
-            <input type="hidden" name="_failure_path" value="<?php echo $view['router']->path('forgot_password') ?>" />
-            <input type="submit" name="login" />
-        </form>
+        <input type="hidden" name="_failure_path" value="{{ path('forgot_password') }}" />
+        <input type="submit" name="login" />
+    </form>
 
 Customizing the Target and Failure Request Parameters
 -----------------------------------------------------
@@ -385,7 +354,7 @@ redirects can be customized using the  ``target_path_parameter`` and
 
     .. code-block:: php
 
-        // app/config/security.php
+        // config/packages/security.php
         $container->loadFromExtension('security', array(
             // ...
 
@@ -407,26 +376,31 @@ are now fully customized:
 
     http://example.com/some/path?go_to=/dashboard&back_to=/forgot-password
 
-.. configuration-block::
+.. code-block:: html+twig
 
-    .. code-block:: html+twig
+    {# templates/security/login.html.twig #}
+    <form action="{{ path('login') }}" method="post">
+        {# ... #}
 
-        {# templates/security/login.html.twig #}
-        <form action="{{ path('login') }}" method="post">
-            {# ... #}
+        <input type="hidden" name="go_to" value="{{ path('dashboard') }}" />
+        <input type="hidden" name="back_to" value="{{ path('forgot_password') }}" />
+        <input type="submit" name="login" />
+    </form>
 
-            <input type="hidden" name="go_to" value="{{ path('dashboard') }}" />
-            <input type="hidden" name="back_to" value="{{ path('forgot_password') }}" />
-            <input type="submit" name="login" />
-        </form>
+Redirecting to the Last Accessed Page with ``TargetPathTrait``
+--------------------------------------------------------------
 
-    .. code-block:: html+php
+The last request URI is stored in a session variable named
+``_security.<your providerKey>.target_path`` (e.g. ``_security.main.target_path``
+if the name of your firewall is ``main``). Most of the times you don't have to
+deal with this low level session variable. However, if you ever need to get or
+remove this variable, it's better to use the
+:class:`Symfony\\Component\\Security\\Http\\Util\\TargetPathTrait` utility::
 
-        <!-- templates/security/login.html.php -->
-        <form action="<?php echo $view['router']->path('login') ?>" method="post">
-            <!-- ... -->
+    // ...
+    use Symfony\Component\Security\Http\Util\TargetPathTrait;
 
-            <input type="hidden" name="go_to" value="<?php echo $view['router']->path('dashboard') ?>" />
-            <input type="hidden" name="back_to" value="<?php echo $view['router']->path('forgot_password') ?>" />
-            <input type="submit" name="login" />
-        </form>
+    $targetPath = $this->getTargetPath($request->getSession(), $providerKey);
+
+    // equivalent to:
+    // $targetPath = $request->getSession()->get('_security.'.$providerKey.'.target_path');

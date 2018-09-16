@@ -9,16 +9,16 @@ All the Symfony Core members are long-time contributors with solid technical
 expertise and they have demonstrated a strong commitment to drive the project
 forward.
 
-This document states the rules that govern the Symfony Core team. These rules
+This document states the rules that govern the Symfony core team. These rules
 are effective upon publication of this document and all Symfony Core members
 must adhere to said rules and protocol.
 
 Core Organization
 -----------------
 
-Symfony Core members are divided into three groups. Each member can only belong
-to one group at a time. The privileges granted to a group are automatically
-granted to all higher priority groups.
+Symfony Core members are divided into groups. Each member can only belong to one
+group at a time. The privileges granted to a group are automatically granted to
+all higher priority groups.
 
 The Symfony Core groups, in descending order of priority, are as follows:
 
@@ -27,14 +27,25 @@ The Symfony Core groups, in descending order of priority, are as follows:
 * Elects members in any other group;
 * Merges pull requests in all Symfony repositories.
 
-2. **Mergers**
+2. **Mergers Team**
 
 * Merge pull requests for the component or components on which they have been
   granted privileges.
 
-3. **Deciders**
+3. **Deciders Team**
 
 * Decide to merge or reject a pull request.
+
+In addition, there are other groups created to manage specific topics:
+
+**Security Team**
+
+* Manage the whole security process (triaging reported vulnerabilities, fixing
+  the reported issues, coordinating the release of security fixes, etc.)
+
+**Documentation Team**
+
+* Manage the whole `symfony-docs repository`_.
 
 Active Core Members
 ~~~~~~~~~~~~~~~~~~~
@@ -47,13 +58,10 @@ Active Core Members
 
   * **Fabien Potencier** (`fabpot`_).
 
-* **Mergers** (``@symfony/mergers`` on GitHub):
+* **Mergers Team** (``@symfony/mergers`` on GitHub):
 
   * **Tobias Schultze** (`Tobion`_) can merge into the Routing_,
     OptionsResolver_ and PropertyAccess_ components;
-
-  * **Romain Neutron** (`romainneutron`_) can merge into the
-    Process_ component;
 
   * **Nicolas Grekas** (`nicolas-grekas`_) can merge into the Cache_, Debug_,
     Process_, PropertyAccess_, VarDumper_ components, PhpUnitBridge_ and
@@ -62,8 +70,8 @@ Active Core Members
   * **Christophe Coevoet** (`stof`_) can merge into all components, bridges and
     bundles;
 
-  * **Kévin Dunglas** (`dunglas`_) can merge into the PropertyInfo_ and the Serializer_
-    component;
+  * **Kévin Dunglas** (`dunglas`_) can merge into the PropertyInfo_, the Serializer_
+    and the WebLink_ components;
 
   * **Jakub Zalas** (`jakzal`_) can merge into the DomCrawler_ and Intl_
     components;
@@ -81,21 +89,41 @@ Active Core Members
     components and the SecurityBundle_;
 
   * **Maxime Steinhausser** (`ogizanagi`_) can merge into Config_, Console_,
-    Form_, Serializer_, DependencyInjection_, and HttpKernel_ components.
+    Form_, Serializer_, DependencyInjection_, and HttpKernel_ components;
 
-* **Deciders** (``@symfony/deciders`` on GitHub):
+  * **Tobias Nyholm** (`Nyholm`_) manages the official and contrib recipes
+    repositories;
+
+  * **Samuel Rozé** (`sroze`_) can merge into the Messenger_ component.
+
+* **Deciders Team** (``@symfony/deciders`` on GitHub):
 
   * **Jordi Boggiano** (`seldaek`_);
   * **Lukas Kahwe Smith** (`lsmith77`_).
 
+* **Security Team** (``@symfony/security`` on GitHub):
+
+  * **Fabien Potencier** (`fabpot`_);
+  * **Michael Cullum** (`michaelcullum`_).
+
+* **Documentation Team** (``@symfony/team-symfony-docs`` on GitHub):
+
+  * **Fabien Potencier** (`fabpot`_);
+  * **Ryan Weaver** (`weaverryan`_);
+  * **Christian Flothmann** (`xabbuh`_);
+  * **Wouter De Jong** (`wouterj`_);
+  * **Jules Pietri** (`HeahDude`_);
+  * **Javier Eguiluz** (`javiereguiluz`_).
+
 Former Core Members
 ~~~~~~~~~~~~~~~~~~~
 
-They are no longer part of the Core Team, but we are very grateful for all their
+They are no longer part of the core team, but we are very grateful for all their
 Symfony contributions:
 
-  * **Bernhard Schussek** (`webmozart`_);
-  * **Abdellatif AitBoudad** (`aitboudad`_).
+* **Bernhard Schussek** (`webmozart`_);
+* **Abdellatif AitBoudad** (`aitboudad`_);
+* **Romain Neutron**.
 
 Core Membership Application
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -189,6 +217,7 @@ discretion of the **Project Leader**.
 .. _Intl: https://github.com/symfony/intl
 .. _LDAP: https://github.com/symfony/ldap
 .. _Locale: https://github.com/symfony/locale
+.. _Messenger: https://github.com/symfony/messenger
 .. _MonologBridge: https://github.com/symfony/monolog-bridge
 .. _OptionsResolver: https://github.com/symfony/options-resolver
 .. _Process: https://github.com/symfony/process
@@ -206,6 +235,8 @@ discretion of the **Project Leader**.
 .. _Workflow: https://github.com/symfony/workflow
 .. _Yaml: https://github.com/symfony/yaml
 .. _WebProfilerBundle: https://github.com/symfony/web-profiler-bundle
+.. _WebLink: https://github.com/symfony/weblink
+.. _`symfony-docs repository`: https://github.com/symfony/symfony-docs
 .. _`fabpot`: https://github.com/fabpot/
 .. _`webmozart`: https://github.com/webmozart/
 .. _`Tobion`: https://github.com/Tobion/
@@ -223,4 +254,8 @@ discretion of the **Project Leader**.
 .. _`lyrixx`: https://github.com/lyrixx/
 .. _`chalasr`: https://github.com/chalasr/
 .. _`ogizanagi`: https://github.com/ogizanagi/
-.. _`csarrazi`: https://github.com/csarrazi/
+.. _`Nyholm`: https://github.com/Nyholm
+.. _`sroze`: https://github.com/sroze
+.. _`michaelcullum`: https://github.com/michaelcullum
+.. _`wouterj`: https://github.com/wouterj
+.. _`HeahDude`: https://github.com/HeahDude

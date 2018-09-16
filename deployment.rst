@@ -103,7 +103,6 @@ specifically tailored to the requirements of Symfony.
 `sf2debpkg`_
     Helps you build a native Debian package for your Symfony project.
 
-
 Basic scripting
     You can of course use shell, `Ant`_ or any other build tool to script
     the deploying of your project.
@@ -117,11 +116,8 @@ you'll need to do:
 A) Check Requirements
 ~~~~~~~~~~~~~~~~~~~~~
 
-Check if your server meets the requirements by running:
-
-.. code-block:: terminal
-
-    $ php bin/symfony_requirements
+Use the :doc:`Symfony Requirements Checker </reference/requirements>` to check
+if your server meets the technical requirements to run Symfony applications.
 
 .. _b-configure-your-app-config-parameters-yml-file:
 
@@ -135,6 +131,10 @@ production, instead of creating this file, you should set *real* environment var
 How you set environment variables, depends on your setup: they can be set at the
 command line, in your Nginx configuration, or via other methods provided by your
 hosting service.
+
+At the very least you need to define the ``APP_ENV=prod`` environment variable
+to run the application in ``prod`` mode, but depending on your application you
+may need to define other env vars too.
 
 C) Install/Update your Vendors
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -157,8 +157,9 @@ as you normally do:
 .. caution::
 
     If you get a "class not found" error during this step, you may need to
-    run ``export SYMFONY_ENV=prod`` before running this command so that
-    the ``post-install-cmd`` scripts run in the ``prod`` environment.
+    run ``export APP_ENV=prod`` (or ``export SYMFONY_ENV=prod`` if you're not
+    using :doc:`Symfony Flex </setup/flex>`) before running this command so
+    that the ``post-install-cmd`` scripts run in the ``prod`` environment.
 
 D) Clear your Symfony Cache
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -167,19 +168,9 @@ Make sure you clear and warm-up your Symfony cache:
 
 .. code-block:: terminal
 
-    $ php bin/console cache:clear --env=prod --no-debug --no-warmup
-    $ php bin/console cache:warmup --env=prod
+    $ php bin/console cache:clear --env=prod --no-debug
 
-E) Dump your Assetic Assets
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-If you're using Assetic, you'll also want to dump your assets:
-
-.. code-block:: terminal
-
-    $ php bin/console assetic:dump --env=prod --no-debug
-
-F) Other Things!
+E) Other Things!
 ~~~~~~~~~~~~~~~~
 
 There may be lots of other things that you need to do, depending on your
@@ -187,15 +178,15 @@ setup:
 
 * Running any database migrations
 * Clearing your APC cache
-* Running ``assets:install`` (already taken care of in ``composer install``)
 * Add/edit CRON jobs
+* :ref:`Building and minifying your assets <how-do-i-deploy-my-encore-assets>` with Webpack Encore
 * Pushing assets to a CDN
 * ...
 
 Application Lifecycle: Continuous Integration, QA, etc.
 -------------------------------------------------------
 
-While this entry covers the technical details of deploying, the full lifecycle
+While this article covers the technical details of deploying, the full lifecycle
 of taking code from development up to production may have more steps:
 deploying to staging, QA (Quality Assurance), running tests, etc.
 
@@ -215,7 +206,7 @@ Deployments not Using the ``composer.json`` File
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Symfony applications provide a ``kernel.project_dir`` parameter and a related
-:method:`Symfony\\Component\\HttpKernel\\Kernel\\Kernel::getProjectDir>` method.
+:method:`Symfony\\Component\\HttpKernel\\Kernel::getProjectDir` method.
 You can use this method to perform operations with file paths relative to your
 project's root directory. The logic to find that project root directory is based
 on the location of the main ``composer.json`` file.
@@ -225,9 +216,9 @@ If your deployment method doesn't use Composer, you may have removed the
 The solution is to override the ``getProjectDir()`` method in the application
 kernel and return your project's root directory::
 
-    // app/AppKernel.php
+    // src/Kernel.php
     // ...
-    class AppKernel extends Kernel
+    class Kernel extends BaseKernel
     {
         // ...
 

@@ -14,9 +14,7 @@ Adding a Session/Request Token
 
 Sometimes it is hard to tell which entries in the log belong to which session
 and/or request. The following example will add a unique token for each request
-using a processor.
-
-.. code-block:: php
+using a processor::
 
     namespace App\Logger;
 
@@ -32,7 +30,7 @@ using a processor.
             $this->session = $session;
         }
 
-        public function processRecord(array $record)
+        public function __invoke(array $record)
         {
             if (!$this->session->isStarted()) {
                 return $record;
@@ -64,7 +62,7 @@ information:
 
             App\Logger\SessionRequestProcessor:
                 tags:
-                    - { name: monolog.processor, method: processRecord }
+                    - { name: monolog.processor }
 
     .. code-block:: xml
 
@@ -86,7 +84,7 @@ information:
                 </service>
 
                 <service id="App\Logger\SessionRequestProcessor">
-                    <tag name="monolog.processor" method="processRecord" />
+                    <tag name="monolog.processor" />
                 </service>
             </services>
         </container>
@@ -111,7 +109,7 @@ Finally, set the formatter to be used on whatever handler you want:
 
     .. code-block:: yaml
 
-        # config/packages/monolog.yaml
+        # config/packages/prod/monolog.yaml
         monolog:
             handlers:
                 main:
@@ -122,7 +120,7 @@ Finally, set the formatter to be used on whatever handler you want:
 
     .. code-block:: xml
 
-        <!-- config/packages/monolog.xml -->
+        <!-- config/packages/prod/monolog.xml -->
         <?xml version="1.0" encoding="UTF-8" ?>
         <container xmlns="http://symfony.com/schema/dic/services"
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -138,21 +136,21 @@ Finally, set the formatter to be used on whatever handler you want:
                     type="stream"
                     path="%kernel.logs_dir%/%kernel.environment%.log"
                     level="debug"
-                    formatter="app.logger.session_request_processor"
+                    formatter="monolog.formatter.session_request"
                 />
             </monolog:config>
         </container>
 
     .. code-block:: php
 
-        // config/packages/monolog.php
+        // config/packages/prod/monolog.php
         $container->loadFromExtension('monolog', array(
             'handlers' => array(
                 'main' => array(
                     'type'      => 'stream',
                     'path'      => '%kernel.logs_dir%/%kernel.environment%.log',
                     'level'     => 'debug',
-                    'formatter' => 'app.logger.session_request_processor',
+                    'formatter' => 'monolog.formatter.session_request',
                 ),
             ),
         ));
@@ -160,6 +158,58 @@ Finally, set the formatter to be used on whatever handler you want:
 If you use several handlers, you can also register a processor at the
 handler level or at the channel level instead of registering it globally
 (see the following sections).
+
+.. tip::
+
+    .. versionadded:: 4.2
+        The autoconfiguration of Monolog processors was introduced in Symfony 4.2.
+
+    If you're using the :ref:`default services.yaml configuration <service-container-services-load-example>`,
+    processors implementing :class:`Symfony\\Bridge\\Monolog\\Processor\\ProcessorInterface`
+    are automatically registered as services and tagged with ``monolog.processor``,
+    so you can use them without adding any configuration. The same applies to the
+    built-in :class:`Symfony\\Bridge\\Monolog\\Processor\\TokenProcessor` and
+    :class:`Symfony\\Bridge\\Monolog\\Processor\\WebProcessor` processors, which
+    can be enabled as follows:
+
+    .. configuration-block::
+
+        .. code-block:: yaml
+
+            # config/services.yaml
+            services:
+                # Adds the current security token to log entries
+                Symfony\Bridge\Monolog\Processor\TokenProcessor: ~
+                # Adds the real client IP to log entries
+                Symfony\Bridge\Monolog\Processor\WebProcessor: ~
+
+        .. code-block:: xml
+
+            <!-- config/services.xml -->
+            <?xml version="1.0" encoding="UTF-8" ?>
+            <container xmlns="http://symfony.com/schema/dic/services"
+                xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                xsi:schemaLocation="http://symfony.com/schema/dic/services
+                    http://symfony.com/schema/dic/services/services-1.0.xsd">
+
+                <services>
+                    <!-- Adds the current security token to log entries -->
+                    <service id="Symfony\Bridge\Monolog\Processor\TokenProcessor" />
+                    <!-- Adds the real client IP to log entries -->
+                    <service id="Symfony\Bridge\Monolog\Processor\WebProcessor" />
+                </services>
+            </container>
+
+        .. code-block:: php
+
+            // config/services.php
+            use Symfony\Bridge\Monolog\Processor\TokenProcessor;
+            use Symfony\Bridge\Monolog\Processor\WebProcessor;
+
+            // Adds the current security token to log entries
+            $container->register(TokenProcessor::class);
+            // Adds the real client IP to log entries
+            $container->register(WebProcessor::class);
 
 Registering Processors per Handler
 ----------------------------------
@@ -175,7 +225,7 @@ the ``monolog.processor`` tag:
         services:
             App\Logger\SessionRequestProcessor:
                 tags:
-                    - { name: monolog.processor, method: processRecord, handler: main }
+                    - { name: monolog.processor, handler: main }
 
     .. code-block:: xml
 
@@ -191,7 +241,7 @@ the ``monolog.processor`` tag:
 
             <services>
                 <service id="App\Logger\SessionRequestProcessor">
-                    <tag name="monolog.processor" method="processRecord" handler="main" />
+                    <tag name="monolog.processor" handler="main" />
                 </service>
             </services>
         </container>
@@ -203,7 +253,7 @@ the ``monolog.processor`` tag:
         // ...
         $container
             ->register(SessionRequestProcessor::class)
-            ->addTag('monolog.processor', array('method' => 'processRecord', 'handler' => 'main'));
+            ->addTag('monolog.processor', array('handler' => 'main'));
 
 Registering Processors per Channel
 ----------------------------------
@@ -219,7 +269,7 @@ the ``monolog.processor`` tag:
         services:
             App\Logger\SessionRequestProcessor:
                 tags:
-                    - { name: monolog.processor, method: processRecord, channel: main }
+                    - { name: monolog.processor, channel: main }
 
     .. code-block:: xml
 
@@ -235,7 +285,7 @@ the ``monolog.processor`` tag:
 
             <services>
                 <service id="App\Logger\SessionRequestProcessor">
-                    <tag name="monolog.processor" method="processRecord" channel="main" />
+                    <tag name="monolog.processor" channel="main" />
                 </service>
             </services>
         </container>
@@ -247,4 +297,4 @@ the ``monolog.processor`` tag:
         // ...
         $container
             ->register(SessionRequestProcessor::class)
-            ->addTag('monolog.processor', array('method' => 'processRecord', 'channel' => 'main'));
+            ->addTag('monolog.processor', array('channel' => 'main'));

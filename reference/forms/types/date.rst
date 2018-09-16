@@ -35,6 +35,7 @@ and can understand a number of different input formats via the `input`_ option.
 | Inherited            | - `data`_                                                                   |
 | options              | - `disabled`_                                                               |
 |                      | - `error_mapping`_                                                          |
+|                      | - `help`_                                                                   |
 |                      | - `inherit_data`_                                                           |
 |                      | - `invalid_message`_                                                        |
 |                      | - `invalid_message_parameters`_                                             |
@@ -76,7 +77,7 @@ use the ``single_text`` widget::
     // ...
 
     $builder->add('publishedAt', DateType::class, array(
-        // render as a single text box
+        // renders it as a single text box
         'widget' => 'single_text',
     ));
 
@@ -94,10 +95,10 @@ make the following changes::
     $builder->add('publishedAt', DateType::class, array(
         'widget' => 'single_text',
 
-        // do not render as type="date", to avoid HTML5 date pickers
+        // prevents rendering it as type="date", to avoid HTML5 date pickers
         'html5' => false,
 
-        // add a class that can be selected in JavaScript
+        // adds a class that can be selected in JavaScript
         'attr' => ['class' => 'js-datepicker'],
     ));
 
@@ -108,7 +109,7 @@ picker:
 
     <script>
         $(document).ready(function() {
-            // configure the bootstrap datepicker
+            // you may need to change this code if you are not using Bootstrap Datepicker
             $('.js-datepicker').datepicker({
                 format: 'yyyy-mm-dd'
             });
@@ -152,7 +153,7 @@ values for the year, month and day fields::
 
     $builder->add('dueDate', DateType::class, array(
         'placeholder' => array(
-            'year' => 'Year', 'month' => 'Month', 'day' => 'Day'
+            'year' => 'Year', 'month' => 'Month', 'day' => 'Day',
         )
     ));
 
@@ -205,6 +206,8 @@ These options inherit from the :doc:`FormType </reference/forms/types/form>`:
 .. include:: /reference/forms/types/options/disabled.rst.inc
 
 .. include:: /reference/forms/types/options/error_mapping.rst.inc
+
+.. include:: /reference/forms/types/options/help.rst.inc
 
 .. include:: /reference/forms/types/options/inherit_data.rst.inc
 

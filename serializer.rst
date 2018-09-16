@@ -19,7 +19,7 @@ install the serializer before using it:
 
 .. code-block:: terminal
 
-    $ composer require serializer
+    $ composer require symfony/serializer
 
 Using the Serializer Service
 ----------------------------
@@ -30,12 +30,12 @@ you need it or it can be used in a controller::
     // src/Controller/DefaultController.php
     namespace App\Controller;
 
-    use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+    use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
     use Symfony\Component\Serializer\SerializerInterface;
 
-    class DefaultController extends Controller
+    class DefaultController extends AbstractController
     {
-        public function indexAction(SerializerInterface $serializer)
+        public function index(SerializerInterface $serializer)
         {
             // keep reading for usage examples
         }
@@ -44,21 +44,38 @@ you need it or it can be used in a controller::
 Adding Normalizers and Encoders
 -------------------------------
 
-Once enabled, the serializer service will be available in the container
-and will be loaded with four :ref:`encoders <component-serializer-encoders>`
-(:class:`Symfony\\Component\\Serializer\\Encoder\\JsonEncoder`,
-:class:`Symfony\\Component\\Serializer\\Encoder\\XmlEncoder`,
-:class:`Symfony\\Component\\Serializer\\Encoder\\YamlEncoder`, and
-:class:`Symfony\\Component\\Serializer\\Encoder\\CsvEncoder`) and the
-:ref:`ObjectNormalizer normalizer <component-serializer-normalizers>`.
+Once enabled, the ``serializer`` service will be available in the container.
+It comes with a set of useful :ref:`encoders <component-serializer-encoders>`
+and :ref:`normalizers <component-serializer-normalizers>`.
 
-You can load normalizers and/or encoders by tagging them as
+Encoders supporting the following formats are enabled:
+
+* JSON: :class:`Symfony\\Component\\Serializer\\Encoder\\JsonEncoder`
+* XML: :class:`Symfony\\Component\\Serializer\\Encoder\\XmlEncoder`
+
+As well as the following normalizers:
+
+* :class:`Symfony\\Component\\Serializer\\Normalizer\\ObjectNormalizer` to
+  handle typical data objects
+* :class:`Symfony\\Component\\Serializer\\Normalizer\\DateTimeNormalizer` for
+  objects implementing the :phpclass:`DateTimeInterface` interface
+* :class:`Symfony\\Component\\Serializer\\Normalizer\\DataUriNormalizer` to
+  transform :phpclass:`SplFileInfo` objects in `Data URIs`_
+* :class:`Symfony\\Component\\Serializer\\Normalizer\\JsonSerializableNormalizer`
+  to deal with objects implementing the :phpclass:`JsonSerializable` interface
+* :class:`Symfony\\Component\\Serializer\\Normalizer\\ArrayDenormalizer` to
+  denormalize arrays of objects using a format like `MyObject[]` (note the `[]` suffix)
+
+Custom normalizers and/or encoders can also be loaded by tagging them as
 :ref:`serializer.normalizer <reference-dic-tags-serializer-normalizer>` and
 :ref:`serializer.encoder <reference-dic-tags-serializer-encoder>`. It's also
 possible to set the priority of the tag in order to decide the matching order.
 
 Here is an example on how to load the
-:class:`Symfony\\Component\\Serializer\\Normalizer\\GetSetMethodNormalizer`:
+:class:`Symfony\\Component\\Serializer\\Normalizer\\GetSetMethodNormalizer`, a
+faster alternative to the `ObjectNormalizer` when data objects always use
+getters (``getXxx()``), issers (``isXxx()``) or hassers (``hasXxx()``) to read
+properties and setters (``setXxx()``) to change properties:
 
 .. configuration-block::
 
@@ -102,19 +119,26 @@ Here is an example on how to load the
 Using Serialization Groups Annotations
 --------------------------------------
 
-To use annotations, first install the annotations package:
+To use annotations, first add support for them via the SensioFrameworkExtraBundle:
 
 .. code-block:: terminal
 
-    $ composer require annotations
+    $ composer require sensio/framework-extra-bundle
 
 Next, add the :ref:`@Groups annotations <component-serializer-attributes-groups-annotations>`
 to your class and choose which groups to use when serializing::
 
     $json = $serializer->serialize(
         $someObject,
-        'json', array('groups' => array('group1'))
+        'json', array('groups' => 'group1')
     );
+
+.. tip::
+
+    The value of the ``groups`` key can be a single string, or an array of strings.
+    
+    .. versionadded:: 4.2
+        The option to pass a single string to ``groups`` was introduced in Symfony 4.2.
 
 In addition to the ``@Groups`` annotation, the Serializer component also
 supports YAML or XML files. These files are automatically loaded when being
@@ -130,8 +154,10 @@ stored in one of the following locations:
 Configuring the Metadata Cache
 ------------------------------
 
-The metadata for the serializer is automatically cached. To configure the cache,
-configure the ``framework.cache.pools`` key in ``config/packages/framework.yaml``.
+The metadata for the serializer is automatically cached to enhance application
+performance. By default, the serializer uses the ``cache.system`` cache pool
+which is configured using the :ref:`cache.system <reference-cache-systen>`
+option.
 
 Enabling a Name Converter
 -------------------------
@@ -186,10 +212,10 @@ take a look at how this bundle works.
 .. toctree::
     :maxdepth: 1
 
-    serializer/encoders
     serializer/custom_encoders
 
 .. _`APCu`: https://github.com/krakjoe/apcu
 .. _`ApiPlatform`: https://github.com/api-platform/core
 .. _`JSON-LD`: http://json-ld.org
 .. _`Hydra Core Vocabulary`: http://hydra-cg.com
+.. _`Data URIs`: https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/Data_URIs

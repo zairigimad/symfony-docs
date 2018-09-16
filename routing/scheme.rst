@@ -15,10 +15,10 @@ the URI scheme via schemes:
         // src/Controller/MainController.php
         namespace App\Controller;
 
-        use Symfony\Bundle\FrameworkBundle\Controller\Controller;
-        use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
+        use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+        use Symfony\Component\Routing\Annotation\Route;
 
-        class MainController extends Controller
+        class MainController extends AbstractController
         {
             /**
              * @Route("/secure", name="secure", schemes={"https"})
@@ -57,12 +57,12 @@ the URI scheme via schemes:
         use Symfony\Component\Routing\RouteCollection;
         use Symfony\Component\Routing\Route;
 
-        $collection = new RouteCollection();
-        $collection->add('secure', new Route('/secure', array(
+        $routes = new RouteCollection();
+        $routes->add('secure', new Route('/secure', array(
             '_controller' => 'App\Controller\MainController::secure',
         ), array(), array(), '', array('https')));
 
-        return $collection;
+        return $routes;
 
 The above configuration forces the ``secure`` route to always use HTTPS.
 

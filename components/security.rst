@@ -9,15 +9,16 @@ The Security Component
     authentication, interactive form login or X.509 certificate login, but also
     allows you to implement your own authentication strategies. Furthermore, the
     component provides ways to authorize authenticated users based on their
-    roles, and it contains an advanced ACL system.
+    roles.
 
 Installation
 ------------
 
-You can install the component in 2 different ways:
+.. code-block:: terminal
 
-* :doc:`Install it via Composer </components/using_components>` (``symfony/security`` on Packagist_);
-* Use the official Git repository (https://github.com/symfony/security).
+    $ composer require symfony/security
+
+Alternatively, you can clone the `<https://github.com/symfony/security>`_ repository.
 
 .. include:: /components/require_autoload.rst.inc
 
@@ -35,8 +36,11 @@ used separately:
 ``symfony/security-csrf``
     It provides protection against `CSRF attacks`_.
 
-``symfony/security-acl``
-    It provides a fine grained permissions mechanism based on Access Control Lists.
+.. seealso::
+
+    This article explains how to use the Security features as an independent
+    component in any PHP application. Read the :doc:`/security` article to learn
+    about how to use it in Symfony applications.
 
 Learn More
 ----------

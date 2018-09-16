@@ -1,19 +1,33 @@
 Coding Standards
 ================
 
-When contributing code to Symfony, you must follow its coding standards. To
-make a long story short, here is the golden rule: **Imitate the existing
-Symfony code**. Most open-source Bundles and libraries used by Symfony also
-follow the same guidelines, and you should too.
+Symfony code is contributed by thousands of developers around the world. To make
+every piece of code look and feel familiar, Symfony defines some coding standards
+that all contributions must follow.
 
-Remember that the main advantage of standards is that every piece of code
-looks and feels familiar, it's not about this or that being more readable.
+These Symfony coding standards are based on the `PSR-1`_, `PSR-2`_ and `PSR-4`_
+standards, so you may already know most of them.
 
-Symfony follows the standards defined in the `PSR-0`_, `PSR-1`_, `PSR-2`_ and `PSR-4`_
-documents.
+Making your Code Follow the Coding Standards
+--------------------------------------------
 
-Since a picture - or some code - is worth a thousand words, here's a short
-example containing most features described below:
+Instead of reviewing your code manually, Symfony makes it simple to ensure that
+your contributed code matches the expected code syntax. First, install the
+`PHP CS Fixer tool`_ and then, run this command to fix any problem:
+
+.. code-block:: terminal
+
+    $ cd your-project/
+    $ php php-cs-fixer.phar fix -v
+
+If you forget to run this command and make a pull request with any syntax issue,
+our automated tools will warn you about that and will provide the solution.
+
+Symfony Coding Standards in Detail
+----------------------------------
+
+If you want to learn about the Symfony coding standards in detail, here's a
+short example containing most features described below:
 
 .. code-block:: html+php
 
@@ -122,7 +136,7 @@ example containing most features described below:
     }
 
 Structure
----------
+~~~~~~~~~
 
 * Add a single space after each comma delimiter;
 
@@ -178,10 +192,12 @@ Structure
 * Do not use ``else``, ``elseif``, ``break`` after ``if`` and ``case`` conditions
   which return or throw something;
 
-* Do not use spaces around ``[`` offset accessor and before ``]`` offset accessor.
+* Do not use spaces around ``[`` offset accessor and before ``]`` offset accessor;
+
+* Add a ``use`` statement for every class that is not part of the global namespace.
 
 Naming Conventions
-------------------
+~~~~~~~~~~~~~~~~~~
 
 * Use camelCase, not underscores, for variable, function and method
   names, arguments;
@@ -215,20 +231,22 @@ Naming Conventions
 Service Naming Conventions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-* A service name contains groups, separated by dots;
+* A service name must be the same as the fully qualified class name (FQCN) of
+  its class (e.g. ``App\EventSubscriber\UserSubscriber``);
 
-* The DI alias of the bundle is the first group (e.g. ``fos_user``);
+* If there are multiple services for the same class, use the FQCN for the main
+  service and use lowercased and underscored names for the rest of services.
+  Optionally divide them in groups separated with dots (e.g.
+  ``something.service_name``, ``fos_user.something.service_name``);
 
-* Use lowercase letters for service and parameter names (except when referring
+* Use lowercase letters for parameter names (except when referring
   to environment variables with the ``%env(VARIABLE_NAME)%`` syntax);
-
-* A group name uses the underscore notation;
 
 * Add class aliases for public services (e.g. alias ``Symfony\Component\Something\ClassName``
   to ``something.service_name``).
 
 Documentation
--------------
+~~~~~~~~~~~~~
 
 * Add PHPDoc blocks for all classes, methods, and functions (though you may
   be asked to remove PHPDoc that do not add value);
@@ -239,17 +257,26 @@ Documentation
 
 * Omit the ``@return`` tag if the method does not return anything;
 
-* The ``@package`` and ``@subpackage`` annotations are not used.
+* The ``@package`` and ``@subpackage`` annotations are not used;
+
+* Don't inline PHPDoc blocks, even when they contain just one tag (e.g. don't
+  put ``/** {@inheritdoc} */`` in a single line);
+
+* When adding a new class or when making significant changes to an existing class,
+  an ``@author`` tag with personal contact information may be added, or expanded.
+  Please note it is possible to have the personal contact information updated or
+  removed per request to the doc:`core team </contributing/code/core_team>`.
 
 License
--------
+~~~~~~~
 
 * Symfony is released under the MIT license, and the license block has to be
   present at the top of every PHP file, before the namespace.
 
-.. _`PSR-0`: http://www.php-fig.org/psr/psr-0/
-.. _`PSR-1`: http://www.php-fig.org/psr/psr-1/
-.. _`PSR-2`: http://www.php-fig.org/psr/psr-2/
-.. _`PSR-4`: http://www.php-fig.org/psr/psr-4/
-.. _`identical comparison`: http://php.net/manual/en/language.operators.comparison.php
+.. _`PHP CS Fixer tool`: http://cs.sensiolabs.org/
+.. _`PSR-0`: https://www.php-fig.org/psr/psr-0/
+.. _`PSR-1`: https://www.php-fig.org/psr/psr-1/
+.. _`PSR-2`: https://www.php-fig.org/psr/psr-2/
+.. _`PSR-4`: https://www.php-fig.org/psr/psr-4/
+.. _`identical comparison`: https://php.net/manual/en/language.operators.comparison.php
 .. _`Yoda conditions`: https://en.wikipedia.org/wiki/Yoda_conditions

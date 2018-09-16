@@ -35,7 +35,7 @@ entry in that array:
             /**
              * @Assert\All({
              *     @Assert\NotBlank,
-             *     @Assert\Length(min = 5)
+             *     @Assert\Length(min=5)
              * })
              */
              protected $favoriteColors = array();
@@ -43,7 +43,7 @@ entry in that array:
 
     .. code-block:: yaml
 
-        # src/Resources/config/validation.yaml
+        # config/validator/validation.yaml
         App\Entity\User:
             properties:
                 favoriteColors:
@@ -54,7 +54,7 @@ entry in that array:
 
     .. code-block:: xml
 
-        <!-- src/Resources/config/validation.xml -->
+        <!-- config/validator/validation.xml -->
         <?xml version="1.0" encoding="UTF-8" ?>
         <constraint-mapping xmlns="http://symfony.com/schema/dic/constraint-mapping"
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"

@@ -38,14 +38,12 @@ Services: Naming and Configuration
 by Symfony's Service Container to manage services with minimal configuration. It
 reads the type-hints on your constructor (or other methods) and automatically
 passes the correct services to each method. It can also add
-:doc:`service tags </service_container/tags>` to the services needed them, such
+:doc:`service tags </service_container/tags>` to the services needing them, such
 as Twig extensions, event subscribers, etc.
 
 The blog application needs a utility that can transform a post title (e.g.
 "Hello World") into a slug (e.g. "hello-world") to include it as part of the
-post URL. Let's create a new ``Slugger`` class inside ``src/Utils/``:
-
-.. code-block:: php
+post URL. Let's create a new ``Slugger`` class inside ``src/Utils/``::
 
     // src/Utils/Slugger.php
     namespace App\Utils;
@@ -69,9 +67,7 @@ simply ``Slugger::class`` if the class is already imported in your code).
     case, use a snake case id).
 
 Now you can use the custom slugger in any other service or controller class,
-such as the ``AdminController``:
-
-.. code-block:: php
+such as the ``AdminController``::
 
     use App\Utils\Slugger;
 
@@ -100,11 +96,13 @@ all services are private by default.
 Service Format: YAML
 --------------------
 
-In the previous section, YAML was used to define the service.
+If you use the :ref:`default services.yaml configuration <service-container-services-load-example>`,
+most services will be configured automatically. However, in some edge cases
+you'll need to configure services (or parts of them) manually.
 
 .. best-practice::
 
-    Use the YAML format to define your own services.
+    Use the YAML format to configure your own services.
 
 This is controversial, and in our experience, YAML and XML usage is evenly
 distributed among developers, with a slight preference towards YAML.
@@ -152,9 +150,7 @@ PHP and annotations.
     Use annotations to define the mapping information of the Doctrine entities.
 
 Annotations are by far the most convenient and agile way of setting up and
-looking for mapping information:
-
-.. code-block:: php
+looking for mapping information::
 
     namespace App\Entity;
 
@@ -166,7 +162,7 @@ looking for mapping information:
      */
     class Post
     {
-        const NUM_ITEMS = 10;
+        const NUMBER_OF_ITEMS = 10;
 
         /**
          * @ORM\Id
@@ -206,7 +202,7 @@ looking for mapping information:
          *      mappedBy="post",
          *      orphanRemoval=true
          * )
-         * @ORM\OrderBy({"publishedAt" = "ASC"})
+         * @ORM\OrderBy({"publishedAt"="ASC"})
          */
         private $comments;
 
@@ -233,9 +229,7 @@ the following command to install the Doctrine fixtures bundle:
     $ composer require "doctrine/doctrine-fixtures-bundle"
 
 Then, this bundle is enabled automatically, but only for the ``dev`` and
-``test`` environments:
-
-.. code-block:: php
+``test`` environments::
 
     // config/bundles.php
 
@@ -275,6 +269,6 @@ Next: :doc:`/best_practices/controllers`
 .. _`full definition`: https://en.wikipedia.org/wiki/Business_logic
 .. _`Doctrine project`: http://www.doctrine-project.org/
 .. _`fixture class`: https://symfony.com/doc/current/bundles/DoctrineFixturesBundle/index.html#writing-simple-fixtures
-.. _`PSR-1`: http://www.php-fig.org/psr/psr-1/
-.. _`PSR-2`: http://www.php-fig.org/psr/psr-2/
+.. _`PSR-1`: https://www.php-fig.org/psr/psr-1/
+.. _`PSR-2`: https://www.php-fig.org/psr/psr-2/
 .. _`PHP-CS-Fixer`: https://github.com/FriendsOfPHP/PHP-CS-Fixer

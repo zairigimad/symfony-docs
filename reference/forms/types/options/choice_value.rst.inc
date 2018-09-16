@@ -13,18 +13,8 @@ integer is used as the value.
 
 If you pass a callable, it will receive one argument: the choice itself. When using
 the :doc:`/reference/forms/types/entity`, the argument will be the entity object
-for each choice or ``null`` in some cases, which you need to handle:
-
-.. code-block:: php
+for each choice or ``null`` in some cases, which you need to handle::
 
     'choice_value' => function (MyOptionEntity $entity = null) {
         return $entity ? $entity->getId() : '';
     },
-
-.. caution::
-
-    In Symfony 2.7, there was a small backwards-compatibility break with how the
-    ``value`` attribute of options is generated. This is not a problem unless you
-    rely on the option values in JavaScript. See `issue #14825`_ for details.
-
-.. _`issue #14825`: https://github.com/symfony/symfony/pull/14825

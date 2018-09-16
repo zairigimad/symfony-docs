@@ -170,59 +170,30 @@ that overrides certain methods of its parent class").
 
 First, build a base layout file:
 
-.. configuration-block::
+.. code-block:: html+twig
 
-    .. code-block:: html+twig
+    {# templates/base.html.twig #}
+    <!DOCTYPE html>
+    <html>
+        <head>
+            <meta charset="UTF-8">
+            <title>{% block title %}Test Application{% endblock %}</title>
+        </head>
+        <body>
+            <div id="sidebar">
+                {% block sidebar %}
+                    <ul>
+                        <li><a href="/">Home</a></li>
+                        <li><a href="/blog">Blog</a></li>
+                    </ul>
+                {% endblock %}
+            </div>
 
-        {# templates/base.html.twig #}
-        <!DOCTYPE html>
-        <html>
-            <head>
-                <meta charset="UTF-8">
-                <title>{% block title %}Test Application{% endblock %}</title>
-            </head>
-            <body>
-                <div id="sidebar">
-                    {% block sidebar %}
-                        <ul>
-                            <li><a href="/">Home</a></li>
-                            <li><a href="/blog">Blog</a></li>
-                        </ul>
-                    {% endblock %}
-                </div>
-
-                <div id="content">
-                    {% block body %}{% endblock %}
-                </div>
-            </body>
-        </html>
-
-    .. code-block:: html+php
-
-        <!-- templates/base.html.php -->
-        <!DOCTYPE html>
-        <html>
-            <head>
-                <meta charset="UTF-8">
-                <title><?php $view['slots']->output('title', 'Test Application') ?></title>
-            </head>
-            <body>
-                <div id="sidebar">
-                    <?php if ($view['slots']->has('sidebar')): ?>
-                        <?php $view['slots']->output('sidebar') ?>
-                    <?php else: ?>
-                        <ul>
-                            <li><a href="/">Home</a></li>
-                            <li><a href="/blog">Blog</a></li>
-                        </ul>
-                    <?php endif ?>
-                </div>
-
-                <div id="content">
-                    <?php $view['slots']->output('body') ?>
-                </div>
-            </body>
-        </html>
+            <div id="content">
+                {% block body %}{% endblock %}
+            </div>
+        </body>
+    </html>
 
 .. note::
 
@@ -238,41 +209,25 @@ simply retain the default values used in this template.
 
 A child template might look like this:
 
-.. configuration-block::
+.. code-block:: html+twig
 
-    .. code-block:: html+twig
+    {# templates/blog/index.html.twig #}
+    {% extends 'base.html.twig' %}
 
-        {# templates/blog/index.html.twig #}
-        {% extends 'base.html.twig' %}
+    {% block title %}My cool blog posts{% endblock %}
 
-        {% block title %}My cool blog posts{% endblock %}
-
-        {% block body %}
-            {% for entry in blog_entries %}
-                <h2>{{ entry.title }}</h2>
-                <p>{{ entry.body }}</p>
-            {% endfor %}
-        {% endblock %}
-
-    .. code-block:: html+php
-
-        <!-- templates/blog/index.html.php -->
-        <?php $view->extend('base.html.php') ?>
-
-        <?php $view['slots']->set('title', 'My cool blog posts') ?>
-
-        <?php $view['slots']->start('body') ?>
-            <?php foreach ($blog_entries as $entry): ?>
-                <h2><?php echo $entry->getTitle() ?></h2>
-                <p><?php echo $entry->getBody() ?></p>
-            <?php endforeach ?>
-        <?php $view['slots']->stop() ?>
+    {% block body %}
+        {% for entry in blog_entries %}
+            <h2>{{ entry.title }}</h2>
+            <p>{{ entry.body }}</p>
+        {% endfor %}
+    {% endblock %}
 
 .. note::
 
-   The parent template is stored in ``templates/``, so its path is
-   simply ``base.html.twig``. The template naming conventions are explained
-   fully in :ref:`template-naming-locations`.
+    The parent template is stored in ``templates/``, so its path is
+    simply ``base.html.twig``. The template naming conventions are explained
+    fully in :ref:`template-naming-locations`.
 
 The key to template inheritance is the ``{% extends %}`` tag. This tells
 the templating engine to first evaluate the base template, which sets up
@@ -360,13 +315,12 @@ By default, templates can live in two different locations:
 ``templates/``
     The application's ``views`` directory can contain application-wide base templates
     (i.e. your application's layouts and templates of the application bundle) as
-    well as templates that override third party bundle templates
-    (see :doc:`/templating/overriding`).
+    well as templates that :ref:`override third party bundle templates <override-templates>`.
 
 ``vendor/path/to/CoolBundle/Resources/views/``
     Each third party bundle houses its templates in its ``Resources/views/``
     directory (and subdirectories). When you plan to share your bundle, you should
-    put the templates in the bundle instead of the ``app/`` directory.
+    put the templates in the bundle instead of the ``templates/`` directory.
 
 Most of the templates you'll use live in the ``templates/``
 directory. The path you'll use will be relative to this directory. For example,
@@ -405,10 +359,8 @@ for several types of templates, each which lives in a specific location:
   is missing (e.g. ``Blog``), the template lives at
   ``Resources/views/layout.html.twig`` inside AcmeBlogBundle.
 
-In the :doc:`/templating/overriding` section, you'll find out how each
-template living inside the AcmeBlogBundle, for example, can be overridden
-by placing a template of the same name in the ``app/Resources/AcmeBlogBundle/views/``
-directory. This gives the power to override templates from any vendor bundle.
+Using this namespaced syntax instead of the real file paths allows applications
+to :ref:`override templates that live inside any bundle <override-templates>`.
 
 Template Suffix
 ~~~~~~~~~~~~~~~
@@ -460,6 +412,7 @@ few more.
    single: Templating; Including other templates
 
 .. _including-templates:
+.. _including-other-templates:
 
 Including other Templates
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -475,60 +428,30 @@ a new PHP class or function. The same is true for templates. By moving the
 reused template code into its own template, it can be included from any other
 template. First, create the template that you'll need to reuse.
 
-.. configuration-block::
+.. code-block:: html+twig
 
-    .. code-block:: html+twig
+    {# templates/article/article_details.html.twig #}
+    <h2>{{ article.title }}</h2>
+    <h3 class="byline">by {{ article.authorName }}</h3>
 
-        {# templates/article/article_details.html.twig #}
-        <h2>{{ article.title }}</h2>
-        <h3 class="byline">by {{ article.authorName }}</h3>
-
-        <p>
-            {{ article.body }}
-        </p>
-
-    .. code-block:: html+php
-
-        <!-- templates/article/article_details.html.php -->
-        <h2><?php echo $article->getTitle() ?></h2>
-        <h3 class="byline">by <?php echo $article->getAuthorName() ?></h3>
-
-        <p>
-            <?php echo $article->getBody() ?>
-        </p>
+    <p>
+        {{ article.body }}
+    </p>
 
 Including this template from any other template is simple:
 
-.. configuration-block::
+.. code-block:: html+twig
 
-    .. code-block:: html+twig
+    {# templates/article/list.html.twig #}
+    {% extends 'layout.html.twig' %}
 
-        {# templates/article/list.html.twig #}
-        {% extends 'layout.html.twig' %}
+    {% block body %}
+        <h1>Recent Articles<h1>
 
-        {% block body %}
-            <h1>Recent Articles<h1>
-
-            {% for article in articles %}
-                {{ include('article/article_details.html.twig', { 'article': article }) }}
-            {% endfor %}
-        {% endblock %}
-
-    .. code-block:: html+php
-
-        <!-- app/Resources/article/list.html.php -->
-        <?php $view->extend('layout.html.php') ?>
-
-        <?php $view['slots']->start('body') ?>
-            <h1>Recent Articles</h1>
-
-            <?php foreach ($articles as $article): ?>
-                <?php echo $view->render(
-                    'Article/article_details.html.php',
-                    array('article' => $article)
-                ) ?>
-            <?php endforeach ?>
-        <?php $view['slots']->stop() ?>
+        {% for article in articles %}
+            {{ include('article/article_details.html.twig', { 'article': article }) }}
+        {% endfor %}
+    {% endblock %}
 
 The template is included using the ``{{ include() }}`` function. Notice that the
 template name follows the same typical convention. The ``article_details.html.twig``
@@ -570,7 +493,7 @@ configuration:
         // ...
         use Symfony\Component\Routing\Annotation\Route;
 
-        class WelcomeController extends Controller
+        class WelcomeController extends AbstractController
         {
             /**
              * @Route("/", name="welcome")
@@ -608,24 +531,18 @@ configuration:
         use Symfony\Component\Routing\Route;
         use Symfony\Component\Routing\RouteCollection;
 
-        $collection = new RouteCollection();
-        $collection->add('welcome', new Route('/', array(
+        $routes = new RouteCollection();
+        $routes->add('welcome', new Route('/', array(
             '_controller' => 'App\Controller\WelcomeController::index',
         )));
 
-        return $collection;
+        return $routes;
 
 To link to the page, just use the ``path()`` Twig function and refer to the route:
 
-.. configuration-block::
+.. code-block:: html+twig
 
-    .. code-block:: html+twig
-
-        <a href="{{ path('welcome') }}">Home</a>
-
-    .. code-block:: html+php
-
-        <a href="<?php echo $view['router']->path('welcome') ?>">Home</a>
+    <a href="{{ path('welcome') }}">Home</a>
 
 As expected, this will generate the URL ``/``. Now, for a more complicated
 route:
@@ -639,7 +556,7 @@ route:
         // ...
         use Symfony\Component\Routing\Annotation\Route;
 
-        class ArticleController extends Controller
+        class ArticleController extends AbstractController
         {
             /**
              * @Route("/article/{slug}", name="article_show")
@@ -677,56 +594,34 @@ route:
         use Symfony\Component\Routing\Route;
         use Symfony\Component\Routing\RouteCollection;
 
-        $collection = new RouteCollection();
-        $collection->add('article_show', new Route('/article/{slug}', array(
+        $routes = new RouteCollection();
+        $routes->add('article_show', new Route('/article/{slug}', array(
             '_controller' => 'App\Controller\ArticleController::show',
         )));
 
-        return $collection;
+        return $routes;
 
 In this case, you need to specify both the route name (``article_show``) and
 a value for the ``{slug}`` parameter. Using this route, revisit the
 ``recent_list.html.twig`` template from the previous section and link to the articles
 correctly:
 
-.. configuration-block::
+.. code-block:: html+twig
 
-    .. code-block:: html+twig
-
-        {# templates/article/recent_list.html.twig #}
-        {% for article in articles %}
-            <a href="{{ path('article_show', {'slug': article.slug}) }}">
-                {{ article.title }}
-            </a>
-        {% endfor %}
-
-    .. code-block:: html+php
-
-        <!-- templates/Article/recent_list.html.php -->
-        <?php foreach ($articles as $article): ?>
-            <a href="<?php echo $view['router']->path('article_show', array(
-                'slug' => $article->getSlug(),
-            )) ?>">
-                <?php echo $article->getTitle() ?>
-            </a>
-        <?php endforeach ?>
+    {# templates/article/recent_list.html.twig #}
+    {% for article in articles %}
+        <a href="{{ path('article_show', {'slug': article.slug}) }}">
+            {{ article.title }}
+        </a>
+    {% endfor %}
 
 .. tip::
 
     You can also generate an absolute URL by using the ``url()`` Twig function:
 
-    .. configuration-block::
+.. code-block:: html+twig
 
-        .. code-block:: html+twig
-
-            <a href="{{ url('welcome') }}">Home</a>
-
-        .. code-block:: html+php
-
-            <a href="<?php echo $view['router']->url(
-                'welcome',
-                array()
-            ) ?>">Home</a>
+    <a href="{{ url('welcome') }}">Home</a>
 
 .. index::
    single: Templating; Linking to assets
@@ -738,21 +633,21 @@ Linking to Assets
 
 Templates also commonly refer to images, JavaScript, stylesheets and other
 assets. Of course you could hard-code the path to these assets (e.g. ``/images/logo.png``),
-but Symfony provides a more dynamic option via the ``asset()`` Twig function:
+but Symfony provides a more dynamic option via the ``asset()`` Twig function.
 
-.. configuration-block::
+To use this function, install the *asset* package:
 
-    .. code-block:: html+twig
+.. code-block:: terminal
 
-        <img src="{{ asset('images/logo.png') }}" alt="Symfony!" />
+    $ composer require symfony/asset
 
-        <link href="{{ asset('css/blog.css') }}" rel="stylesheet" />
+You can now use the ``asset()`` function:
 
-    .. code-block:: html+php
+.. code-block:: html+twig
 
-        <img src="<?php echo $view['assets']->getUrl('images/logo.png') ?>" alt="Symfony!" />
+    <img src="{{ asset('images/logo.png') }}" alt="Symfony!" />
 
-        <link href="<?php echo $view['assets']->getUrl('css/blog.css') ?>" rel="stylesheet" />
+    <link href="{{ asset('css/blog.css') }}" rel="stylesheet" />
 
 The ``asset()`` function's main purpose is to make your application more portable.
 If your application lives at the root of your host (e.g. ``http://example.com``),
@@ -801,76 +696,43 @@ one called ``stylesheets`` inside the ``head`` tag and another called ``javascri
 just above the closing ``body`` tag. These blocks will contain all of the
 stylesheets and JavaScripts that you'll need throughout your site:
 
-.. configuration-block::
+.. code-block:: html+twig
 
-    .. code-block:: html+twig
+    {# templates/base.html.twig #}
+    <html>
+        <head>
+            {# ... #}
 
-        {# templates/base.html.twig #}
-        <html>
-            <head>
-                {# ... #}
+            {% block stylesheets %}
+                <link href="{{ asset('css/main.css') }}" rel="stylesheet" />
+            {% endblock %}
+        </head>
+        <body>
+            {# ... #}
 
-                {% block stylesheets %}
-                    <link href="{{ asset('css/main.css') }}" rel="stylesheet" />
-                {% endblock %}
-            </head>
-            <body>
-                {# ... #}
-
-                {% block javascripts %}
-                    <script src="{{ asset('js/main.js') }}"></script>
-                {% endblock %}
-            </body>
-        </html>
-
-    .. code-block:: php
-
-        // templates/base.html.php
-        <html>
-            <head>
-                <?php ... ?>
-
-                <?php $view['slots']->start('stylesheets') ?>
-                    <link href="<?php echo $view['assets']->getUrl('css/main.css') ?>" rel="stylesheet" />
-                <?php $view['slots']->stop() ?>
-            </head>
-            <body>
-                <?php ... ?>
-
-                <?php $view['slots']->start('javascripts') ?>
-                    <script src="<?php echo $view['assets']->getUrl('js/main.js') ?>"></script>
-                <?php $view['slots']->stop() ?>
-            </body>
-        </html>
+            {% block javascripts %}
+                <script src="{{ asset('js/main.js') }}"></script>
+            {% endblock %}
+        </body>
+    </html>
 
 That's easy enough! But what if you need to include an extra stylesheet or
 JavaScript from a child template? For example, suppose you have a contact
 page and you need to include a ``contact.css`` stylesheet *just* on that
 page. From inside that contact page's template, do the following:
 
-.. configuration-block::
+.. code-block:: html+twig
 
-    .. code-block:: html+twig
+    {# templates/contact/contact.html.twig #}
+    {% extends 'base.html.twig' %}
 
-        {# templates/contact/contact.html.twig #}
-        {% extends 'base.html.twig' %}
+    {% block stylesheets %}
+        {{ parent() }}
 
-        {% block stylesheets %}
-            {{ parent() }}
+        <link href="{{ asset('css/contact.css') }}" rel="stylesheet" />
+    {% endblock %}
 
-            <link href="{{ asset('css/contact.css') }}" rel="stylesheet" />
-        {% endblock %}
-
-        {# ... #}
-
-    .. code-block:: php
-
-        // templates/contact/contact.html.twig
-        <?php $view->extend('base.html.php') ?>
-
-        <?php $view['slots']->start('stylesheets') ?>
-            <link href="<?php echo $view['assets']->getUrl('css/contact.css') ?>" rel="stylesheet" />
-        <?php $view['slots']->stop() ?>
+    {# ... #}
 
 In the child template, you simply override the ``stylesheets`` block and
 put your new stylesheet tag inside of that block. Of course, since you want
@@ -881,7 +743,7 @@ block of the base template.
 You can also include assets located in your bundles' ``Resources/public/`` folder.
 You will need to run the ``php bin/console assets:install target [--symlink]``
 command, which copies (or symlinks) files into the correct location. (target
-is by default the "web/" directory of your application).
+is by default the "public/" directory of your application).
 
 .. code-block:: html+twig
 
@@ -946,11 +808,11 @@ Learn more
 
     /templating/*
 
-.. _`Twig`: http://twig.sensiolabs.org
-.. _`tags`: http://twig.sensiolabs.org/doc/tags/index.html
-.. _`filters`: http://twig.sensiolabs.org/doc/filters/index.html
-.. _`functions`: http://twig.sensiolabs.org/doc/functions/index.html
-.. _`add your own extensions`: http://twig.sensiolabs.org/doc/advanced.html#creating-an-extension
-.. _`with_context`: http://twig.sensiolabs.org/doc/functions/include.html
-.. _`include() function`: http://twig.sensiolabs.org/doc/functions/include.html
-.. _`{% include %} tag`: http://twig.sensiolabs.org/doc/tags/include.html
+.. _`Twig`: https://twig.symfony.com
+.. _`tags`: https://twig.symfony.com/doc/2.x/tags/index.html
+.. _`filters`: https://twig.symfony.com/doc/2.x/filters/index.html
+.. _`functions`: https://twig.symfony.com/doc/2.x/functions/index.html
+.. _`add your own extensions`: https://twig.symfony.com/doc/2.x/advanced.html#creating-an-extension
+.. _`with_context`: https://twig.symfony.com/doc/2.x/functions/include.html
+.. _`include() function`: https://twig.symfony.com/doc/2.x/functions/include.html
+.. _`{% include %} tag`: https://twig.symfony.com/doc/2.x/tags/include.html

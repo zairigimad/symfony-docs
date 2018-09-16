@@ -12,7 +12,7 @@ install the profiler before using it:
 
 .. code-block:: terminal
 
-    $ composer require profiler
+    $ composer require --dev symfony/profiler-pack
 
 .. toctree::
     :maxdepth: 1
@@ -21,3 +21,4 @@ install the profiler before using it:
     profiler/profiling_data
     profiler/matchers
     profiler/storage
+    profiler/wdt_follow_ajax

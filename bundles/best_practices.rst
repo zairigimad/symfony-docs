@@ -26,7 +26,7 @@ A namespace becomes a bundle as soon as you add a bundle class to it. The
 bundle class name must follow these simple rules:
 
 * Use only alphanumeric characters and underscores;
-* Use a CamelCased name;
+* Use a StudlyCaps name (i.e. camelCase with the first letter uppercased);
 * Use a descriptive and short name (no more than two words);
 * Prefix the name with the concatenation of the vendor (and optionally the
   category namespaces);
@@ -163,8 +163,84 @@ the ``Tests/`` directory. Tests should follow the following principles:
 
 .. note::
 
-   A test suite must not contain ``AllTests.php`` scripts, but must rely on the
-   existence of a ``phpunit.xml.dist`` file.
+    A test suite must not contain ``AllTests.php`` scripts, but must rely on the
+    existence of a ``phpunit.xml.dist`` file.
+
+Continuous Integration
+----------------------
+
+Testing bundle code continuously, including all its commits and pull requests,
+is a good practice called Continuous Integration. There are several services
+providing this feature for free for open source projects. The most popular
+service for Symfony bundles is called `Travis CI`_.
+
+Here is the recommended configuration file (``.travis.yml``) for Symfony bundles,
+which test the two latest :doc:`LTS versions </contributing/community/releases>`
+of Symfony and the latest beta release:
+
+.. code-block:: yaml
+
+    language: php
+    sudo: false
+    cache:
+        directories:
+            - $HOME/.composer/cache/files
+            - $HOME/symfony-bridge/.phpunit
+
+    env:
+        global:
+            - PHPUNIT_FLAGS="-v"
+            - SYMFONY_PHPUNIT_DIR="$HOME/symfony-bridge/.phpunit"
+
+    matrix:
+        fast_finish: true
+        include:
+              # Minimum supported dependencies with the latest and oldest PHP version
+            - php: 7.2
+              env: COMPOSER_FLAGS="--prefer-stable --prefer-lowest" SYMFONY_DEPRECATIONS_HELPER="weak_vendors"
+            - php: 7.0
+              env: COMPOSER_FLAGS="--prefer-stable --prefer-lowest" SYMFONY_DEPRECATIONS_HELPER="weak_vendors"
+
+              # Test the latest stable release
+            - php: 7.0
+            - php: 7.1
+            - php: 7.2
+              env: COVERAGE=true PHPUNIT_FLAGS="-v --coverage-text"
+
+              # Test LTS versions. This makes sure we do not use Symfony packages with version greater
+              # than 2 or 3 respectively. Read more at https://github.com/symfony/lts
+            - php: 7.2
+              env: DEPENDENCIES="symfony/lts:^2"
+            - php: 7.2
+              env: DEPENDENCIES="symfony/lts:^3"
+
+              # Latest commit to master
+            - php: 7.2
+              env: STABILITY="dev"
+
+        allow_failures:
+              # Dev-master is allowed to fail.
+            - env: STABILITY="dev"
+
+    before_install:
+        - if [[ $COVERAGE != true ]]; then phpenv config-rm xdebug.ini || true; fi
+        - if ! [ -z "$STABILITY" ]; then composer config minimum-stability ${STABILITY}; fi;
+        - if ! [ -v "$DEPENDENCIES" ]; then composer require --no-update ${DEPENDENCIES}; fi;
+
+    install:
+        # To be removed when this issue will be resolved: https://github.com/composer/composer/issues/5355
+        - if [[ "$COMPOSER_FLAGS" == *"--prefer-lowest"* ]]; then composer update --prefer-dist --no-interaction --prefer-stable --quiet; fi
+        - composer update ${COMPOSER_FLAGS} --prefer-dist --no-interaction
+        - ./vendor/bin/simple-phpunit install
+
+    script:
+        - composer validate --strict --no-check-lock
+        # simple-phpunit is the PHPUnit wrapper provided by the PHPUnit Bridge component and
+        # it helps with testing legacy code and deprecations (composer require symfony/phpunit-bridge)
+        - ./vendor/bin/simple-phpunit $PHPUNIT_FLAGS
+
+Consider using the `Travis cron`_ tool to make sure your project is built even if
+there are no new pull requests or commits.
 
 Installation
 ------------
@@ -220,7 +296,7 @@ following standardized instructions in your ``README.md`` file.
         following command to download the latest stable version of this bundle:
 
         ```console
-        $ composer require <package-name> "~1"
+        $ composer require <package-name>
         ```
 
         This command requires you to have Composer installed globally, as explained
@@ -278,7 +354,7 @@ following standardized instructions in your ``README.md`` file.
 
         .. code-block:: terminal
 
-            $ composer require <package-name> "~1"
+            $ composer require <package-name>
 
         This command requires you to have Composer installed globally, as explained
         in the `installation chapter`_ of the Composer documentation.
@@ -363,13 +439,13 @@ The end user can provide values in any configuration file:
 
     .. code-block:: yaml
 
-        # app/config/config.yml
+        # config/services.yaml
         parameters:
             acme_blog.author.email: 'fabien@example.com'
 
     .. code-block:: xml
 
-        <!-- app/config/config.xml -->
+        <!-- config/services.xml -->
         <?xml version="1.0" encoding="UTF-8" ?>
         <container xmlns="http://symfony.com/schema/dic/services"
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -384,7 +460,7 @@ The end user can provide values in any configuration file:
 
     .. code-block:: php
 
-        // app/config/config.php
+        // config/services.php
         $container->setParameter('acme_blog.author.email', 'fabien@example.com');
 
 Retrieve the configuration parameters in your code from the container::
@@ -454,7 +530,7 @@ Resources
 
 If the bundle references any resources (config files, translation files, etc.),
 don't use physical paths (e.g. ``__DIR__/config/services.xml``) but logical
-paths (e.g. ``@AppBundle/Resources/config/services.xml``).
+paths (e.g. ``@FooBundle/Resources/config/services.xml``).
 
 The logical paths are required because of the bundle overriding mechanism that
 lets you override any resource/file of any bundle. See :ref:`http-kernel-resource-locator`
@@ -462,7 +538,7 @@ for more details about transforming physical paths into logical paths.
 
 Beware that templates use a simplified version of the logical path shown above.
 For example, an ``index.html.twig`` template located in the ``Resources/views/Default/``
-directory of the AppBundle, is referenced as ``@App/Default/index.html.twig``.
+directory of the FooBundle, is referenced as ``@Foo/Default/index.html.twig``.
 
 Learn more
 ----------
@@ -470,9 +546,11 @@ Learn more
 * :doc:`/bundles/extension`
 * :doc:`/bundles/configuration`
 
-.. _`PSR-4`: http://www.php-fig.org/psr/psr-4/
+.. _`PSR-4`: https://www.php-fig.org/psr/psr-4/
 .. _`Symfony Flex recipe`: https://github.com/symfony/recipes
-.. _`Semantic Versioning Standard`: http://semver.org/
+.. _`Semantic Versioning Standard`: https://semver.org/
 .. _`Packagist`: https://packagist.org/
-.. _`choose any license`: http://choosealicense.com/
+.. _`choose any license`: https://choosealicense.com/
 .. _`valid license identifier`: https://spdx.org/licenses/
+.. _`Travis CI`: https://travis-ci.org/
+.. _`Travis Cron`: https://docs.travis-ci.com/user/cron-jobs/

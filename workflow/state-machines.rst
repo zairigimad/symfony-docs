@@ -35,6 +35,7 @@ Below is the configuration for the pull request state machine.
                     type: 'state_machine'
                     supports:
                         - App\Entity\PullRequest
+                    initial_place: start
                     places:
                         - start
                         - coding
@@ -200,14 +201,14 @@ you can get this state machine by injecting the Workflow registry service::
     {
         private $workflows;
 
-        public function __constructor(Registry $workflows)
+        public function __construct(Registry $workflows)
         {
             $this->workflows = $workflows;
         }
 
-        public function someMethod()
+        public function someMethod($subject)
         {
-            $stateMachine = $this->workflows->get('pull_request');
+            $stateMachine = $this->workflows->get($subject, 'pull_request');
             // ...
         }
 

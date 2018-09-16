@@ -1,7 +1,7 @@
 Encore Versus Assetic?
 ======================
 
-Symfony originally shipped with support for :doc:`Assetic </frontend/assetic>`: a
+Symfony originally shipped with support for :doc:`Assetic </frontend/assetic/index>`: a
 pure PHP library capable of processing, combining and minifying CSS and JavaScript
 files. And while Encore is now the recommended way of processing your assets, Assetic
 still works well.
@@ -45,12 +45,12 @@ So what are the differences between Assetic and Encore?
        images.
 
 .. [2] Assetic has outdated support for React.js only. Encore ships with modern
-       support for React.js, Vue.js, Typescript, etc.
+       support for React.js, Vue.js, TypeScript, etc.
 
 Should I Upgrade from Assetic to Encore
 ---------------------------------------
 
 If you already have Assetic working in an application, and haven't needed any of
-the features that Encore offers over Assetic, continuting to use Assetic is fine.
+the features that Encore offers over Assetic, continuing to use Assetic is fine.
 If you *do* start to need more features, then you might have a business case for
 changing to Encore.

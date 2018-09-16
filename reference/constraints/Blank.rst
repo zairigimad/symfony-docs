@@ -10,7 +10,6 @@ Validates that a value is blank - meaning equal to an empty string or ``null``::
 To force that a value strictly be equal to ``null``, see the
 :doc:`/reference/constraints/IsNull` constraint.
 
-
 To force that a value is *not* blank, see :doc:`/reference/constraints/NotBlank`.
 But be careful as ``NotBlank`` is *not* strictly the opposite of ``Blank``.
 
@@ -50,7 +49,7 @@ of an ``Author`` class were blank, you could do the following:
 
     .. code-block:: yaml
 
-        # src/Resources/config/validation.yaml
+        # config/validator/validation.yaml
         App\Entity\Author:
             properties:
                 firstName:
@@ -58,7 +57,7 @@ of an ``Author`` class were blank, you could do the following:
 
     .. code-block:: xml
 
-        <!-- src/Resources/config/validation.xml -->
+        <!-- config/validator/validation.xml -->
         <?xml version="1.0" encoding="UTF-8" ?>
         <constraint-mapping xmlns="http://symfony.com/schema/dic/constraint-mapping"
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"

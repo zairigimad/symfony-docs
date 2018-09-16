@@ -10,23 +10,27 @@ The Process Component
 Installation
 ------------
 
-You can install the component in 2 different ways:
+.. code-block:: terminal
 
-* :doc:`Install it via Composer </components/using_components>` (``symfony/process`` on `Packagist`_);
-* Use the official Git repository (https://github.com/symfony/process).
+    $ composer require symfony/process
+
+Alternatively, you can clone the `<https://github.com/symfony/process>`_ repository.
 
 .. include:: /components/require_autoload.rst.inc
 
 Usage
 -----
 
-The :class:`Symfony\\Component\\Process\\Process` class allows you to execute
-a command in a sub-process::
+The :class:`Symfony\\Component\\Process\\Process` class executes a command in a
+sub-process, taking care of the differences between operating system and
+escaping arguments to prevent security issues. It replaces PHP functions like
+:phpfunction:`exec`, :phpfunction:`passthru`, :phpfunction:`shell_exec` and
+:phpfunction:`system`::
 
     use Symfony\Component\Process\Process;
     use Symfony\Component\Process\Exception\ProcessFailedException;
 
-    $process = new Process('ls -lsa');
+    $process = new Process(array('ls', '-lsa'));
     $process->run();
 
     // executes after the command finishes
@@ -36,8 +40,18 @@ a command in a sub-process::
 
     echo $process->getOutput();
 
-The component takes care of the subtle differences between the different platforms
-when executing the command.
+.. tip::
+
+    In addition to passing the command binary and its arguments as a string, you
+    can also pass them as an array, which is useful when building a complex
+    command programmatically::
+
+        // traditional string based commands
+        $builder = new Process('ls -lsa');
+        // same example but using an array
+        $builder = new Process(array('ls', '-lsa'));
+        // the array can contain any number of arguments and options
+        $builder = new Process(array('ls', '-l', '-s', '-a'));
 
 The ``getOutput()`` method always returns the whole content of the standard
 output of the command and ``getErrorOutput()`` the content of the error
@@ -54,7 +68,7 @@ You can also use the :class:`Symfony\\Component\\Process\\Process` class with th
 foreach construct to get the output while it is generated. By default, the loop waits
 for new output before going to the next iteration::
 
-    $process = new Process('ls -lsa');
+    $process = new Process(array('ls', '-lsa'));
     $process->start();
 
     foreach ($process as $type => $data) {
@@ -71,7 +85,7 @@ for new output before going to the next iteration::
     it is generated. That iterator is exposed via the ``getIterator()`` method
     to allow customizing its behavior::
 
-        $process = new Process('ls -lsa');
+        $process = new Process(array('ls', '-lsa'));
         $process->start();
         $iterator = $process->getIterator($process::ITER_SKIP_ERR | $process::ITER_KEEP_OUTPUT);
         foreach ($iterator as $data) {
@@ -86,15 +100,47 @@ with a non-zero code)::
     use Symfony\Component\Process\Exception\ProcessFailedException;
     use Symfony\Component\Process\Process;
 
-    $process = new Process('ls -lsa');
+    $process = new Process(array('ls', '-lsa'));
 
     try {
         $process->mustRun();
 
         echo $process->getOutput();
-    } catch (ProcessFailedException $e) {
-        echo $e->getMessage();
+    } catch (ProcessFailedException $exception) {
+        echo $exception->getMessage();
     }
+
+.. tip::
+
+    .. versionadded:: 3.3
+        The ability to define commands as arrays of arguments was introduced in
+        Symfony 3.3.
+
+    Using array of arguments is the recommended way to define commands. This
+    saves you from any escaping and allows sending signals seamlessly
+    (e.g. to stop processes before completion.)::
+
+        $process = new Process(array('/path/command', '--flag', 'arg 1', 'etc.'));
+
+    If you need to use stream redirections, conditional execution, or any other
+    feature provided by the shell of your operating system, you can also define
+    commands as strings.
+
+    Please note that each OS provides a different syntax for their command-lines
+    so that it becomes your responsibility to deal with escaping and portability.
+
+    To provide any variable arguments to command-line string, pass them as
+    environment variables using the second argument of the ``run()``,
+    ``mustRun()`` or ``start()`` methods. Referencing them is also OS-dependent::
+
+        // On Unix-like OSes (Linux, macOS)
+        $process = new Process('echo "$MESSAGE"');
+
+        // On Windows
+        $process = new Process('echo "!MESSAGE!"');
+
+        // On both Unix-like and Windows
+        $process->run(null, array('MESSAGE' => 'Something to output'));
 
 Getting real-time Process Output
 --------------------------------
@@ -106,7 +152,7 @@ anonymous function to the
 
     use Symfony\Component\Process\Process;
 
-    $process = new Process('ls -lsa');
+    $process = new Process(array('ls', '-lsa'));
     $process->run(function ($type, $buffer) {
         if (Process::ERR === $type) {
             echo 'ERR > '.$buffer;
@@ -125,7 +171,7 @@ process, the :method:`Symfony\\Component\\Process\\Process::isRunning` method
 to check if the process is done and the
 :method:`Symfony\\Component\\Process\\Process::getOutput` method to get the output::
 
-    $process = new Process('ls -lsa');
+    $process = new Process(array('ls', '-lsa'));
     $process->start();
 
     while ($process->isRunning()) {
@@ -137,7 +183,7 @@ to check if the process is done and the
 You can also wait for a process to end if you started it asynchronously and
 are done doing other stuff::
 
-    $process = new Process('ls -lsa');
+    $process = new Process(array('ls', '-lsa'));
     $process->start();
 
     // ... do other things
@@ -176,7 +222,7 @@ are done doing other stuff::
 a callback that is called repeatedly whilst the process is still running, passing
 in the output and its type::
 
-    $process = new Process('ls -lsa');
+    $process = new Process(array('ls', '-lsa'));
     $process->start();
 
     $process->wait(function ($type, $buffer) {
@@ -208,7 +254,7 @@ provides the :class:`Symfony\\Component\\Process\\InputStream` class::
     $input = new InputStream();
     $input->write('foo');
 
-    $process = new Process('cat');
+    $process = new Process(array('cat'));
     $process->setInput($input);
     $process->start();
 
@@ -227,6 +273,29 @@ stream resources or Traversable objects as argument. As shown in the above examp
 you need to explicitly call the :method:`Symfony\\Component\\Process\\InputStream::close`
 method when you are done writing to the standard input of the subprocess.
 
+Using PHP Streams as the Standard Input of a Process
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The input of a process can also be defined using `PHP streams`_::
+
+    $stream = fopen('php://temporary', 'w+');
+
+    $process = new Process(array('cat'));
+    $process->setInput($stream);
+    $process->start();
+
+    fwrite($stream, 'foo');
+
+    // ... read process output or do other things
+
+    fwrite($stream, 'bar');
+    fclose($stream);
+
+    $process->wait();
+
+    // will echo: 'foobar'
+    echo $process->getOutput();
+
 Stopping a Process
 ------------------
 
@@ -237,7 +306,7 @@ is sent to the running process. The default signal sent to a process is ``SIGKIL
 Please read the :ref:`signal documentation below<reference-process-signal>`
 to find out more about signal handling in the Process component::
 
-    $process = new Process('ls -lsa');
+    $process = new Process(array('ls', '-lsa'));
     $process->start();
 
     // ... do other things
@@ -258,38 +327,6 @@ instead::
     );
     $process->run();
 
-To make your code work better on all platforms, you might want to use the
-:class:`Symfony\\Component\\Process\\ProcessBuilder` class instead::
-
-    use Symfony\Component\Process\ProcessBuilder;
-
-    $builder = new ProcessBuilder(array('ls', '-lsa'));
-    $builder->getProcess()->run();
-
-In case you are building a binary driver, you can use the
-:method:`Symfony\\Component\\Process\\ProcessBuilder::setPrefix` method to prefix all
-the generated process commands.
-
-The following example will generate two process commands for a tar binary
-adapter::
-
-    use Symfony\Component\Process\ProcessBuilder;
-
-    $builder = new ProcessBuilder();
-    $builder->setPrefix('/usr/bin/tar');
-
-    // '/usr/bin/tar' '--list' '--file=archive.tar.gz'
-    echo $builder
-        ->setArguments(array('--list', '--file=archive.tar.gz'))
-        ->getProcess()
-        ->getCommandLine();
-
-    // '/usr/bin/tar' '-xzf' 'archive.tar.gz'
-    echo $builder
-        ->setArguments(array('-xzf', 'archive.tar.gz'))
-        ->getProcess()
-        ->getCommandLine();
-
 Process Timeout
 ---------------
 
@@ -298,7 +335,7 @@ timeout (in seconds)::
 
     use Symfony\Component\Process\Process;
 
-    $process = new Process('ls -lsa');
+    $process = new Process(array('ls', '-lsa'));
     $process->setTimeout(3600);
     $process->run();
 
@@ -328,12 +365,12 @@ Process Idle Timeout
 In contrast to the timeout of the previous paragraph, the idle timeout only
 considers the time since the last output was produced by the process::
 
-   use Symfony\Component\Process\Process;
+    use Symfony\Component\Process\Process;
 
-   $process = new Process('something-with-variable-runtime');
-   $process->setTimeout(3600);
-   $process->setIdleTimeout(60);
-   $process->run();
+    $process = new Process(array('something-with-variable-runtime'));
+    $process->setTimeout(3600);
+    $process->setIdleTimeout(60);
+    $process->run();
 
 In the case above, a process is considered timed out, when either the total runtime
 exceeds 3600 seconds, or the process does not produce any output for 60 seconds.
@@ -346,41 +383,24 @@ When running a program asynchronously, you can send it POSIX signals with the
 
     use Symfony\Component\Process\Process;
 
-    $process = new Process('find / -name "rabbit"');
+    $process = new Process(array('find', '/', '-name', 'rabbit'));
     $process->start();
 
     // will send a SIGKILL to the process
     $process->signal(SIGKILL);
 
-.. caution::
-
-    Due to some limitations in PHP, if you're using signals with the Process
-    component, you may have to prefix your commands with `exec`_. Please read
-    `Symfony Issue#5759`_ and `PHP Bug#39992`_ to understand why this is happening.
-
-    POSIX signals are not available on Windows platforms, please refer to the
-    `PHP documentation`_ for available signals.
-
 Process Pid
 -----------
 
 You can access the `pid`_ of a running process with the
-:method:`Symfony\\Component\\Process\\Process::getPid` method.
-
-.. code-block:: php
+:method:`Symfony\\Component\\Process\\Process::getPid` method::
 
     use Symfony\Component\Process\Process;
 
-    $process = new Process('/usr/bin/php worker.php');
+    $process = new Process(array('/usr/bin/php', 'worker.php'));
     $process->start();
 
     $pid = $process->getPid();
-
-.. caution::
-
-    Due to some limitations in PHP, if you want to get the pid of a symfony Process,
-    you may have to prefix your commands with `exec`_. Please read
-    `Symfony Issue#5759`_ to understand why this is happening.
 
 Disabling Output
 ----------------
@@ -392,7 +412,7 @@ Use :method:`Symfony\\Component\\Process\\Process::disableOutput` and
 
     use Symfony\Component\Process\Process;
 
-    $process = new Process('/usr/bin/php worker.php');
+    $process = new Process(array('/usr/bin/php', 'worker.php'));
     $process->disableOutput();
     $process->run();
 
@@ -407,9 +427,38 @@ Use :method:`Symfony\\Component\\Process\\Process::disableOutput` and
     However, it is possible to pass a callback to the ``start``, ``run`` or ``mustRun``
     methods to handle process output in a streaming fashion.
 
+Finding the Executable PHP Binary
+---------------------------------
+
+This component also provides a utility class called
+:class:`Symfony\\Component\\Process\\PhpExecutableFinder` which returns the
+absolute path of the executable PHP binary available on your server::
+
+    use Symfony\Component\Process\PhpExecutableFinder;
+
+    $phpBinaryFinder = new PhpExecutableFinder();
+    $phpBinaryPath = $phpBinaryFinder->find();
+    // $phpBinaryPath = '/usr/local/bin/php' (the result will be different on your computer)
+
+Checking for TTY Support
+------------------------
+
+Another utility provided by this component is a method called
+:method:`Symfony\\Component\\Process\\Process::isTtySupported` which returns
+whether `TTY`_ is supported on the current operating system::
+
+    use Symfony\Component\Process\Process;
+
+    $process = (new Process())->setTty(Process::isTtySupported());
+
+.. versionadded:: 4.1
+    The ``isTtySupported()`` method was introduced in Symfony 4.1.
+
 .. _`Symfony Issue#5759`: https://github.com/symfony/symfony/issues/5759
 .. _`PHP Bug#39992`: https://bugs.php.net/bug.php?id=39992
 .. _`exec`: https://en.wikipedia.org/wiki/Exec_(operating_system)
 .. _`pid`: https://en.wikipedia.org/wiki/Process_identifier
-.. _`PHP Documentation`: http://php.net/manual/en/pcntl.constants.php
+.. _`PHP Documentation`: https://php.net/manual/en/pcntl.constants.php
 .. _Packagist: https://packagist.org/packages/symfony/process
+.. _`PHP streams`: http://www.php.net/manual/en/book.stream.php
+.. _`TTY`: https://en.wikipedia.org/wiki/Tty_(unix)

@@ -42,6 +42,7 @@ the data can be a ``DateTime`` object, a string, a timestamp or an array.
 +----------------------+-----------------------------------------------------------------------------+
 | Inherited            | - `data`_                                                                   |
 | options              | - `disabled`_                                                               |
+|                      | - `help`_                                                                   |
 |                      | - `inherit_data`_                                                           |
 |                      | - `invalid_message`_                                                        |
 |                      | - `invalid_message_parameters`_                                             |
@@ -83,7 +84,7 @@ as a series of ``select`` boxes. When the placeholder value is a string,
 it will be used as the **blank value** of all select boxes::
 
     use Symfony\Component\Form\Extension\Core\Type\DateTimeType;
-    
+
     $builder->add('startDateTime', DateTimeType::class, array(
         'placeholder' => 'Select a value',
     ));
@@ -92,7 +93,7 @@ Alternatively, you can use an array that configures different placeholder
 values for the year, month, day, hour, minute and second fields::
 
     use Symfony\Component\Form\Extension\Core\Type\DateTimeType;
-    
+
     $builder->add('startDateTime', DateTimeType::class, array(
         'placeholder' => array(
             'year' => 'Year', 'month' => 'Month', 'day' => 'Day',
@@ -109,7 +110,8 @@ If the ``widget`` option is set to ``single_text``, this option specifies
 the format of the input, i.e. how Symfony will interpret the given input
 as a datetime string. It defaults to the `RFC 3339`_ format which is used
 by the HTML5 ``datetime`` field. Keeping the default value will cause the
-field to be rendered as an ``input`` field with ``type="datetime"``.
+field to be rendered as an ``input`` field with ``type="datetime"``. For
+more information on valid formats, see `Date/Time Format Syntax`_.
 
 .. include:: /reference/forms/types/options/hours.rst.inc
 
@@ -125,6 +127,7 @@ on your underlying object. Valid values are:
 
 * ``string`` (e.g. ``2011-06-05 12:15:00``)
 * ``datetime`` (a ``DateTime`` object)
+* ``datetime_immutable`` (a ``DateTimeImmutable`` object)
 * ``array`` (e.g. ``array(2011, 06, 05, 12, 15, 0)``)
 * ``timestamp`` (e.g. ``1307276100``)
 
@@ -193,6 +196,8 @@ These options inherit from the :doc:`FormType </reference/forms/types/form>`:
 
 .. include:: /reference/forms/types/options/disabled.rst.inc
 
+.. include:: /reference/forms/types/options/help.rst.inc
+
 .. include:: /reference/forms/types/options/inherit_data.rst.inc
 
 .. include:: /reference/forms/types/options/invalid_message.rst.inc
@@ -213,4 +218,5 @@ Field Variables
 |          |            | contains the input type to use (``datetime``, ``date`` or ``time``). |
 +----------+------------+----------------------------------------------------------------------+
 
-.. _`RFC 3339`: http://tools.ietf.org/html/rfc3339
+.. _`RFC 3339`: https://tools.ietf.org/html/rfc3339
+.. _`Date/Time Format Syntax`: http://userguide.icu-project.org/formatparse/datetime#TOC-Date-Time-Format-Syntax

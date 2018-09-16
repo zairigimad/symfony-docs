@@ -11,10 +11,11 @@ The Workflow Component
 Installation
 ------------
 
-You can install the component in 2 different ways:
+.. code-block:: terminal
 
-* :doc:`Install it via Composer </components/using_components>` (``symfony/workflow`` on `Packagist`_);
-* Use the official Git repository (https://github.com/symfony/workflow).
+    $ composer require symfony/workflow
+
+Alternatively, you can clone the `<https://github.com/symfony/workflow>`_ repository.
 
 .. include:: /components/require_autoload.rst.inc
 
@@ -63,6 +64,7 @@ A registry will also help you to decide if a workflow supports the object you
 are trying to use it with::
 
     use Symfony\Component\Workflow\Registry;
+    use Symfony\Component\Workflow\WorkflowInterface\InstanceOfSupportStrategy;
     use Acme\Entity\BlogPost;
     use Acme\Entity\Newsletter;
 
@@ -70,8 +72,12 @@ are trying to use it with::
     $newsletterWorkflow = ...
 
     $registry = new Registry();
-    $registry->add($blogWorkflow, BlogPost::class);
-    $registry->add($newsletterWorkflow, Newsletter::class);
+    $registry->addWorkflow($blogWorkflow, new InstanceOfSupportStrategy(BlogPost::class));
+    $registry->addWorkflow($newsletterWorkflow, new InstanceOfSupportStrategy(Newsletter::class));
+    
+.. versionadded:: 4.1
+    The ``addWorkflow()`` method was introduced in Symfony 4.1. In previous
+    Symfony versions it was called ``add()``.
 
 Usage
 -----

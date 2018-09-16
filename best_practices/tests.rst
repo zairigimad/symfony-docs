@@ -13,7 +13,7 @@ Unit Tests
 Unit tests are used to test your "business logic", which should live in classes
 that are independent of Symfony. For that reason, Symfony doesn't really
 have an opinion on what tools you use for unit testing. However, the most
-popular tools are `PhpUnit`_ and `PhpSpec`_.
+popular tools are `PHPUnit`_ and `PHPSpec`_.
 
 Functional Tests
 ----------------
@@ -27,7 +27,8 @@ functional tests, you can quickly spot any big errors before you deploy them:
     Define a functional test that at least checks if your application pages
     are successfully loading.
 
-A functional test can be as easy as this::
+A functional test like this is simple to implement thanks to
+:ref:`PHPUnit data providers <testing-data-providers>`::
 
     // tests/ApplicationAvailabilityFunctionalTest.php
     namespace App\Tests;
@@ -79,9 +80,7 @@ generator service:
     generator.
 
 Consider the following functional test that uses the ``router`` service to
-generate the URL of the tested page:
-
-.. code-block:: php
+generate the URL of the tested page::
 
     // ...
     private $router; // consider that this holds the Symfony router service
@@ -116,8 +115,8 @@ Learn More about Functional Tests
 Consider using the `HautelookAliceBundle`_ to generate real-looking data for
 your test fixtures using `Faker`_ and `Alice`_.
 
-.. _`PhpUnit`: https://phpunit.de/
-.. _`PhpSpec`: http://www.phpspec.net/
+.. _`PHPUnit`: https://phpunit.de/
+.. _`PHPSpec`: https://www.phpspec.net/
 .. _`smoke testing`: https://en.wikipedia.org/wiki/Smoke_testing_(software)
 .. _`Mink`: http://mink.behat.org
 .. _`HautelookAliceBundle`: https://github.com/hautelook/AliceBundle

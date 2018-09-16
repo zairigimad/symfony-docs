@@ -1,6 +1,11 @@
 Managing CSS and JavaScript
 ===========================
 
+.. admonition:: Screencast
+    :class: screencast
+
+    Do you prefer video tutorials? Check out the `Webpack Encore screencast series`_.
+
 Symfony ships with a pure-JavaScript library - called Webpack Encore - that makes
 working with CSS and JavaScript a joy. You can use it, use something else, or just
 create static CSS and JS files in your ``public/`` directory and include them in your
@@ -51,8 +56,9 @@ Optimizing
 ..........
 
 * :doc:`Versioning (and the manifest.json file) </frontend/encore/versioning>`
-* :doc:`Using A CDN </frontend/encore/cdn>`
+* :doc:`Using a CDN </frontend/encore/cdn>`
 * :doc:`Creating a "Shared" entry for re-used modules </frontend/encore/shared-entry>`
+* :doc:`/frontend/encore/url-loader`
 
 Guides
 ......
@@ -76,15 +82,6 @@ Full API
 
 * `Full API`_: https://github.com/symfony/webpack-encore/blob/master/index.js
 
-Assetic
--------
-
-Assetic is a pure PHP library that helps to process & optimize your assets (similar
-to Encore). Even though we recommend using Encore, Assetic still works great. For
-a comparison, see :doc:`/frontend/encore/versus-assetic`.
-
-For more about Assetic, see :doc:`/frontend/assetic`.
-
 Other Front-End Articles
 ------------------------
 
@@ -92,6 +89,7 @@ Other Front-End Articles
     :hidden:
     :glob:
 
+    frontend/assetic/index
     frontend/encore/installation
     frontend/encore/simple-example
     frontend/encore/*
@@ -105,6 +103,7 @@ Other Front-End Articles
 .. _`Webpack Encore`: https://www.npmjs.com/package/@symfony/webpack-encore
 .. _`Webpack`: https://webpack.js.org/
 .. _`Webpacker`: https://github.com/rails/webpacker
-.. _`Mix`: https://laravel.com/docs/5.4/mix
+.. _`Mix`: https://laravel.com/docs/mix
 .. _`Symfony`: http://symfony.com/
 .. _`Full API`: https://github.com/symfony/webpack-encore/blob/master/index.js
+.. _`Webpack Encore screencast series`: https://knpuniversity.com/screencast/webpack-encore

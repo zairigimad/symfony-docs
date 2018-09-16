@@ -28,11 +28,14 @@ To use this field, you must specify *either* ``choices`` or ``choice_loader`` op
 | Overridden  | - `compound`_                                                                |
 | options     | - `empty_data`_                                                              |
 |             | - `error_bubbling`_                                                          |
+|             | - `trim`_                                                                    |
 +-------------+------------------------------------------------------------------------------+
-| Inherited   | - `by_reference`_                                                            |
-| options     | - `data`_                                                                    |
+| Inherited   | - `attr`_                                                                    |
+| options     | - `by_reference`_                                                            |
+|             | - `data`_                                                                    |
 |             | - `disabled`_                                                                |
 |             | - `error_mapping`_                                                           |
+|             | - `help`_                                                                    |
 |             | - `inherit_data`_                                                            |
 |             | - `label`_                                                                   |
 |             | - `label_attr`_                                                              |
@@ -91,18 +94,18 @@ method::
             new Category('Cat3'),
             new Category('Cat4'),
         ],
-        'choice_label' => function($category, $key, $index) {
+        'choice_label' => function($category, $key, $value) {
             /** @var Category $category */
             return strtoupper($category->getName());
         },
-        'choice_attr' => function($category, $key, $index) {
+        'choice_attr' => function($category, $key, $value) {
             return ['class' => 'category_'.strtolower($category->getName())];
         },
-        'group_by' => function($category, $key, $index) {
+        'group_by' => function($category, $key, $value) {
             // randomly assign things into 2 groups
             return rand(0, 1) == 1 ? 'Group A' : 'Group B';
         },
-        'preferred_choices' => function($category, $key, $index) {
+        'preferred_choices' => function($category, $key, $value) {
             return $category->getName() == 'Cat2' || $category->getName() == 'Cat3';
         },
     ]);
@@ -247,10 +250,14 @@ error_bubbling
 Set that error on this field must be attached to the field instead of
 the parent field (the form in most cases).
 
+.. include:: /reference/forms/types/options/choice_type_trim.rst.inc
+
 Inherited Options
 -----------------
 
 These options inherit from the :doc:`FormType </reference/forms/types/form>`:
+
+.. include:: /reference/forms/types/options/attr.rst.inc
 
 .. include:: /reference/forms/types/options/by_reference.rst.inc
 
@@ -259,6 +266,8 @@ These options inherit from the :doc:`FormType </reference/forms/types/form>`:
 .. include:: /reference/forms/types/options/disabled.rst.inc
 
 .. include:: /reference/forms/types/options/error_mapping.rst.inc
+
+.. include:: /reference/forms/types/options/help.rst.inc
 
 .. include:: /reference/forms/types/options/inherit_data.rst.inc
 

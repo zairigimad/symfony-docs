@@ -5,8 +5,8 @@
 The Asset Component
 ===================
 
-   The Asset component manages URL generation and versioning of web assets such
-   as CSS stylesheets, JavaScript files and image files.
+    The Asset component manages URL generation and versioning of web assets such
+    as CSS stylesheets, JavaScript files and image files.
 
 In the past, it was common for web applications to hardcode URLs of web assets.
 For example:
@@ -42,10 +42,13 @@ simple. Hardcoding URLs can be a disadvantage because:
 Installation
 ------------
 
-You can install the component in two different ways:
+.. code-block:: terminal
 
-* :doc:`Install it via Composer </components/using_components>` (``symfony/asset`` on `Packagist`_);
-* Use the official Git repository (https://github.com/symfony/asset).
+    $ composer require symfony/asset
+
+Alternatively, you can clone the `<https://github.com/symfony/asset>`_ repository.
+
+.. include:: /components/require_autoload.rst.inc
 
 Usage
 -----
@@ -66,7 +69,7 @@ any versioning::
     // Absolute path
     echo $package->getUrl('/image.png');
     // result: /image.png
-    
+
     // Relative path
     echo $package->getUrl('image.png');
     // result: image.png
@@ -113,7 +116,7 @@ suffix to any asset path::
     // Absolute path
     echo $package->getUrl('/image.png');
     // result: /image.png?v1
-    
+
     // Relative path
     echo $package->getUrl('image.png');
     // result: image.png?v1
@@ -121,20 +124,47 @@ suffix to any asset path::
 In case you want to modify the version format, pass a sprintf-compatible format
 string as the second argument of the ``StaticVersionStrategy`` constructor::
 
-    // put the 'version' word before the version value
+    // puts the 'version' word before the version value
     $package = new Package(new StaticVersionStrategy('v1', '%s?version=%s'));
 
     echo $package->getUrl('/image.png');
     // result: /image.png?version=v1
 
-    // put the asset version before its path
+    // puts the asset version before its path
     $package = new Package(new StaticVersionStrategy('v1', '%2$s/%1$s'));
 
     echo $package->getUrl('/image.png');
     // result: /v1/image.png
-    
+
     echo $package->getUrl('image.png');
     // result: v1/image.png
+
+JSON File Manifest
+..................
+
+A popular strategy to manage asset versioning, which is used by tools such as
+`Webpack`_, is to generate a JSON file mapping all source file names to their
+corresponding output file:
+
+.. code-block:: json
+
+    // rev-manifest.json
+    {
+        "css/app.css": "build/css/app.b916426ea1d10021f3f17ce8031f93c2.css",
+        "js/app.js": "build/js/app.13630905267b809161e71d0f8a0c017b.js",
+        "...": "..."
+    }
+
+In those cases, use the 
+:class:`Symfony\\Component\\Asset\\VersionStrategy\\JsonManifestVersionStrategy`::
+
+    use Symfony\Component\Asset\Package;
+    use Symfony\Component\Asset\VersionStrategy\JsonManifestVersionStrategy;
+
+    $package = new Package(new JsonManifestVersionStrategy(__DIR__.'/rev-manifest.json'));
+
+    echo $package->getUrl('css/app.css');
+    // result: build/css/app.b916426ea1d10021f3f17ce8031f93c2.css
 
 Custom Version Strategies
 .........................
@@ -179,11 +209,11 @@ that path over and over again::
     use Symfony\Component\Asset\PathPackage;
     // ...
 
-    $package = new PathPackage('/static/images', new StaticVersionStrategy('v1'));
+    $pathPackage = new PathPackage('/static/images', new StaticVersionStrategy('v1'));
 
-    echo $package->getUrl('logo.png');
+    echo $pathPackage->getUrl('logo.png');
     // result: /static/images/logo.png?v1
-    
+
     // Base path is ignored when using absolute paths
     echo $package->getUrl('/logo.png');
     // result: /logo.png?v1
@@ -199,14 +229,18 @@ class can take into account the context of the current request::
     use Symfony\Component\Asset\Context\RequestStackContext;
     // ...
 
-    $package = new PathPackage(
+    $pathPackage = new PathPackage(
         '/static/images',
         new StaticVersionStrategy('v1'),
         new RequestStackContext($requestStack)
     );
 
-    echo $package->getUrl('/logo.png');
+    echo $pathPackage->getUrl('logo.png');
     // result: /somewhere/static/images/logo.png?v1
+
+    // Both "base path" and "base url" are ignored when using absolute path for asset
+    echo $package->getUrl('/logo.png');
+    // result: /logo.png?v1
 
 Now that the request context is set, the ``PathPackage`` will prepend the
 current request base URL. So, for example, if your entire site is hosted under
@@ -226,12 +260,12 @@ class to generate absolute URLs for their assets::
     use Symfony\Component\Asset\UrlPackage;
     // ...
 
-    $package = new UrlPackage(
+    $urlPackage = new UrlPackage(
         'http://static.example.com/images/',
         new StaticVersionStrategy('v1')
     );
 
-    echo $package->getUrl('/logo.png');
+    echo $urlPackage->getUrl('/logo.png');
     // result: http://static.example.com/images/logo.png?v1
 
 You can also pass a schema-agnostic URL::
@@ -239,12 +273,12 @@ You can also pass a schema-agnostic URL::
     use Symfony\Component\Asset\UrlPackage;
     // ...
 
-    $package = new UrlPackage(
+    $urlPackage = new UrlPackage(
         '//static.example.com/images/',
         new StaticVersionStrategy('v1')
     );
 
-    echo $package->getUrl('/logo.png');
+    echo $urlPackage->getUrl('/logo.png');
     // result: //static.example.com/images/logo.png?v1
 
 This is useful because assets will automatically be requested via HTTPS if
@@ -262,11 +296,11 @@ constructor::
         '//static1.example.com/images/',
         '//static2.example.com/images/',
     );
-    $package = new UrlPackage($urls, new StaticVersionStrategy('v1'));
+    $urlPackage = new UrlPackage($urls, new StaticVersionStrategy('v1'));
 
-    echo $package->getUrl('/logo.png');
+    echo $urlPackage->getUrl('/logo.png');
     // result: http://static1.example.com/images/logo.png?v1
-    echo $package->getUrl('/icon.png');
+    echo $urlPackage->getUrl('/icon.png');
     // result: http://static2.example.com/images/icon.png?v1
 
 For each asset, one of the URLs will be randomly used. But, the selection
@@ -285,13 +319,13 @@ protocol-relative URLs for HTTPs requests, any base URL for HTTP requests)::
     use Symfony\Component\Asset\Context\RequestStackContext;
     // ...
 
-    $package = new UrlPackage(
+    $urlPackage = new UrlPackage(
         array('http://example.com/', 'https://example.com/'),
         new StaticVersionStrategy('v1'),
         new RequestStackContext($requestStack)
     );
 
-    echo $package->getUrl('/logo.png');
+    echo $urlPackage->getUrl('/logo.png');
     // assuming the RequestStackContext says that we are on a secure host
     // result: https://example.com/logo.png?v1
 
@@ -321,7 +355,7 @@ they all have different base paths::
         'doc' => new PathPackage('/somewhere/deep/for/documents', $versionStrategy),
     );
 
-    $packages = new Packages($defaultPackage, $namedPackages)
+    $packages = new Packages($defaultPackage, $namedPackages);
 
 The ``Packages`` class allows to define a default package, which will be applied
 to assets that don't define the name of package to use. In addition, this
@@ -335,10 +369,11 @@ document inside a template::
     echo $packages->getUrl('/logo.png', 'img');
     // result: http://img.example.com/logo.png?v1
 
-    echo $packages->getUrl('/resume.pdf', 'doc');
+    echo $packages->getUrl('resume.pdf', 'doc');
     // result: /somewhere/deep/for/documents/resume.pdf?v1
 
 Learn more
 ----------
 
 .. _Packagist: https://packagist.org/packages/symfony/asset
+.. _`Webpack`: https://webpack.js.org/

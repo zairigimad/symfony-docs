@@ -55,10 +55,10 @@ Next, create an ``index.php`` file that defines the kernel class and executes it
         {
             // kernel is a service that points to this class
             // optional 3rd argument is the route name
-            $routes->add('/random/{limit}', 'kernel:randomAction');
+            $routes->add('/random/{limit}', 'kernel:randomNumber');
         }
 
-        public function randomAction($limit)
+        public function randomNumber($limit)
         {
             return new JsonResponse(array(
                 'number' => rand(0, $limit)
@@ -101,7 +101,6 @@ that define your bundles, your services and your routes:
     Your job in this method is to add routes to the application. The
     ``RouteCollectionBuilder`` has methods that make adding routes in PHP more
     fun. You can also load external routing files (shown below).
-
 
 Advanced Example: Twig, Annotations and the Web Debug Toolbar
 -------------------------------------------------------------
@@ -250,15 +249,15 @@ has one file in it::
     // src/Controller/MicroController.php
     namespace App\Controller;
 
-    use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+    use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
     use Symfony\Component\Routing\Annotation\Route;
 
-    class MicroController extends Controller
+    class MicroController extends AbstractController
     {
         /**
          * @Route("/random/{limit}")
          */
-        public function randomAction($limit)
+        public function randomNumber($limit)
         {
             $number = rand(0, $limit);
 

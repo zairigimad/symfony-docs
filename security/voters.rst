@@ -34,9 +34,7 @@ The Voter Interface
 A custom voter needs to implement
 :class:`Symfony\\Component\\Security\\Core\\Authorization\\Voter\\VoterInterface`
 or extend :class:`Symfony\\Component\\Security\\Core\\Authorization\\Voter\\Voter`,
-which makes creating a voter even easier.
-
-.. code-block:: php
+which makes creating a voter even easier::
 
     abstract class Voter implements VoterInterface
     {
@@ -56,7 +54,7 @@ code like this::
     // src/Controller/PostController.php
     // ...
 
-    class PostController extends Controller
+    class PostController extends AbstractController
     {
         /**
          * @Route("/posts/{id}", name="post_show")
@@ -278,7 +276,9 @@ strategies available:
     This grants access if there are more voters granting access than denying;
 
 ``unanimous``
-    This only grants access once *all* voters grant access.
+    This only grants access if there is no voter denying access. If all voters
+    abstained from voting, the decision is based on the ``allow_if_all_abstain``
+    config option (which defaults to ``false``).
 
 In the above scenario, both voters should grant access in order to grant access
 to the user to read the post. In this case, the default strategy is no longer
@@ -293,6 +293,7 @@ security configuration:
         security:
             access_decision_manager:
                 strategy: unanimous
+                allow_if_all_abstain: false
 
     .. code-block:: xml
 
@@ -306,15 +307,16 @@ security configuration:
         >
 
             <config>
-                <access-decision-manager strategy="unanimous" />
+                <access-decision-manager strategy="unanimous" allow-if-all-abstain="false"  />
             </config>
         </srv:container>
 
     .. code-block:: php
 
-        // app/config/security.php
+        // config/packages/security.php
         $container->loadFromExtension('security', array(
             'access_decision_manager' => array(
                 'strategy' => 'unanimous',
+                'allow_if_all_abstain' => false,
             ),
         ));

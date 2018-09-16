@@ -45,7 +45,7 @@ includes some simple default logic::
     // in the base Symfony\Component\Validator\Constraint class
     public function validatedBy()
     {
-        return get_class($this).'Validator';
+        return \get_class($this).'Validator';
     }
 
 In other words, if you create a custom ``Constraint`` (e.g. ``MyConstraint``),
@@ -59,11 +59,22 @@ The validator class is also simple, and only has one required method ``validate(
 
     use Symfony\Component\Validator\Constraint;
     use Symfony\Component\Validator\ConstraintValidator;
+    use Symfony\Component\Validator\Exception\UnexpectedTypeException;
 
     class ContainsAlphanumericValidator extends ConstraintValidator
     {
         public function validate($value, Constraint $constraint)
         {
+            // custom constraints should ignore null and empty values to allow
+            // other constraints (NotBlank, NotNull, etc.) take care of that
+            if (null === $value || '' === $value) {
+                return;
+            }
+
+            if (!is_string($value)) {
+                throw new UnexpectedTypeException($value, 'string');
+            }
+
             if (!preg_match('/^[a-zA-Z0-9]+$/', $value, $matches)) {
                 $this->context->buildViolation($constraint->message)
                     ->setParameter('{{ string }}', $value)
@@ -107,7 +118,7 @@ Using custom validators is very easy, just as the ones provided by Symfony itsel
 
     .. code-block:: yaml
 
-        # src/Resources/config/validation.yml
+        # config/validator/validation.yaml
         App\Entity\AcmeEntity:
             properties:
                 name:
@@ -116,7 +127,7 @@ Using custom validators is very easy, just as the ones provided by Symfony itsel
 
     .. code-block:: xml
 
-        <!-- src/Resources/config/validation.xml -->
+        <!-- config/validator/validation.xml -->
         <?xml version="1.0" encoding="UTF-8" ?>
         <constraint-mapping xmlns="http://symfony.com/schema/dic/constraint-mapping"
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -202,14 +213,14 @@ not to the property:
 
     .. code-block:: yaml
 
-        # src/Resources/config/validation.yml
+        # config/validator/validation.yaml
         App\Entity\AcmeEntity:
             constraints:
                 - App\Validator\Constraints\ContainsAlphanumeric: ~
 
     .. code-block:: xml
 
-        <!-- src/Resources/config/validation.xml -->
+        <!-- config/validator/validation.xml -->
         <class name="App\Entity\AcmeEntity">
             <constraint name="App\Validator\Constraints\ContainsAlphanumeric" />
         </class>

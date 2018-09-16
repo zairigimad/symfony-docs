@@ -33,7 +33,7 @@ In reality, each environment differs only somewhat from others. This means that
 all environments share a large base of common configurations. This configuration
 is put in files directly in the ``config/packages/`` directory.
 
-The location of these files is defined by the application's Kernel::
+The location of these files is defined by the application's kernel::
 
     // src/Kernel.php
 
@@ -68,7 +68,7 @@ Take the framework package, installed by default, as an example:
 * In the **prod** environment, nothing extra will be set as there is no
   ``config/packages/prod/`` directory;
 * The same applies to **dev**, as there is no
-  ``config/packages/framework.yaml``. There are however other packages (e.g.
+  ``config/packages/dev/framework.yaml``. There are however other packages (e.g.
   ``routing.yaml``) with special dev settings;
 * At last, during the **test** environment, the framework's test features are
   enabled in ``config/packages/test/framework.yaml``.
@@ -100,8 +100,8 @@ your application in the configured environment.
 
 .. note::
 
-   The given URLs assume that your web server is configured to use the ``public/``
-   directory of the application as its root. Read more in :doc:`Installing Symfony </setup>`.
+    The given URLs assume that your web server is configured to use the ``public/``
+    directory of the application as its root. Read more in :doc:`Installing Symfony </setup>`.
 
 If you open the file you just visited (``public/index.php``), you'll see that
 the environment variable is passed to the kernel::
@@ -119,8 +119,8 @@ always run the application in the dev environment, independent of the
 
 .. note::
 
-   The ``test`` environment is used when writing functional tests and is
-   usually not accessed in the browser directly via a front controller.
+    The ``test`` environment is used when writing functional tests and is
+    usually not accessed in the browser directly via a front controller.
 
 .. index::
    single: Configuration; Debug mode
@@ -131,7 +131,7 @@ always run the application in the dev environment, independent of the
     argument to the ``Kernel`` constructor. This specifies if the application
     should run in "debug mode". Regardless of the environment, a Symfony
     application can be run with debug mode set to ``true`` or ``false``
-    (respectively ``1`` or ``0`` for the ``APP_ENV`` variable defined in
+    (respectively ``1`` or ``0`` for the ``APP_DEBUG`` variable defined in
     ``.env``). This affects many things in the application, such as displaying
     stacktraces on error pages or if cache files are dynamically rebuilt on
     each request.  Though not a requirement, debug mode is generally set to

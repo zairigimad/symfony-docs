@@ -19,11 +19,11 @@ within that class.
 Installation
 ------------
 
-You can install the component in two different ways:
+.. code-block:: terminal
 
-* :doc:`Install it via Composer </components/using_components>` (``symfony/property-info``
-  on `Packagist`_);
-* Use the official Git repository (https://github.com/symfony/property-info).
+    $ composer require symfony/property-info
+
+Alternatively, you can clone the `<https://github.com/symfony/property-info>`_ repository.
 
 .. include:: /components/require_autoload.rst.inc
 
@@ -50,28 +50,35 @@ provide it with a set of information extractors.
     $phpDocExtractor = new PhpDocExtractor();
     $reflectionExtractor = new ReflectionExtractor();
 
-    // array of PropertyListExtractorInterface
+    // list of PropertyListExtractorInterface (any iterable)
     $listExtractors = array($reflectionExtractor);
 
-    // array of PropertyTypeExtractorInterface
+    // list of PropertyTypeExtractorInterface (any iterable)
     $typeExtractors = array($phpDocExtractor, $reflectionExtractor);
 
-    // array of PropertyDescriptionExtractorInterface
+    // list of PropertyDescriptionExtractorInterface (any iterable)
     $descriptionExtractors = array($phpDocExtractor);
 
-    // array of PropertyAccessExtractorInterface
-    $accessExtractors = array($reflectionExtractor);
+    // list of PropertyInitializableExtractorInterface (any iterable)
+    $propertyInitializableExtractors = array($reflectionExtractor);
+
+    // list of PropertyAccessExtractorInterface (any iterable)
 
     $propertyInfo = new PropertyInfoExtractor(
         $listExtractors,
         $typeExtractors,
         $descriptionExtractors,
-        $accessExtractors
+        $accessExtractors,
+        $propertyInitializableExtractors
     );
 
     // see below for more examples
     $class = YourAwesomeCoolClass::class;
     $properties = $propertyInfo->getProperties($class);
+
+.. versionadded:: 4.2
+    :class:`Symfony\\Component\\PropertyInfo\\PropertyInitializableExtractorInterface`
+    was introduced in Symfony 4.2.
 
 Extractor Ordering
 ~~~~~~~~~~~~~~~~~~
@@ -120,12 +127,13 @@ Extractable Information
 -----------------------
 
 The :class:`Symfony\\Component\\PropertyInfo\\PropertyInfoExtractor`
-class exposes public methods to extract four types of information:
+class exposes public methods to extract several types of information:
 
-* :ref:`*List* of properties <property-info-list>`: `getProperties()`
-* :ref:`Property *type* <property-info-type>`: `getTypes()`
-* :ref:`Property *description* <property-info-description>`: `getShortDescription()` and `getLongDescription()`
-* :ref:`Property *access* details <property-info-access>`: `isReadable()` and `isWritable()`
+* :ref:`List of properties <property-info-list>`: :method:`Symfony\\Component\\PropertyInfo\\PropertyListExtractorInterface::getProperties()`
+* :ref:`Property type <property-info-type>`: :method:`Symfony\\Component\\PropertyInfo\\PropertyTypeExtractorInterface::getTypes()`
+* :ref:`Property description <property-info-description>`: :method:`Symfony\\Component\\PropertyInfo\\PropertyDescriptionExtractorInterface::getShortDescription()` and :method:`Symfony\\Component\\PropertyInfo\\PropertyDescriptionExtractorInterface::getLongDescription()`
+* :ref:`Property access details <property-info-access>`: :method:`Symfony\\Component\\PropertyInfo\\PropertyAccessExtractorInterface::isReadable()` and  :method:`Symfony\\Component\\PropertyInfo\\PropertyAccessExtractorInterface::isWritable()`
+* :ref:`Property initializable through the constructor <property-info-initializable>`:  :method:`Symfony\\Component\\PropertyInfo\\PropertyInitializableExtractorInterface::isInitializable()`
 
 .. note::
 
@@ -236,14 +244,35 @@ provide whether properties are readable or writable as booleans.
     // Example Result: bool(false)
 
 The :class:`Symfony\\Component\\PropertyInfo\\Extractor\\ReflectionExtractor` looks
-for getter/isser/setter method in addition to whether or not a property is public
+for getter/isser/setter/hasser method in addition to whether or not a property is public
 to determine if it's accessible. This based on how the :doc:`PropertyAccess </components/property_access>`
 works.
+
+.. versionadded:: 4.1
+    The support of hasser methods in the ``ReflectionExtractor`` class was
+    introduced in Symfony 4.1.
+
+.. _property-info-initializable:
+
+Property Initializable Information
+----------------------------------
+
+Extractors that implement :class:`Symfony\\Component\\PropertyInfo\\PropertyInitializableExtractorInterface`
+provide whether properties are initializable through the class's constructor as booleans.
+
+.. code-block:: php
+
+    $propertyInfo->isInitializable($class, $property);
+    // Example Result: bool(true)
+
+:method:`Symfony\\Component\\PropertyInfo\\Extractor\\ReflectionExtractor::isInitializable`
+returns ``true`` if a constructor's parameter of the given class matches the
+given property name.
 
 .. tip::
 
     The main :class:`Symfony\\Component\\PropertyInfo\\PropertyInfoExtractor`
-    class implements all four interfaces, delegating the extraction of property
+    class implements all interfaces, delegating the extraction of property
     information to the extractors that have been registered with it.
 
     This means that any method available on each of the extractors is also
@@ -280,9 +309,9 @@ Type::getBuiltInType()
 ~~~~~~~~~~~~~~~~~~~~~~
 
 The :method:`Type::getBuiltinType() <Symfony\\Component\\PropertyInfo\\Type::getBuiltinType>`
-method will return the built-in PHP data type, which can be one of 9 possible
-string values: ``array``, ``bool``, ``callable``, ``float``, ``int``, ``null``,
-``object``, ``resource`` or ``string``.
+method returns the built-in PHP data type, which can be one of these
+string values: ``array``, ``bool``, ``callable``, ``float``, ``int``,
+``iterable``, ``null``, ``object``, ``resource`` or ``string``.
 
 Constants inside the :class:`Symfony\\Component\\PropertyInfo\\Type`
 class, in the form ``Type::BUILTIN_TYPE_*``, are provided for convenience.
@@ -346,7 +375,8 @@ ReflectionExtractor
 
 Using PHP reflection, the :class:`Symfony\\Component\\PropertyInfo\\Extractor\\ReflectionExtractor`
 provides list, type and access information from setter and accessor methods.
-It can also provide return and scalar types for PHP 7+.
+It can also give the type of a property, and if it is initializable through the
+constructor. It supports return and scalar types for PHP 7.
 
 .. note::
 
@@ -355,7 +385,7 @@ It can also provide return and scalar types for PHP 7+.
 
     .. code-block:: yaml
 
-        # app/config/config.yml
+        # config/packages/framework.yaml
         framework:
             property_info:
                 enabled: true
@@ -368,18 +398,23 @@ It can also provide return and scalar types for PHP 7+.
 
     // List information.
     $reflectionExtractor->getProperties($class);
+
     // Type information.
     $reflectionExtractor->getTypes($class, $property);
+
     // Access information.
     $reflectionExtractor->isReadable($class, $property);
     $reflectionExtractor->isWritable($class, $property);
+
+    // Initializable information
+    $reflectionExtractor->isInitializable($class, $property);
 
 PhpDocExtractor
 ~~~~~~~~~~~~~~~
 
 .. note::
 
-    This extractor depends on the `phpdocumentor/reflection`_ library.
+    This extractor depends on the `phpdocumentor/reflection-docblock`_ library.
 
 Using `phpDocumentor Reflection`_ to parse property and method annotations,
 the :class:`Symfony\\Component\\PropertyInfo\\Extractor\\PhpDocExtractor`
@@ -451,12 +486,17 @@ with the ``property_info`` service in the Symfony Framework.
         'driver' => 'pdo_sqlite',
         // ...
     ], $config);
-    $doctrineExtractor = new DoctrineExtractor($entityManager->getMetadataFactory());
+    $doctrineExtractor = new DoctrineExtractor($entityManager);
 
     // List information.
     $doctrineExtractor->getProperties($class);
     // Type information.
     $doctrineExtractor->getTypes($class, $property);
+
+.. versionadded:: 4.2
+    The option to pass Doctrine's EntityManager to ``DoctrineExtractor`` was
+    introduced in Symfony 4.2. Previously you needed to pass the class metadata
+    factory associated to the EntityManager.
 
 .. _`components-property-information-extractors-creation`:
 
@@ -467,8 +507,9 @@ You can create your own property information extractors by creating a
 class that implements one or more of the following interfaces:
 :class:`Symfony\\Component\\PropertyInfo\\PropertyAccessExtractorInterface`,
 :class:`Symfony\\Component\\PropertyInfo\\PropertyDescriptionExtractorInterface`,
-:class:`Symfony\\Component\\PropertyInfo\\PropertyListExtractorInterface`
-and :class:`Symfony\\Component\\PropertyInfo\\PropertyTypeExtractorInterface`.
+:class:`Symfony\\Component\\PropertyInfo\\PropertyListExtractorInterface`,
+:class:`Symfony\\Component\\PropertyInfo\\PropertyTypeExtractorInterface` and
+:class:`Symfony\\Component\\PropertyInfo\\PropertyInitializableExtractorInterface`.
 
 If you have enabled the PropertyInfo component with the FrameworkBundle,
 you can automatically register your extractor class with the ``property_info``
@@ -481,8 +522,8 @@ service by defining it as a service with one or more of the following
 * ``property_info.access_extractor`` if it provides access information.
 
 .. _Packagist: https://packagist.org/packages/symfony/property-info
-.. _`phpDocumentor Reflection`: https://github.com/phpDocumentor/Reflection
-.. _`phpdocumentor/reflection`: https://packagist.org/packages/phpdocumentor/reflection
+.. _`phpDocumentor Reflection`: https://github.com/phpDocumentor/ReflectionDocBlock
+.. _`phpdocumentor/reflection-docblock`: https://packagist.org/packages/phpdocumentor/reflection-docblock
 .. _`Doctrine ORM`: http://www.doctrine-project.org/projects/orm.html
 .. _`symfony/serializer`: https://packagist.org/packages/symfony/serializer
 .. _`symfony/doctrine-bridge`: https://packagist.org/packages/symfony/doctrine-bridge

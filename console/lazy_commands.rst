@@ -15,10 +15,10 @@ which will be responsible for returning ``Command`` instances::
 
     use App\Command\HeavyCommand;
     use Symfony\Component\Console\Application;
-    use Symfony\Component\Console\CommandLoader\FactoryCommmandLoader;
+    use Symfony\Component\Console\CommandLoader\FactoryCommandLoader;
 
     $commandLoader = new FactoryCommandLoader(array(
-        'app:heavy' => function () { return new HeavyCommand() },
+        'app:heavy' => function () { return new HeavyCommand(); },
     ));
 
     $application = new Application();
@@ -48,7 +48,7 @@ array of ``Command`` factories as its only constructor argument::
     use Symfony\Component\Console\CommandLoader\FactoryCommandLoader;
 
     $commandLoader = new FactoryCommandLoader(array(
-        'app:foo' => function () { return new FooCommand() },
+        'app:foo' => function () { return new FooCommand(); },
         'app:bar' => array(BarCommand::class, 'create'),
     ));
 
@@ -68,13 +68,13 @@ with command names as keys and service identifiers as values::
     use Symfony\Component\Console\CommandLoader\ContainerCommandLoader;
     use Symfony\Component\DependencyInjection\ContainerBuilder;
 
-    $container = new ContainerBuilder();
-    $container->register(FooCommand::class, FooCommand::class);
-    $container->compile();
+    $containerBuilder = new ContainerBuilder();
+    $containerBuilder->register(FooCommand::class, FooCommand::class);
+    $containerBuilder->compile();
 
-    $commandLoader = new ContainerCommandLoader($container, array(
+    $commandLoader = new ContainerCommandLoader($containerBuilder, array(
         'app:foo' => FooCommand::class,
     ));
 
 Like this, executing the ``app:foo`` command will load the ``FooCommand`` service
-by calling ``$container->get(FooCommand::class)``.
+by calling ``$containerBuilder->get(FooCommand::class)``.

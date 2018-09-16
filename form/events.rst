@@ -219,7 +219,8 @@ View data        Normalized data transformed using a view transformer
 
 .. caution::
 
-    At this point, you cannot add or remove fields to the form.
+    At this point, you cannot add or remove fields to the current form and its
+    children.
 
 .. sidebar:: ``FormEvents::POST_SUBMIT`` in the Form component
 
@@ -251,9 +252,9 @@ Name                    ``FormEvents`` Constant        Event's Data
 ======================  =============================  ===============
 ``form.pre_set_data``   ``FormEvents::PRE_SET_DATA``   Model data
 ``form.post_set_data``  ``FormEvents::POST_SET_DATA``  Model data
-``form.pre_bind``       ``FormEvents::PRE_SUBMIT``     Request data
-``form.bind``           ``FormEvents::SUBMIT``         Normalized data
-``form.post_bind``      ``FormEvents::POST_SUBMIT``    View data
+``form.pre_submit``     ``FormEvents::PRE_SUBMIT``     Request data
+``form.submit``         ``FormEvents::SUBMIT``         Normalized data
+``form.post_submit``    ``FormEvents::POST_SUBMIT``    View data
 ======================  =============================  ===============
 
 Event Listeners
@@ -282,7 +283,7 @@ Creating and binding an event listener to the form is very easy::
                 return;
             }
 
-            // Check whether the user has chosen to display their email or not.
+            // checks whether the user has chosen to display their email or not.
             // If the data was submitted previously, the additional value that is
             // included in the request variables needs to be removed.
             if (true === $user['show_email']) {
@@ -362,7 +363,7 @@ Event subscribers have different uses:
             $user = $event->getData();
             $form = $event->getForm();
 
-            // Check whether the user from the initial data has chosen to
+            // checks whether the user from the initial data has chosen to
             // display their email or not.
             if (true === $user->isShowEmail()) {
                 $form->add('email', EmailType::class);
@@ -378,7 +379,7 @@ Event subscribers have different uses:
                 return;
             }
 
-            // Check whether the user has chosen to display their email or not.
+            // checks whether the user has chosen to display their email or not.
             // If the data was submitted previously, the additional value that
             // is included in the request variables needs to be removed.
             if (true === $user['show_email']) {

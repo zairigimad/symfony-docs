@@ -34,6 +34,16 @@ This means that the following scenarios will work:
 * Loading user information from an LDAP server, while using another
   authentication strategy (token-based pre-authentication, for example).
 
+Installation
+------------
+
+In applications using :doc:`Symfony Flex </setup/flex>`, run this command to
+install the Ldap component before using it:
+
+.. code-block:: terminal
+
+    $ composer require symfony/ldap
+
 Ldap Configuration Reference
 ----------------------------
 
@@ -192,6 +202,15 @@ use the ``ldap`` user provider.
     any escaping yet. Thus, it's your responsibility to prevent LDAP injection
     attacks when using the component directly.
 
+.. caution::
+
+    The user configured above in the user provider is only used to retrieve
+    data. It's a static user defined by its username and password (for improved
+    security, define the password as an environment variable).
+
+    If your LDAP server allows to retrieve information anonymously, you can
+    set the ``search_dn`` and ``search_password`` options to ``null``.
+
 The ``ldap`` user provider supports many different configuration options:
 
 service
@@ -199,7 +218,7 @@ service
 
 **type**: ``string`` **default**: ``ldap``
 
-This is the name of your configured LDAP client. You can freely chose the
+This is the name of your configured LDAP client. You can freely choose the
 name, but it must be unique in your application and it cannot start with a
 number or contain white spaces.
 
@@ -278,7 +297,7 @@ service
 
 **type**: ``string`` **default**: ``ldap``
 
-This is the name of your configured LDAP client. You can freely chose the
+This is the name of your configured LDAP client. You can freely choose the
 name, but it must be unique in your application and it cannot start with a
 number or contain white spaces.
 
@@ -471,7 +490,7 @@ Configuration example for form login and query_string
 
     .. code-block:: php
 
-        // app/config/security.php
+        // config/packages/security.php
         use Symfony\Component\Ldap\Ldap;
 
         $container->loadFromExtension('security', array(

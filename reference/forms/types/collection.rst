@@ -27,6 +27,7 @@ photos).
 | options     | - `empty_data`_                                                             |
 |             | - `error_bubbling`_                                                         |
 |             | - `error_mapping`_                                                          |
+|             | - `help`_                                                                   |
 |             | - `label`_                                                                  |
 |             | - `label_attr`_                                                             |
 |             | - `label_format`_                                                           |
@@ -59,56 +60,34 @@ address as its own input text box::
 
     $builder->add('emails', CollectionType::class, array(
         // each entry in the array will be an "email" field
-        'entry_type'   => EmailType::class,
+        'entry_type' => EmailType::class,
         // these options are passed to each "email" type
-        'entry_options'  => array(
-            'attr'      => array('class' => 'email-box')
+        'entry_options' => array(
+            'attr' => array('class' => 'email-box'),
         ),
     ));
 
 The simplest way to render this is all at once:
 
-.. configuration-block::
+.. code-block:: twig
 
-    .. code-block:: twig
-
-        {{ form_row(form.emails) }}
-
-    .. code-block:: php
-
-        <?php echo $view['form']->row($form['emails']) ?>
+    {{ form_row(form.emails) }}
 
 A much more flexible method would look like this:
 
-.. configuration-block::
+.. code-block:: html+twig
 
-    .. code-block:: html+twig
+    {{ form_label(form.emails) }}
+    {{ form_errors(form.emails) }}
 
-        {{ form_label(form.emails) }}
-        {{ form_errors(form.emails) }}
-
-        <ul>
-        {% for emailField in form.emails %}
-            <li>
-                {{ form_errors(emailField) }}
-                {{ form_widget(emailField) }}
-            </li>
-        {% endfor %}
-        </ul>
-
-    .. code-block:: html+php
-
-        <?php echo $view['form']->label($form['emails']) ?>
-        <?php echo $view['form']->errors($form['emails']) ?>
-
-        <ul>
-        <?php foreach ($form['emails'] as $emailField): ?>
-            <li>
-                <?php echo $view['form']->errors($emailField) ?>
-                <?php echo $view['form']->widget($emailField) ?>
-            </li>
-        <?php endforeach ?>
-        </ul>
+    <ul>
+    {% for emailField in form.emails %}
+        <li>
+            {{ form_errors(emailField) }}
+            {{ form_widget(emailField) }}
+        </li>
+    {% endfor %}
+    </ul>
 
 In both cases, no input fields would render unless your ``emails`` data
 array already contained some emails.
@@ -160,55 +139,63 @@ Using jQuery, a simple example might look like this. If you're rendering
 your collection fields all at once (e.g. ``form_row(form.emails)``), then
 things are even easier because the ``data-prototype`` attribute is rendered
 automatically for you (with a slight difference - see note below) and all
-you need is the JavaScript:
+you need is this JavaScript code:
 
-.. configuration-block::
+.. code-block:: javascript
 
-    .. code-block:: html+twig
+    // add-collection-widget.js
+    jQuery(document).ready(function () {
+        jQuery('.add-another-collection-widget').click(function (e) {
+            var list = jQuery(jQuery(this).attr('data-list'));
+            // Try to find the counter of the list
+            var counter = list.data('widget-counter') | list.children().length;
+            // If the counter does not exist, use the length of the list
+            if (!counter) { counter = list.children().length; }
 
-        {{ form_start(form) }}
-            {# ... #}
+            // grab the prototype template
+            var newWidget = list.attr('data-prototype');
+            // replace the "__name__" used in the id and name of the prototype
+            // with a number that's unique to your emails
+            // end name attribute looks like name="contact[emails][2]"
+            newWidget = newWidget.replace(/__name__/g, counter);
+            // Increase the counter
+            counter++;
+            // And store it, the length cannot be used if deleting widgets is allowed
+            list.data(' widget-counter', counter);
 
-            {# store the prototype on the data-prototype attribute #}
-            <ul id="email-fields-list"
-                data-prototype="{{ form_widget(form.emails.vars.prototype)|e }}">
-            {% for emailField in form.emails %}
-                <li>
-                    {{ form_errors(emailField) }}
-                    {{ form_widget(emailField) }}
-                </li>
-            {% endfor %}
-            </ul>
+            // create a new list element and add it to the list
+            var newElem = jQuery(list.attr('data-widget-tags')).html(newWidget);
+            newElem.appendTo(list);
+        });
+    });
 
-            <a href="#" id="add-another-email">Add another email</a>
+And update the template as follows:
 
-            {# ... #}
-        {{ form_end(form) }}
+.. code-block:: html+twig
 
-        <script type="text/javascript">
-            // keep track of how many email fields have been rendered
-            var emailCount = '{{ form.emails|length }}';
+    {{ form_start(form) }}
+        {# ... #}
 
-            jQuery(document).ready(function() {
-                jQuery('#add-another-email').click(function(e) {
-                    e.preventDefault();
+        {# store the prototype on the data-prototype attribute #}
+        <ul id="email-fields-list"
+            data-prototype="{{ form_widget(form.emails.vars.prototype)|e }}"
+            data-widget-tags="{{ '<li></li>'|e }}">
+        {% for emailField in form.emails %}
+            <li>
+                {{ form_errors(emailField) }}
+                {{ form_widget(emailField) }}
+            </li>
+        {% endfor %}
+        </ul>
 
-                    var emailList = jQuery('#email-fields-list');
+        <button type="button"
+            class="add-another-collection-widget"
+            data-list="#email-fields-list">Add another email</button>
 
-                    // grab the prototype template
-                    var newWidget = emailList.attr('data-prototype');
-                    // replace the "__name__" used in the id and name of the prototype
-                    // with a number that's unique to your emails
-                    // end name attribute looks like name="contact[emails][2]"
-                    newWidget = newWidget.replace(/__name__/g, emailCount);
-                    emailCount++;
+        {# ... #}
+    {{ form_end(form) }}
 
-                    // create a new list element and add it to the list
-                    var newLi = jQuery('<li></li>').html(newWidget);
-                    newLi.appendTo(emailList);
-                });
-            })
-        </script>
+    <script src="add-collection-widget.js"></script>
 
 .. tip::
 
@@ -334,13 +321,13 @@ type::
 entry_type
 ~~~~~~~~~~
 
-**type**: ``string`` or :class:`Symfony\\Component\\Form\\FormTypeInterface` **required**
+**type**: ``string`` **default**: ``Symfony\\Component\\Form\\Extension\\Core\\Type\\TextType``
 
 This is the field type for each item in this collection (e.g. ``TextType``,
 ``ChoiceType``, etc). For example, if you have an array of email addresses,
 you'd use the :doc:`EmailType </reference/forms/types/email>`. If you want
-to embed a collection of some other form, create a new instance of your
-form type and pass it as this option.
+to embed a collection of some other form, pass the form type class as this
+option (e.g. ``MyFormType::class``).
 
 prototype
 ~~~~~~~~~
@@ -359,15 +346,9 @@ be added to your underlying array due to the `allow_add`_ option.
 The prototype field can be rendered via the ``prototype`` variable in the
 collection field:
 
-.. configuration-block::
+.. code-block:: twig
 
-    .. code-block:: twig
-
-        {{ form_row(form.emails.vars.prototype) }}
-
-    .. code-block:: php
-
-        <?php echo $view['form']->row($form['emails']->vars['prototype']) ?>
+    {{ form_row(form.emails.vars.prototype) }}
 
 Note that all you really need is the "widget", but depending on how you're
 rendering your form, having the entire "form row" may be easier for you.
@@ -438,6 +419,8 @@ error_bubbling
 .. include:: /reference/forms/types/options/_error_bubbling_body.rst.inc
 
 .. include:: /reference/forms/types/options/error_mapping.rst.inc
+
+.. include:: /reference/forms/types/options/help.rst.inc
 
 .. include:: /reference/forms/types/options/label.rst.inc
 

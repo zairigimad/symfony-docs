@@ -25,7 +25,7 @@ tests significantly. That's why Symfony disables it by default:
 
         # ...
         framework:
-            profiler: { collect: false }
+            profiler: { enabled: true, collect: false }
 
     .. code-block:: xml
 
@@ -71,11 +71,12 @@ provided by the collectors obtained through the ``$client->getProfile()`` call::
 
     class LuckyControllerTest extends WebTestCase
     {
-        public function testNumberAction()
+        public function testRandomNumber()
         {
             $client = static::createClient();
 
-            // Enable the profiler for the next request
+            // enable the profiler only for the next request (if you make
+            // new requests, you must call this method again)
             // (it does nothing if the profiler is not available)
             $client->enableProfiler();
 
@@ -83,7 +84,7 @@ provided by the collectors obtained through the ``$client->getProfile()`` call::
 
             // ... write some assertions about the Response
 
-            // Check that the profiler is enabled
+            // check that the profiler is enabled
             if ($profile = $client->getProfile()) {
                 // check the number of requests
                 $this->assertLessThan(

@@ -19,7 +19,7 @@ install the validator before using it:
 
 .. code-block:: terminal
 
-    $ composer require validator
+    $ composer require symfony/validator doctrine/annotations
 
 .. index::
    single: Validation; The basics
@@ -43,8 +43,9 @@ So far, this is just an ordinary class that serves some purpose inside your
 application. The goal of validation is to tell you if the data
 of an object is valid. For this to work, you'll configure a list of rules
 (called :ref:`constraints <validation-constraints>`) that the object must
-follow in order to be valid. These rules can be specified via a number of
-different formats (YAML, XML, annotations, or PHP).
+follow in order to be valid. These rules are usually defined using PHP code or
+annotations but they can also be defined as a ``validation.yaml`` or
+``validation.xml`` file inside the ``config/validator/`` directory:
 
 For example, to guarantee that the ``$name`` property is not empty, add the
 following:
@@ -129,16 +130,16 @@ returned. Take this simple example from inside a controller::
 
     // ...
     use Symfony\Component\HttpFoundation\Response;
+    use Symfony\Component\Validator\Validator\ValidatorInterface;
     use App\Entity\Author;
 
     // ...
-    public function authorAction()
+    public function author(ValidatorInterface $validator)
     {
         $author = new Author();
 
         // ... do something to the $author object
 
-        $validator = $this->get('validator');
         $errors = $validator->validate($author);
 
         if (count($errors) > 0) {
@@ -183,27 +184,15 @@ You could also pass the collection of errors into a template::
 
 Inside the template, you can output the list of errors exactly as needed:
 
-.. configuration-block::
+.. code-block:: html+twig
 
-    .. code-block:: html+twig
-
-        {# templates/author/validation.html.twig #}
-        <h3>The author has the following errors</h3>
-        <ul>
-        {% for error in errors %}
-            <li>{{ error.message }}</li>
-        {% endfor %}
-        </ul>
-
-    .. code-block:: html+php
-
-        <!-- templates/author/validation.html.php -->
-        <h3>The author has the following errors</h3>
-        <ul>
-        <?php foreach ($errors as $error): ?>
-            <li><?php echo $error->getMessage() ?></li>
-        <?php endforeach ?>
-        </ul>
+    {# templates/author/validation.html.twig #}
+    <h3>The author has the following errors</h3>
+    <ul>
+    {% for error in errors %}
+        <li>{{ error.message }}</li>
+    {% endfor %}
+    </ul>
 
 .. note::
 
@@ -259,7 +248,7 @@ previous configuration by the following:
 
     .. code-block:: yaml
 
-        # config/packages/framework.yml
+        # config/packages/framework.yaml
         framework:
             validation: { enable_annotations: true }
 
@@ -439,7 +428,7 @@ options can be specified in this way.
 
     .. code-block:: yaml
 
-        # config/validator/validation.yml
+        # config/validator/validation.yaml
         App\Entity\Author:
             properties:
                 genre:
@@ -493,7 +482,7 @@ options can be specified in this way.
 This is purely meant to make the configuration of the most common option of
 a constraint shorter and quicker.
 
-If you're ever unsure of how to specify an option, either check the API documentation
+If you're ever unsure of how to specify an option, either check :namespace:`Symfony\\Component\\Validator\\Constraints`
 for the constraint or play it safe by always passing in an array of options
 (the first method shown above).
 
@@ -512,14 +501,6 @@ of the form fields::
             ))
         ;
     }
-
-The ``constraints`` option is only available if the ``ValidatorExtension``
-was enabled through the form factory builder::
-
-    Forms::createFormFactoryBuilder()
-        ->addExtension(new ValidatorExtension(Validation::createValidator()))
-        ->getFormFactory()
-    ;
 
 .. index::
    single: Validation; Constraint targets
@@ -631,7 +612,7 @@ as "getters".
 The benefit of this technique is that it allows you to validate your object
 dynamically. For example, suppose you want to make sure that a password field
 doesn't match the first name of the user (for security reasons). You can
-do this by creating an ``isPasswordLegal()`` method, and then asserting that
+do this by creating an ``isPasswordSafe()`` method, and then asserting that
 this method must return ``true``:
 
 .. configuration-block::
@@ -646,9 +627,9 @@ this method must return ``true``:
         class Author
         {
             /**
-             * @Assert\IsTrue(message = "The password cannot match your first name")
+             * @Assert\IsTrue(message="The password cannot match your first name")
              */
-            public function isPasswordLegal()
+            public function isPasswordSafe()
             {
                 // ... return true or false
             }
@@ -659,7 +640,7 @@ this method must return ``true``:
         # config/validator/validation.yaml
         App\Entity\Author:
             getters:
-                passwordLegal:
+                passwordSafe:
                     - 'IsTrue': { message: 'The password cannot match your first name' }
 
     .. code-block:: xml
@@ -672,7 +653,7 @@ this method must return ``true``:
                 http://symfony.com/schema/dic/constraint-mapping/constraint-mapping-1.0.xsd">
 
             <class name="App\Entity\Author">
-                <getter property="passwordLegal">
+                <getter property="passwordSafe">
                     <constraint name="IsTrue">
                         <option name="message">The password cannot match your first name</option>
                     </constraint>
@@ -692,15 +673,15 @@ this method must return ``true``:
         {
             public static function loadValidatorMetadata(ClassMetadata $metadata)
             {
-                $metadata->addGetterConstraint('passwordLegal', new Assert\IsTrue(array(
+                $metadata->addGetterConstraint('passwordSafe', new Assert\IsTrue(array(
                     'message' => 'The password cannot match your first name',
                 )));
             }
         }
 
-Now, create the ``isPasswordLegal()`` method and include the logic you need::
+Now, create the ``isPasswordSafe()`` method and include the logic you need::
 
-    public function isPasswordLegal()
+    public function isPasswordSafe()
     {
         return $this->firstName !== $this->password;
     }

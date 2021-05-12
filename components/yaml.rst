@@ -33,8 +33,6 @@ Installation
 
     $ composer require symfony/yaml
 
-Alternatively, you can clone the `<https://github.com/symfony/yaml>`_ repository.
-
 .. include:: /components/require_autoload.rst.inc
 
 Why?
@@ -71,7 +69,7 @@ level configuration for pretty outputs.
 Types Support
 ~~~~~~~~~~~~~
 
-It supports most of the YAML built-in types like dates, integers, octals,
+It supports most of the YAML built-in types like dates, integers, octal numbers,
 booleans, and much more...
 
 Full Merge Key Support
@@ -85,7 +83,7 @@ yourself by referencing common configuration bits.
 Using the Symfony YAML Component
 --------------------------------
 
-The Symfony Yaml component is very simple and consists of two main classes:
+The Symfony Yaml component consists of two main classes:
 one parses YAML strings (:class:`Symfony\\Component\\Yaml\\Parser`), and the
 other dumps a PHP array to a YAML string
 (:class:`Symfony\\Component\\Yaml\\Dumper`).
@@ -102,7 +100,7 @@ string and converts it to a PHP array::
     use Symfony\Component\Yaml\Yaml;
 
     $value = Yaml::parse("foo: bar");
-    // $value = array('foo' => 'bar')
+    // $value = ['foo' => 'bar']
 
 If an error occurs during parsing, the parser throws a
 :class:`Symfony\\Component\\Yaml\\Exception\\ParseException` exception
@@ -139,10 +137,10 @@ array to its YAML representation::
 
     use Symfony\Component\Yaml\Yaml;
 
-    $array = array(
+    $array = [
         'foo' => 'bar',
-        'bar' => array('foo' => 'bar', 'bar' => 'baz'),
-    );
+        'bar' => ['foo' => 'bar', 'bar' => 'baz'],
+    ];
 
     $yaml = Yaml::dump($array);
 
@@ -151,8 +149,10 @@ array to its YAML representation::
 If an error occurs during the dump, the parser throws a
 :class:`Symfony\\Component\\Yaml\\Exception\\DumpException` exception.
 
-Array Expansion and Inlining
-............................
+.. _array-expansion-and-inlining:
+
+Expanded and Inlined Arrays
+...........................
 
 The YAML format supports two kind of representation for arrays, the expanded
 one, and the inline one. By default, the dumper uses the expanded
@@ -190,7 +190,7 @@ representation to the inline one::
 Indentation
 ...........
 
-By default the YAML component will use 4 spaces for indentation. This can be
+By default, the YAML component will use 4 spaces for indentation. This can be
 changed using the third argument as follows::
 
     // uses 8 spaces for indentation
@@ -261,7 +261,7 @@ You can dump objects as Yaml maps by using the ``DUMP_OBJECT_AS_MAP`` flag::
     $object = new \stdClass();
     $object->foo = 'bar';
 
-    $dumped = Yaml::dump(array('data' => $object), 2, 4, Yaml::DUMP_OBJECT_AS_MAP);
+    $dumped = Yaml::dump(['data' => $object], 2, 4, Yaml::DUMP_OBJECT_AS_MAP);
     // $dumped = "data:\n    foo: bar"
 
 And parse them by using the ``PARSE_OBJECT_FOR_MAP`` flag::
@@ -279,7 +279,7 @@ representation of the object as a map.
 Handling Invalid Types
 ~~~~~~~~~~~~~~~~~~~~~~
 
-By default the parser will encode invalid types as ``null``. You can make the
+By default, the parser will encode invalid types as ``null``. You can make the
 parser throw exceptions by using the ``PARSE_EXCEPTION_ON_INVALID_TYPE``
 flag::
 
@@ -291,14 +291,12 @@ Similarly you can use ``DUMP_EXCEPTION_ON_INVALID_TYPE`` when dumping::
     $data = new \stdClass(); // by default objects are invalid.
     Yaml::dump($data, 2, 4, Yaml::DUMP_EXCEPTION_ON_INVALID_TYPE); // throws an exception
 
-    echo $yaml; // { foo: bar }
-
 Date Handling
 ~~~~~~~~~~~~~
 
-By default the YAML parser will convert unquoted strings which look like a
+By default, the YAML parser will convert unquoted strings which look like a
 date or a date-time into a Unix timestamp; for example ``2016-05-27`` or
-``2016-05-27T02:59:43.1Z`` (ISO-8601_)::
+``2016-05-27T02:59:43.1Z`` (`ISO-8601`_)::
 
     Yaml::parse('2016-05-27'); // 1464307200
 
@@ -311,17 +309,17 @@ flag::
 Dumping Multi-line Literal Blocks
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-In YAML multiple lines can be represented as literal blocks, by default the
+In YAML, multiple lines can be represented as literal blocks. By default, the
 dumper will encode multiple lines as an inline string::
 
-    $string = array("string" => "Multiple\nLine\nString");
+    $string = ["string" => "Multiple\nLine\nString"];
     $yaml = Yaml::dump($string);
     echo $yaml; // string: "Multiple\nLine\nString"
 
 You can make it use a literal block with the ``DUMP_MULTI_LINE_LITERAL_BLOCK``
 flag::
 
-    $string = array("string" => "Multiple\nLine\nString");
+    $string = ["string" => "Multiple\nLine\nString"];
     $yaml = Yaml::dump($string, 2, 4, Yaml::DUMP_MULTI_LINE_LITERAL_BLOCK);
     echo $yaml;
     //  string: |
@@ -338,7 +336,7 @@ syntax to parse them as proper PHP constants::
 
     $yaml = '{ foo: PHP_INT_SIZE, bar: !php/const PHP_INT_SIZE }';
     $parameters = Yaml::parse($yaml, Yaml::PARSE_CONSTANT);
-    // $parameters = array('foo' => 'PHP_INT_SIZE', 'bar' => 8);
+    // $parameters = ['foo' => 'PHP_INT_SIZE', 'bar' => 8];
 
 Parsing and Dumping of Binary Data
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -347,7 +345,7 @@ You can dump binary data by using the ``DUMP_BASE64_BINARY_DATA`` flag::
 
     $imageContents = file_get_contents(__DIR__.'/images/logo.png');
 
-    $dumped = Yaml::dump(array('logo' => $imageContents), 2, 4, Yaml::DUMP_BASE64_BINARY_DATA);
+    $dumped = Yaml::dump(['logo' => $imageContents], 2, 4, Yaml::DUMP_BASE64_BINARY_DATA);
     // logo: !!binary iVBORw0KGgoAAAANSUhEUgAAA6oAAADqCAY...
 
 Binary data is automatically parsed if they include the ``!!binary`` YAML tag
@@ -366,18 +364,31 @@ In addition to the built-in support of tags like ``!php/const`` and
 
     $data = "!my_tag { foo: bar }";
     $parsed = Yaml::parse($data, Yaml::PARSE_CUSTOM_TAGS);
-    // $parsed = Symfony\Component\Yaml\Tag\TaggedValue('my_tag', array('foo' => 'bar'));
+    // $parsed = Symfony\Component\Yaml\Tag\TaggedValue('my_tag', ['foo' => 'bar']);
     $tagName = $parsed->getTag();    // $tagName = 'my_tag'
-    $tagValue = $parsed->getValue(); // $tagValue = array('foo' => 'bar')
+    $tagValue = $parsed->getValue(); // $tagValue = ['foo' => 'bar']
 
 If the contents to dump contain :class:`Symfony\\Component\\Yaml\\Tag\\TaggedValue`
 objects, they are automatically transformed into YAML tags::
 
     use Symfony\Component\Yaml\Tag\TaggedValue;
 
-    $data = new TaggedValue('my_tag', array('foo' => 'bar'));
+    $data = new TaggedValue('my_tag', ['foo' => 'bar']);
     $dumped = Yaml::dump($data);
     // $dumped = '!my_tag { foo: bar }'
+
+Dumping Null Values
+~~~~~~~~~~~~~~~~~~~
+
+The official YAML specification uses both ``null`` and ``~`` to represent null
+values. This component uses ``null`` by default when dumping null values but
+you can dump them as ``~`` with the ``DUMP_NULL_AS_TILDE`` flag::
+
+    $dumped = Yaml::dump(['foo' => null]);
+    // foo: null
+
+    $dumped = Yaml::dump(['foo' => null], 2, 4, Yaml::DUMP_NULL_AS_TILDE);
+    // foo: ~
 
 Syntax Validation
 ~~~~~~~~~~~~~~~~~
@@ -394,7 +405,6 @@ First, install the Console component:
 Create a console application with ``lint:yaml`` as its only command::
 
     // lint.php
-
     use Symfony\Component\Console\Application;
     use Symfony\Component\Yaml\Command\LintCommand;
 
@@ -411,8 +421,14 @@ Then, execute the script for validating contents:
     # validates a single file
     $ php lint.php path/to/file.yaml
 
+    # or validates multiple files
+    $ php lint.php path/to/file1.yaml path/to/file2.yaml
+
     # or all the files in a directory
     $ php lint.php path/to/directory
+
+    # or all the files in multiple directories
+    $ php lint.php path/to/directory1 path/to/directory2
 
     # or contents passed to STDIN
     $ cat path/to/file.yaml | php lint.php
@@ -439,7 +455,6 @@ Learn More
 
     yaml/*
 
-.. _YAML: http://yaml.org/
-.. _Packagist: https://packagist.org/packages/symfony/yaml
-.. _`YAML 1.2 version specification`: http://yaml.org/spec/1.2/spec.html
-.. _ISO-8601: http://www.iso.org/iso/iso8601
+.. _`YAML`: https://yaml.org/
+.. _`YAML 1.2 version specification`: https://yaml.org/spec/1.2/spec.html
+.. _`ISO-8601`: https://www.iso.org/iso-8601-date-and-time-format.html

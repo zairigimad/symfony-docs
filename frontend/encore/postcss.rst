@@ -8,7 +8,7 @@ First, download ``postcss-loader`` and any plugins you want, like ``autoprefixer
 
 .. code-block:: terminal
 
-    $ yarn add --dev postcss-loader autoprefixer
+    $ yarn add postcss-loader autoprefixer --dev
 
 Next, create a ``postcss.config.js`` file at the root of your project:
 
@@ -24,35 +24,41 @@ Next, create a ``postcss.config.js`` file at the root of your project:
         }
     }
 
-Then, Enable the loader in Encore!
+Then, enable the loader in Encore!
 
 .. code-block:: diff
 
-    // webpack.config.js
+      // webpack.config.js
 
-    Encore
-        // ...
+      Encore
+          // ...
     +     .enablePostCssLoader()
-    ;
+      ;
+
+Because you just modified ``webpack.config.js``, stop and restart Encore.
 
 That's it! The ``postcss-loader`` will now be used for all CSS, Sass, etc files.
 You can also pass options to the `postcss-loader`_ by passing a callback:
 
 .. code-block:: diff
 
-    // webpack.config.js
+      // webpack.config.js
+    + const path = require('path');
 
-    Encore
-        // ...
+      Encore
+          // ...
     +     .enablePostCssLoader((options) => {
-    +         options.config = {
-    +             path: 'config/postcss.config.js'
+    +         options.postcssOptions = {
+    +             // the directory where the postcss.config.js file is stored
+    +             config: path.resolve(__dirname, 'sub-dir', 'custom.config.js'),
     +         };
     +     })
-    ;
+      ;
 
-Adding browserslist to package.json
------------------------------------
+.. _browserslist_package_config:
+
+Adding browserslist to ``package.json``
+---------------------------------------
 
 The ``autoprefixer`` (and many other tools) need to know what browsers you want to
 support. The best-practice is to configure this directly in your ``package.json``
@@ -60,21 +66,30 @@ support. The best-practice is to configure this directly in your ``package.json`
 
 .. code-block:: diff
 
-    {
-    +     "browserslist": [ "last 2 versions", "ios >= 8" ]
-    }
+      {
+    +  "browserslist": [
+    +    "defaults"
+    +  ]
+      }
+
+The ``defaults`` option is recommended for most users and would be equivalent
+to the following browserslist:
+
+.. code-block:: diff
+
+      {
+    +  "browserslist": [
+    +    "> 0.5%",
+    +    "last 2 versions",
+    +    "Firefox ESR",
+    +    "not dead"
+    +  ]
+      }
 
 See `browserslist`_ for more details on the syntax.
 
-.. note::
-
-    Encore uses `babel-preset-env`_, which *also* needs to know which browsers you
-    want to support. But this does *not* read the ``browserslist`` config key. You
-    must configure the browsers separately via :doc:`configureBabel() </frontend/encore/babel>`.
-
-.. _`PostCSS`: http://postcss.org/
+.. _`PostCSS`: https://postcss.org/
 .. _`autoprefixing`: https://github.com/postcss/autoprefixer
 .. _`linting`: https://stylelint.io/
-.. _`browserslist`: https://github.com/ai/browserslist
-.. _`babel-preset-env`: https://github.com/babel/babel-preset-env
+.. _`browserslist`: https://github.com/browserslist/browserslist
 .. _`postcss-loader`: https://github.com/postcss/postcss-loader

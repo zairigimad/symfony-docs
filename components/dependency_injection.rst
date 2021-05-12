@@ -19,8 +19,6 @@ Installation
 
     $ composer require symfony/dependency-injection
 
-Alternatively, you can clone the `<https://github.com/symfony/dependency-injection>`_ repository.
-
 .. include:: /components/require_autoload.rst.inc
 
 Basic Usage
@@ -32,7 +30,7 @@ Basic Usage
     independent component in any PHP application. Read the :doc:`/service_container`
     article to learn about how to use it in Symfony applications.
 
-You might have a simple class like the following ``Mailer`` that
+You might have a class like the following ``Mailer`` that
 you want to make available as a service::
 
     class Mailer
@@ -159,7 +157,7 @@ If you do want to though then the container can call the setter method::
 
     $containerBuilder
         ->register('newsletter_manager', 'NewsletterManager')
-        ->addMethodCall('setMailer', array(new Reference('mailer')));
+        ->addMethodCall('setMailer', [new Reference('mailer')]);
 
 You could then get your ``newsletter_manager`` service from the container
 like this::
@@ -200,8 +198,8 @@ files. To do this you also need to install
 
 Loading an XML config file::
 
-    use Symfony\Component\DependencyInjection\ContainerBuilder;
     use Symfony\Component\Config\FileLocator;
+    use Symfony\Component\DependencyInjection\ContainerBuilder;
     use Symfony\Component\DependencyInjection\Loader\XmlFileLoader;
 
     $containerBuilder = new ContainerBuilder();
@@ -210,8 +208,8 @@ Loading an XML config file::
 
 Loading a YAML config file::
 
-    use Symfony\Component\DependencyInjection\ContainerBuilder;
     use Symfony\Component\Config\FileLocator;
+    use Symfony\Component\DependencyInjection\ContainerBuilder;
     use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
 
     $containerBuilder = new ContainerBuilder();
@@ -235,8 +233,8 @@ Loading a YAML config file::
 If you *do* want to use PHP to create the services then you can move this
 into a separate config file and load it in a similar way::
 
-    use Symfony\Component\DependencyInjection\ContainerBuilder;
     use Symfony\Component\Config\FileLocator;
+    use Symfony\Component\DependencyInjection\ContainerBuilder;
     use Symfony\Component\DependencyInjection\Loader\PhpFileLoader;
 
     $containerBuilder = new ContainerBuilder();
@@ -261,14 +259,14 @@ config files:
             newsletter_manager:
                 class:     NewsletterManager
                 calls:
-                    - [setMailer, ['@mailer']]
+                    - setMailer: ['@mailer']
 
     .. code-block:: xml
 
         <?xml version="1.0" encoding="UTF-8" ?>
         <container xmlns="http://symfony.com/schema/dic/services"
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-            xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
+            xsi:schemaLocation="http://symfony.com/schema/dic/services https://symfony.com/schema/dic/services/services-1.0.xsd">
 
             <parameters>
                 <!-- ... -->
@@ -282,7 +280,7 @@ config files:
 
                 <service id="newsletter_manager" class="NewsletterManager">
                     <call method="setMailer">
-                        <argument type="service" id="mailer" />
+                        <argument type="service" id="mailer"/>
                     </call>
                 </service>
             </services>
@@ -290,17 +288,26 @@ config files:
 
     .. code-block:: php
 
-        use Symfony\Component\DependencyInjection\Reference;
+        namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
-        // ...
-        $container->setParameter('mailer.transport', 'sendmail');
-        $container
-            ->register('mailer', 'Mailer')
-            ->addArgument('%mailer.transport%');
+        return function(ContainerConfigurator $configurator) {
+            $configurator->parameters()
+                // ...
+                ->set('mailer.transport', 'sendmail')
+            ;
 
-        $container
-            ->register('newsletter_manager', 'NewsletterManager')
-            ->addMethodCall('setMailer', array(new Reference('mailer')));
+            $services = $configurator->services();
+
+            $services->set('mailer', 'Mailer')
+                // the param() method was introduced in Symfony 5.2.
+                ->args([param('mailer.transport')])
+            ;
+
+            $services->set('newsletter_manager', 'NewsletterManager')
+                // In versions earlier to Symfony 5.1 the service() function was called ref()
+                ->call('setMailer', [service('mailer')])
+            ;
+        };
 
 Learn More
 ----------
@@ -312,5 +319,4 @@ Learn More
     /components/dependency_injection/*
     /service_container/*
 
-.. _`PSR-11`: http://www.php-fig.org/psr/psr-11/
-.. _Packagist: https://packagist.org/packages/symfony/dependency-injection
+.. _`PSR-11`: https://www.php-fig.org/psr/psr-11/

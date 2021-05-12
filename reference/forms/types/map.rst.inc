@@ -34,6 +34,7 @@ Date and Time Fields
 * :doc:`DateTimeType </reference/forms/types/datetime>`
 * :doc:`TimeType </reference/forms/types/time>`
 * :doc:`BirthdayType </reference/forms/types/birthday>`
+* :doc:`WeekType </reference/forms/types/week>`
 
 Other Fields
 ~~~~~~~~~~~~
@@ -41,6 +42,12 @@ Other Fields
 * :doc:`CheckboxType </reference/forms/types/checkbox>`
 * :doc:`FileType </reference/forms/types/file>`
 * :doc:`RadioType </reference/forms/types/radio>`
+
+UID Fields
+~~~~~~~~~~
+
+* :doc:`UuidType </reference/forms/types/uuid>`
+* :doc:`UlidType </reference/forms/types/ulid>`
 
 Field Groups
 ~~~~~~~~~~~~

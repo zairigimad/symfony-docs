@@ -4,34 +4,41 @@
 
 .. _component-cache-files-adapter:
 
-Php Files Cache Adapter
+PHP Files Cache Adapter
 =======================
 
 Similarly to :ref:`Filesystem Adapter <component-cache-filesystem-adapter>`, this cache
 implementation writes cache entries out to disk, but unlike the Filesystem cache adapter,
 the PHP Files cache adapter writes and reads back these cache files *as native PHP code*.
-For example, caching the value ``array('my', 'cached', 'array')`` will write out a cache
+For example, caching the value ``['my', 'cached', 'array']`` will write out a cache
 file similar to the following::
 
-    <?php return array(
+    <?php return [
 
         // the cache item expiration
         0 => 9223372036854775807,
 
         // the cache item contents
-        1 => array (
+        1 => [
             0 => 'my',
             1 => 'cached',
             2 => 'array',
-        ),
+        ],
 
-    );
+    ];
 
 .. note::
 
+    This adapter requires turning on the ``opcache.enable`` php.ini setting.
     As cache items are included and parsed as native PHP code and due to the way `OPcache`_
     handles file includes, this adapter has the potential to be much faster than other
     filesystem-based caches.
+
+.. caution::
+
+    While it supports updates and because it is using OPcache as a backend, this adapter is
+    better suited for append-mostly needs. Using it in other scenarios might lead to
+    periodical reset of the OPcache memory, potentially leading to degraded performance.
 
 The PhpFilesAdapter can optionally be provided a namespace, default cache lifetime, and cache
 directory path as constructor arguments::
@@ -56,8 +63,8 @@ directory path as constructor arguments::
 
 .. note::
 
-    Since Symfony 3.4, this adapter implements :class:`Symfony\\Component\\Cache\\PruneableInterface`,
+    This adapter implements :class:`Symfony\\Component\\Cache\\PruneableInterface`,
     allowing for manual :ref:`pruning of expired cache entries <component-cache-cache-pool-prune>` by
     calling its ``prune()`` method.
 
-.. _`OPcache`: http://php.net/manual/en/book.opcache.php
+.. _`OPcache`: https://www.php.net/manual/en/book.opcache.php

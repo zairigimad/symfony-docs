@@ -35,31 +35,54 @@ want a command to create a user::
 
     class CreateUserCommand extends Command
     {
-        protected function configure()
+        // the name of the command (the part after "bin/console")
+        protected static $defaultName = 'app:create-user';
+
+        protected function configure(): void
         {
             // ...
         }
 
-        protected function execute(InputInterface $input, OutputInterface $output)
+        protected function execute(InputInterface $input, OutputInterface $output): int
         {
-            // ...
+            // ... put here the code to create the user
+
+            // this method must return an integer number with the "exit status code"
+            // of the command. You can also use these constants to make code more readable
+
+            // return this if there was no problem running the command
+            // (it's equivalent to returning int(0))
+            return Command::SUCCESS;
+
+            // or return this if some error happened during the execution
+            // (it's equivalent to returning int(1))
+            // return Command::FAILURE;
+
+            // or return this to indicate incorrect command usage; e.g. invalid options
+            // or missing arguments (it's equivalent to returning int(2))
+            // return Command::INVALID
         }
     }
+
+.. versionadded:: 5.1
+
+    The ``Command::SUCCESS`` and ``Command::FAILURE`` constants were introduced
+    in Symfony 5.1.
+
+.. versionadded:: 5.3
+
+    The ``Command::INVALID`` constant was introduced in Symfony 5.3
 
 Configuring the Command
 -----------------------
 
-First of all, you must configure the name of the command in the ``configure()``
-method. Then you can optionally define a help message and the
+You can optionally define a description, help message and the
 :doc:`input options and arguments </console/input>`::
 
     // ...
-    protected function configure()
+    protected function configure(): void
     {
         $this
-            // the name of the command (the part after "bin/console")
-            ->setName('app:create-user')
-
             // the short description shown while running "php bin/console list"
             ->setDescription('Creates a new user.')
 
@@ -73,6 +96,10 @@ The ``configure()`` method is called automatically at the end of the command
 constructor. If your command defines its own constructor, set the properties
 first and then call to the parent constructor, to make those properties
 available in the ``configure()`` method::
+
+    // ...
+    use Symfony\Component\Console\Command\Command;
+    use Symfony\Component\Console\Input\InputArgument;
 
     class CreateUserCommand extends Command
     {
@@ -88,11 +115,11 @@ available in the ``configure()`` method::
             parent::__construct();
         }
 
-        public function configure()
+        protected function configure(): void
         {
             $this
                 // ...
-                ->addArgument('password', $this->requirePassword ? InputArgument::OPTIONAL : InputArgument::REQUIRED, 'User password')
+                ->addArgument('password', $this->requirePassword ? InputArgument::REQUIRED : InputArgument::OPTIONAL, 'User password')
             ;
         }
     }
@@ -108,7 +135,7 @@ this is already done for you, thanks to :ref:`autoconfiguration <services-autoco
 Executing the Command
 ---------------------
 
-After configuring and registering the command, you can execute it in the terminal:
+After configuring and registering the command, you can run it in the terminal:
 
 .. code-block:: terminal
 
@@ -124,7 +151,7 @@ The ``execute()`` method has access to the output stream to write messages to
 the console::
 
     // ...
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         // outputs multiple lines to the console (adding "\n" at the end of each line)
         $output->writeln([
@@ -143,11 +170,9 @@ the console::
         // outputs a message without adding a "\n" at the end of the line
         $output->write('You are about to ');
         $output->write('create a user.');
-    }
 
-.. versionadded:: 4.1
-    The support of PHP iterators in the ``write()`` and ``writeln()`` methods
-    was introduced in Symfony 4.1.
+        return Command::SUCCESS;
+    }
 
 Now, try executing the command:
 
@@ -165,24 +190,29 @@ Now, try executing the command:
 Output Sections
 ~~~~~~~~~~~~~~~
 
-.. versionadded:: 4.1
-    Output sections were introduced in Symfony 4.1.
-
 The regular console output can be divided into multiple independent regions
 called "output sections". Create one or more of these sections when you need to
 clear and overwrite the output information.
 
 Sections are created with the
-:method:`Symfony\\Component\\Console\\Output\\ConsoleOutput::section` method,
-which returns an instance of
+:method:`ConsoleOutput::section() <Symfony\\Component\\Console\\Output\\ConsoleOutput::section>`
+method, which returns an instance of
 :class:`Symfony\\Component\\Console\\Output\\ConsoleSectionOutput`::
+
+    // ...
+    use Symfony\Component\Console\Output\ConsoleOutputInterface;
 
     class MyCommand extends Command
     {
-        protected function execute(InputInterface $input, OutputInterface $output)
+        protected function execute(InputInterface $input, OutputInterface $output): int
         {
+            if (!$output instanceof ConsoleOutputInterface) {
+                throw new \LogicException('This command accepts only an instance of "ConsoleOutputInterface".');
+            }
+
             $section1 = $output->section();
             $section2 = $output->section();
+
             $section1->writeln('Hello');
             $section2->writeln('World!');
             // Output displays "Hello\nWorld!\n"
@@ -199,6 +229,8 @@ which returns an instance of
             // (this example deletes the last two lines of the section)
             $section1->clear(2);
             // Output is now completely empty!
+
+            return Command::SUCCESS;
         }
     }
 
@@ -219,7 +251,7 @@ Use input options or arguments to pass information to the command::
     use Symfony\Component\Console\Input\InputArgument;
 
     // ...
-    protected function configure()
+    protected function configure(): void
     {
         $this
             // configure an argument
@@ -229,7 +261,7 @@ Use input options or arguments to pass information to the command::
     }
 
     // ...
-    public function execute(InputInterface $input, OutputInterface $output)
+    public function execute(InputInterface $input, OutputInterface $output): int
     {
         $output->writeln([
             'User Creator',
@@ -239,6 +271,8 @@ Use input options or arguments to pass information to the command::
 
         // retrieve the argument value using getArgument()
         $output->writeln('Username: '.$input->getArgument('username'));
+
+        return Command::SUCCESS;
     }
 
 Now, you can pass the username to the command:
@@ -265,8 +299,8 @@ as a service, you can use normal dependency injection. Imagine you have a
 ``App\Service\UserManager`` service that you want to access::
 
     // ...
-    use Symfony\Component\Console\Command\Command;
     use App\Service\UserManager;
+    use Symfony\Component\Console\Command\Command;
 
     class CreateUserCommand extends Command
     {
@@ -281,13 +315,15 @@ as a service, you can use normal dependency injection. Imagine you have a
 
         // ...
 
-        protected function execute(InputInterface $input, OutputInterface $output)
+        protected function execute(InputInterface $input, OutputInterface $output): int
         {
             // ...
 
             $this->userManager->create($input->getArgument('username'));
 
             $output->writeln('User successfully generated!');
+
+            return Command::SUCCESS;
         }
     }
 
@@ -311,7 +347,8 @@ command:
 
 :method:`Symfony\\Component\\Console\\Command\\Command::execute` *(required)*
     This method is executed after ``interact()`` and ``initialize()``.
-    It contains the logic you want the command to execute.
+    It contains the logic you want the command to execute and it must
+    return an integer which will be used as the command `exit status`_.
 
 .. _console-testing-commands:
 
@@ -326,7 +363,6 @@ console::
     // tests/Command/CreateUserCommandTest.php
     namespace App\Tests\Command;
 
-    use App\Command\CreateUserCommand;
     use Symfony\Bundle\FrameworkBundle\Console\Application;
     use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
     use Symfony\Component\Console\Tester\CommandTester;
@@ -335,35 +371,55 @@ console::
     {
         public function testExecute()
         {
-            $kernel = self::bootKernel();
+            $kernel = static::createKernel();
             $application = new Application($kernel);
-
-            $application->add(new CreateUserCommand());
 
             $command = $application->find('app:create-user');
             $commandTester = new CommandTester($command);
-            $commandTester->execute(array(
-                'command'  => $command->getName(),
-
+            $commandTester->execute([
                 // pass arguments to the helper
                 'username' => 'Wouter',
 
                 // prefix the key with two dashes when passing options,
                 // e.g: '--some-option' => 'option_value',
-            ));
+            ]);
 
             // the output of the command in the console
             $output = $commandTester->getDisplay();
-            $this->assertContains('Username: Wouter', $output);
+            $this->assertStringContainsString('Username: Wouter', $output);
 
             // ...
         }
     }
 
+If you are using a :doc:`single-command application </components/console/single_command_tool>`,
+call ``setAutoExit(false)`` on it to get the command result in ``CommandTester``.
+
+.. versionadded:: 5.2
+
+    The ``setAutoExit()`` method for single-command applications was introduced
+    in Symfony 5.2.
+
 .. tip::
 
     You can also test a whole console application by using
     :class:`Symfony\\Component\\Console\\Tester\\ApplicationTester`.
+
+.. caution::
+
+    When testing commands using the ``CommandTester`` class, console events are
+    not dispatched. If you need to test those events, use the
+    :class:`Symfony\\Component\\Console\\Tester\\ApplicationTester` instead.
+
+.. caution::
+
+    When testing commands using the :class:`Symfony\\Component\\Console\\Tester\\ApplicationTester`
+    class, don't forget to disable the auto exit flag::
+
+        $application = new Application();
+        $application->setAutoExit(false);
+        
+        $tester = new ApplicationTester($application);
 
 .. note::
 
@@ -371,37 +427,14 @@ console::
     :class:`Symfony\\Component\\Console\\Application <Symfony\\Component\\Console\\Application>`
     and extend the normal ``\PHPUnit\Framework\TestCase``.
 
-To be able to use the fully set up service container for your console tests
-you can extend your test from
-:class:`Symfony\\Bundle\\FrameworkBundle\\Test\\KernelTestCase`::
+Logging Command Errors
+----------------------
 
-    // ...
-    use Symfony\Component\Console\Tester\CommandTester;
-    use Symfony\Bundle\FrameworkBundle\Console\Application;
-    use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
-
-    class CreateUserCommandTest extends KernelTestCase
-    {
-        public function testExecute()
-        {
-            $kernel = static::createKernel();
-            $kernel->boot();
-
-            $application = new Application($kernel);
-
-            $command = $application->find('app:create-user');
-            $commandTester = new CommandTester($command);
-            $commandTester->execute(array(
-                'command'  => $command->getName(),
-                'username' => 'Wouter',
-            ));
-
-            $output = $commandTester->getDisplay();
-            $this->assertContains('Username: Wouter', $output);
-
-            // ...
-        }
-    }
+Whenever an exception is thrown while running commands, Symfony adds a log
+message for it including the entire failing command. In addition, Symfony
+registers an :doc:`event subscriber </event_dispatcher>` to listen to the
+:ref:`ConsoleEvents::TERMINATE event <console-events-terminate>` and adds a log
+message whenever a command doesn't finish with the ``0`` `exit status`_.
 
 Learn More
 ----------
@@ -419,3 +452,7 @@ tools capable of helping you with different tasks:
 * :doc:`/components/console/helpers/formatterhelper`: customize the output colorization
 * :doc:`/components/console/helpers/progressbar`: shows a progress bar
 * :doc:`/components/console/helpers/table`: displays tabular data as a table
+* :doc:`/components/console/helpers/debug_formatter`: provides functions to
+  output debug information when running an external program
+
+.. _`exit status`: https://en.wikipedia.org/wiki/Exit_status

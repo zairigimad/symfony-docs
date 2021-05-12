@@ -1,7 +1,7 @@
 How to Use Multiple Guard Authenticators
 ========================================
 
-The Guard authentication component allows you to easily use many different
+The Guard authentication component allows you to use many different
 authenticators at a time.
 
 An entry point is a service id (of one of your authenticators) whose
@@ -24,10 +24,11 @@ This is how your security configuration can look in action:
 
         # config/packages/security.yaml
         security:
-             # ...
+            # ...
             firewalls:
                 default:
-                    anonymous: ~
+                    anonymous: true
+                    lazy: true
                     guard:
                         authenticators:
                             - App\Security\LoginFormAuthenticator
@@ -37,17 +38,18 @@ This is how your security configuration can look in action:
     .. code-block:: xml
 
         <!-- config/packages/security.xml -->
-        <?xml version="1.0" encoding="UTF-8"?>
+        <?xml version="1.0" encoding="UTF-8" ?>
         <srv:container xmlns="http://symfony.com/schema/dic/security"
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
             xmlns:srv="http://symfony.com/schema/dic/services"
             xsi:schemaLocation="http://symfony.com/schema/dic/services
-                http://symfony.com/schema/dic/services/services-1.0.xsd">
+                https://symfony.com/schema/dic/services/services-1.0.xsd
+                http://symfony.com/schema/dic/security
+                https://symfony.com/schema/dic/security/security-1.0.xsd">
 
             <config>
                 <!-- ... -->
-                <firewall name="default">
-                    <anonymous />
+                <firewall name="default" anonymous="true" lazy="true">
                     <guard entry-point="App\Security\LoginFormAuthenticator">
                         <authenticator>App\Security\LoginFormAuthenticator</authenticator>
                         <authenticator>App\Security\FacebookConnectAuthenticator</authenticator>
@@ -59,24 +61,25 @@ This is how your security configuration can look in action:
     .. code-block:: php
 
         // config/packages/security.php
-        use App\Security\LoginFormAuthenticator;
         use App\Security\FacebookConnectAuthenticator;
+        use App\Security\LoginFormAuthenticator;
 
-        $container->loadFromExtension('security', array(
+        $container->loadFromExtension('security', [
             // ...
-            'firewalls' => array(
-                'default' => array(
-                    'anonymous' => null,
-                    'guard' => array(
-                        'entry_point' => '',
-                        'authenticators' => array(
+            'firewalls' => [
+                'default' => [
+                    'anonymous' => true,
+                    'lazy' => true,
+                    'guard' => [
+                        'entry_point' => LoginFormAuthenticator::class,
+                        'authenticators' => [
                             LoginFormAuthenticator::class,
-                            FacebookConnectAuthenticator::class'
-                        ),
-                    ),
-                ),
-            ),
-        ));
+                            FacebookConnectAuthenticator::class,
+                        ],
+                    ],
+                ],
+            ],
+        ]);
 
 There is one limitation with this approach - you have to use exactly one entry point.
 
@@ -103,24 +106,27 @@ the solution is to split the configuration into two separate firewalls:
                         authenticators:
                             - App\Security\ApiTokenAuthenticator
                 default:
-                    anonymous: ~
+                    anonymous: true
+                    lazy: true
                     guard:
                         authenticators:
                             - App\Security\LoginFormAuthenticator
             access_control:
-                - { path: ^/login, roles: IS_AUTHENTICATED_ANONYMOUSLY }
-                - { path: ^/api, roles: ROLE_API_USER }
-                - { path: ^/, roles: ROLE_USER }
+                - { path: '^/login', roles: IS_AUTHENTICATED_ANONYMOUSLY }
+                - { path: '^/api', roles: ROLE_API_USER }
+                - { path: '^/', roles: ROLE_USER }
 
     .. code-block:: xml
 
         <!-- config/packages/security.xml -->
-        <?xml version="1.0" encoding="UTF-8"?>
+        <?xml version="1.0" encoding="UTF-8" ?>
         <srv:container xmlns="http://symfony.com/schema/dic/security"
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
             xmlns:srv="http://symfony.com/schema/dic/services"
             xsi:schemaLocation="http://symfony.com/schema/dic/services
-                http://symfony.com/schema/dic/services/services-1.0.xsd">
+                https://symfony.com/schema/dic/services/services-1.0.xsd
+                http://symfony.com/schema/dic/security
+                https://symfony.com/schema/dic/security/security-1.0.xsd">
 
             <config>
                 <!-- ... -->
@@ -129,15 +135,14 @@ the solution is to split the configuration into two separate firewalls:
                         <authenticator>App\Security\ApiTokenAuthenticator</authenticator>
                     </guard>
                 </firewall>
-                <firewall name="default">
-                    <anonymous />
+                <firewall name="default" anonymous="true" lazy="true">
                     <guard>
                         <authenticator>App\Security\LoginFormAuthenticator</authenticator>
                     </guard>
                 </firewall>
-                <rule path="^/login" role="IS_AUTHENTICATED_ANONYMOUSLY" />
-                <rule path="^/api" role="ROLE_API_USER" />
-                <rule path="^/" role="ROLE_USER" />
+                <rule path="^/login" role="IS_AUTHENTICATED_ANONYMOUSLY"/>
+                <rule path="^/api" role="ROLE_API_USER"/>
+                <rule path="^/" role="ROLE_USER"/>
             </config>
         </srv:container>
 
@@ -147,29 +152,30 @@ the solution is to split the configuration into two separate firewalls:
         use App\Security\ApiTokenAuthenticator;
         use App\Security\LoginFormAuthenticator;
 
-        $container->loadFromExtension('security', array(
+        $container->loadFromExtension('security', [
             // ...
-            'firewalls' => array(
-                'api' => array(
+            'firewalls' => [
+                'api' => [
                     'pattern' => '^/api',
-                    'guard' => array(
-                        'authenticators' => array(
+                    'guard' => [
+                        'authenticators' => [
                             ApiTokenAuthenticator::class,
-                        ),
-                    ),
-                ),
-                'default' => array(
-                    'anonymous' => null,
-                    'guard' => array(
-                        'authenticators' => array(
+                        ],
+                    ],
+                ],
+                'default' => [
+                    'anonymous' => true,
+                    'lazy' => true,
+                    'guard' => [
+                        'authenticators' => [
                             LoginFormAuthenticator::class,
-                        ),
-                    ),
-                ),
-            ),
-            'access_control' => array(
-                array('path' => '^/login', 'role' => 'IS_AUTHENTICATED_ANONYMOUSLY'),
-                array('path' => '^/api', 'role' => 'ROLE_API_USER'),
-                array('path' => '^/', 'role' => 'ROLE_USER'),
-            ),
-        ));
+                        ],
+                    ],
+                ],
+            ],
+            'access_control' => [
+                ['path' => '^/login', 'roles' => 'IS_AUTHENTICATED_ANONYMOUSLY'],
+                ['path' => '^/api', 'roles' => 'ROLE_API_USER'],
+                ['path' => '^/', 'roles' => 'ROLE_USER'],
+            ],
+        ]);

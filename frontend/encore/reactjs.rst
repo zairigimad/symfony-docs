@@ -1,26 +1,35 @@
 Enabling React.js
 =================
 
-Using React? Make sure you have React installed, along with the `babel-preset-react`_:
+.. admonition:: Screencast
+    :class: screencast
+
+    Do you prefer video tutorials? Check out the `React.js screencast series`_.
+
+Using React? First add some dependencies with Yarn:
 
 .. code-block:: terminal
 
-    $ yarn add --dev babel-preset-react
+    $ yarn add @babel/preset-react --dev
     $ yarn add react react-dom prop-types
 
 Enable react in your ``webpack.config.js``:
 
-.. code-block:: javascript
+.. code-block:: diff
 
-    // webpack.config.js
-    // ...
+      // webpack.config.js
+      // ...
 
-    Encore
-        // ...
-        .enableReactPreset()
-    ;
+      Encore
+          // ...
+    +     .enableReactPreset()
+      ;
 
-That's it! Your ``.js`` and ``.jsx`` files will now be transformed through
-``babel-preset-react``.
 
-.. _`babel-preset-react`: https://babeljs.io/docs/plugins/preset-react/
+Then restart Encore. When you do, it will give you a command you can run to
+install any missing dependencies. After running that command and restarting
+Encore, you're done!
+
+Your ``.js`` and ``.jsx`` files will now be transformed through ``babel-preset-react``.
+
+.. _`React.js screencast series`: https://symfonycasts.com/screencast/reactjs

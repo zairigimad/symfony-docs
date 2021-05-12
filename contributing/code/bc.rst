@@ -4,10 +4,13 @@ Our Backward Compatibility Promise
 Ensuring smooth upgrades of your projects is our first priority. That's why
 we promise you backward compatibility (BC) for all minor Symfony releases.
 You probably recognize this strategy as `Semantic Versioning`_. In short,
-Semantic Versioning means that only major releases (such as 2.0, 3.0 etc.) are
-allowed to break backward compatibility. Minor releases (such as 2.5, 2.6 etc.)
+Semantic Versioning means that only major releases (such as 5.0, 6.0 etc.) are
+allowed to break backward compatibility. Minor releases (such as 5.1, 5.2 etc.)
 may introduce new features, but must do so without breaking the existing API of
-that release branch (2.x in the previous example).
+that release branch (5.x in the previous example).
+
+We also provide deprecation message triggered in the code base to help you with
+the migration process across major release.
 
 .. caution::
 
@@ -22,7 +25,7 @@ method signature.
 
 Also, not every BC break has the same impact on application code. While some BC
 breaks require you to make significant changes to your classes or your
-architecture, others are fixed as easily as changing the name of a method.
+architecture, others are fixed by changing the name of a method.
 
 That's why we created this page for you. The section "Using Symfony Code" will
 tell you how you can ensure that your application won't break completely when
@@ -32,7 +35,7 @@ The second section, "Working on Symfony Code", is targeted at Symfony
 contributors. This section lists detailed rules that every contributor needs to
 follow to ensure smooth upgrades for our users.
 
-.. warning::
+.. caution::
 
     :doc:`Experimental Features </contributing/code/experimental>` and code
     marked with the ``@internal`` tags are excluded from our Backward
@@ -72,7 +75,7 @@ backward compatibility promise:
 +-----------------------------------------------+-----------------------------+
 | Type hint against the interface               | Yes                         |
 +-----------------------------------------------+-----------------------------+
-| Call a method                                 | Yes                         |
+| Call a method                                 | Yes [10]_                   |
 +-----------------------------------------------+-----------------------------+
 | **If you implement the interface and...**     | **Then we guarantee BC...** |
 +-----------------------------------------------+-----------------------------+
@@ -94,7 +97,7 @@ public methods and properties.
 .. caution::
 
     Classes, properties and methods that bear the tag ``@internal`` as well as
-    the classes located in the various ``*\\Tests\\`` namespaces are an
+    the classes located in the various ``*\Tests\`` namespaces are an
     exception to this rule. They are meant for internal use only and should
     not be accessed by your own code.
 
@@ -114,13 +117,13 @@ covered by our backward compatibility promise:
 +-----------------------------------------------+-----------------------------+
 | Access a public property                      | Yes                         |
 +-----------------------------------------------+-----------------------------+
-| Call a public method                          | Yes                         |
+| Call a public method                          | Yes [10]_                   |
 +-----------------------------------------------+-----------------------------+
 | **If you extend the class and...**            | **Then we guarantee BC...** |
 +-----------------------------------------------+-----------------------------+
 | Access a protected property                   | Yes                         |
 +-----------------------------------------------+-----------------------------+
-| Call a protected method                       | Yes                         |
+| Call a protected method                       | Yes [10]_                   |
 +-----------------------------------------------+-----------------------------+
 | Override a public property                    | Yes                         |
 +-----------------------------------------------+-----------------------------+
@@ -204,7 +207,7 @@ Change name                                     No
 Move to parent interface                        Yes
 Add argument without a default value            No
 Add argument with a default value               No
-Remove argument                                 Yes [3]_
+Remove argument                                 No [3]_
 Add default value to an argument                No
 Remove default value of an argument             No
 Add type hint to an argument                    No
@@ -272,7 +275,7 @@ Make final                                          No [6]_
 Move to parent class                                Yes
 Add argument without a default value                No
 Add argument with a default value                   No [7]_ [8]_
-Remove argument                                     Yes [3]_
+Remove argument                                     No [3]_
 Add default value to an argument                    No [7]_ [8]_
 Remove default value of an argument                 No
 Add type hint to an argument                        No [7]_ [8]_
@@ -291,7 +294,7 @@ Make public                                         No [7]_ [8]_
 Move to parent class                                Yes
 Add argument without a default value                No [7]_
 Add argument with a default value                   No [7]_ [8]_
-Remove argument                                     Yes [3]_
+Remove argument                                     No [3]_
 Add default value to an argument                    No [7]_ [8]_
 Remove default value of an argument                 No [7]_
 Add type hint to an argument                        No [7]_ [8]_
@@ -416,8 +419,8 @@ Turn static into non static                         No
 .. [2] The added parent interface must not introduce any new methods that don't
        exist in the interface already.
 
-.. [3] Only the last argument(s) of a method may be removed, as PHP does not
-       care about additional arguments that you pass to a method.
+.. [3] Only the last optional argument(s) of a method may be removed, as PHP
+       does not care about additional arguments that you pass to a method.
 
 .. [4] When changing the parent class, the original parent class must remain an
        ancestor of the class.
@@ -445,9 +448,8 @@ Turn static into non static                         No
 
 .. [9] Allowed for the ``void`` return type.
 
-.. _Semantic Versioning: https://semver.org/
-.. _scalar type: https://php.net/manual/en/function.is-scalar.php
-.. _boolean values: https://php.net/manual/en/function.boolval.php
-.. _string values: https://php.net/manual/en/function.strval.php
-.. _integer values: https://php.net/manual/en/function.intval.php
-.. _float values: https://php.net/manual/en/function.floatval.php
+.. [10] Parameter names are not part of the compatibility promise. Using
+        PHP 8's named arguments feature might break your code when upgrading to
+        newer Symfony versions.
+
+.. _`Semantic Versioning`: https://semver.org/

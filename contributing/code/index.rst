@@ -5,8 +5,9 @@ Contributing Code
     :maxdepth: 2
 
     bugs
+    stack_trace
     reproducer
-    patches
+    pull_requests
     maintenance
     core_team
     security

@@ -13,27 +13,27 @@ in the session, so that it's used on subsequent requests.
 Creating a LocaleSubscriber
 ---------------------------
 
-Create and a :ref:`new event subscriber <events-subscriber>`. Typically, ``_locale``
+Create a :ref:`new event subscriber <events-subscriber>`. Typically, ``_locale``
 is used as a routing parameter to signify the locale, though you can determine the
 correct locale however you want::
 
     // src/EventSubscriber/LocaleSubscriber.php
     namespace App\EventSubscriber;
 
-    use Symfony\Component\HttpKernel\Event\GetResponseEvent;
-    use Symfony\Component\HttpKernel\KernelEvents;
     use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+    use Symfony\Component\HttpKernel\Event\RequestEvent;
+    use Symfony\Component\HttpKernel\KernelEvents;
 
     class LocaleSubscriber implements EventSubscriberInterface
     {
         private $defaultLocale;
 
-        public function __construct($defaultLocale = 'en')
+        public function __construct(string $defaultLocale = 'en')
         {
             $this->defaultLocale = $defaultLocale;
         }
 
-        public function onKernelRequest(GetResponseEvent $event)
+        public function onKernelRequest(RequestEvent $event)
         {
             $request = $event->getRequest();
             if (!$request->hasPreviousSession()) {
@@ -51,10 +51,10 @@ correct locale however you want::
 
         public static function getSubscribedEvents()
         {
-            return array(
+            return [
                 // must be registered before (i.e. with a higher priority than) the default Locale listener
-                KernelEvents::REQUEST => array(array('onKernelRequest', 20)),
-            );
+                KernelEvents::REQUEST => [['onKernelRequest', 20]],
+            ];
         }
     }
 
@@ -63,7 +63,7 @@ you're done! Symfony will automatically know about the event subscriber and call
 the ``onKernelRequest`` method on each request.
 
 To see it working, either set the ``_locale`` key on the session manually (e.g.
-via some "Change Locale" route & controller), or create a route with a the :ref:`_locale default <translation-locale-url>`.
+via some "Change Locale" route & controller), or create a route with the :ref:`_locale default <translation-locale-url>`.
 
 .. sidebar:: Explicitly Configure the Subscriber
 
@@ -89,14 +89,14 @@ via some "Change Locale" route & controller), or create a route with a the :ref:
             <container xmlns="http://symfony.com/schema/dic/services"
                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                 xsi:schemaLocation="http://symfony.com/schema/dic/services
-                    http://symfony.com/schema/dic/services/services-1.0.xsd">
+                    https://symfony.com/schema/dic/services/services-1.0.xsd">
 
                 <services>
                     <service id="App\EventSubscriber\LocaleSubscriber">
                         <argument>%kernel.default_locale%</argument>
 
                         <!-- uncomment the next line if you are not using autoconfigure -->
-                        <!-- <tag name="kernel.event_subscriber" /> -->
+                        <!-- <tag name="kernel.event_subscriber"/> -->
                     </service>
                 </services>
             </container>
@@ -109,7 +109,8 @@ via some "Change Locale" route & controller), or create a route with a the :ref:
             $container->register(LocaleSubscriber::class)
                 ->addArgument('%kernel.default_locale%')
                 // uncomment the next line if you are not using autoconfigure
-                // ->addTag('kernel.event_subscriber');
+                // ->addTag('kernel.event_subscriber')
+            ;
 
 That's it! Now celebrate by changing the user's locale and seeing that it's
 sticky throughout the request.
@@ -146,7 +147,7 @@ event::
     namespace App\EventSubscriber;
 
     use Symfony\Component\EventDispatcher\EventSubscriberInterface;
-    use Symfony\Component\HttpFoundation\Session\SessionInterface;
+    use Symfony\Component\HttpFoundation\RequestStack;
     use Symfony\Component\Security\Http\Event\InteractiveLoginEvent;
     use Symfony\Component\Security\Http\SecurityEvents;
 
@@ -156,11 +157,11 @@ event::
      */
     class UserLocaleSubscriber implements EventSubscriberInterface
     {
-        private $session;
+        private $requestStack;
 
-        public function __construct(SessionInterface $session)
+        public function __construct(RequestStack $requestStack)
         {
-            $this->session = $session;
+            $this->requestStack = $requestStack;
         }
 
         public function onInteractiveLogin(InteractiveLoginEvent $event)
@@ -168,53 +169,17 @@ event::
             $user = $event->getAuthenticationToken()->getUser();
 
             if (null !== $user->getLocale()) {
-                $this->session->set('_locale', $user->getLocale());
+                $this->requestStack->getSession()->set('_locale', $user->getLocale());
             }
         }
+
+        public static function getSubscribedEvents()
+        {
+            return [
+                SecurityEvents::INTERACTIVE_LOGIN => 'onInteractiveLogin',
+            ];
+        }
     }
-
-Then register the listener:
-
-.. configuration-block::
-
-    .. code-block:: yaml
-
-        # config/services.yaml
-        services:
-            App\EventListener\UserLocaleListener:
-                tags:
-                    - { name: kernel.event_listener, event: security.interactive_login, method: onInteractiveLogin, priority: 15 }
-
-    .. code-block:: xml
-
-        <!-- config/services.xml -->
-        <?xml version="1.0" encoding="UTF-8" ?>
-        <container xmlns="http://symfony.com/schema/dic/services"
-            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-            xsi:schemaLocation="http://symfony.com/schema/dic/services
-                http://symfony.com/schema/dic/services/services-1.0.xsd">
-
-            <services>
-                <service id="App\EventListener\UserLocaleListener">
-                    <tag name="kernel.event_listener"
-                        event="security.interactive_login"
-                        method="onInteractiveLogin" priority=15 />
-                </service>
-            </services>
-        </container>
-
-    .. code-block:: php
-
-        // config/services.php
-        use AppBundle\EventListener\UserLocaleListener;
-        use Symfony\Component\DependencyInjection\Reference;
-
-        $container
-            ->register(UserLocaleListener::class)
-            ->addTag(
-                'kernel.event_listener',
-                array('event' => 'security.interactive_login', 'method' => 'onInteractiveLogin', 'priority' => 15)
-            );
 
 .. caution::
 

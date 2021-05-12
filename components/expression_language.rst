@@ -16,8 +16,6 @@ Installation
 
     $ composer require symfony/expression-language
 
-Alternatively, you can clone the `<https://github.com/symfony/expression-language>`_ repository.
-
 .. include:: /components/require_autoload.rst.inc
 
 How can the Expression Engine Help Me?
@@ -101,13 +99,20 @@ PHP type (including objects)::
 
     var_dump($expressionLanguage->evaluate(
         'fruit.variety',
-        array(
+        [
             'fruit' => $apple,
-        )
-    ));
+        ]
+    )); // displays "Honeycrisp"
 
-This will print "Honeycrisp". For more information, see the :doc:`/components/expression_language/syntax`
+For more information, see the :doc:`/components/expression_language/syntax`
 entry, especially :ref:`component-expression-objects` and :ref:`component-expression-arrays`.
+
+.. caution::
+
+    When using variables in expressions, avoid passing untrusted data into the
+    array of variables. If you can't avoid that, sanitize non-alphanumeric
+    characters in untrusted data to prevent malicious users from injecting
+    control characters and altering the expression.
 
 Caching
 -------
@@ -131,5 +136,3 @@ Learn More
     /components/expression_language/*
     /service_container/expression_language
     /reference/constraints/Expression
-
-.. _Packagist: https://packagist.org/packages/symfony/expression-language

@@ -4,7 +4,7 @@
 The Generic Event Object
 ========================
 
-The base :class:`Symfony\\Component\\EventDispatcher\\Event` class provided
+The base :class:`Symfony\\Contracts\\EventDispatcher\\Event` class provided
 by the EventDispatcher component is deliberately sparse to allow the creation
 of API specific event objects by inheritance using OOP. This allows for
 elegant and readable code in complex applications.
@@ -16,9 +16,9 @@ box, because it follows the standard observer pattern where the event object
 encapsulates an event 'subject', but has the addition of optional extra
 arguments.
 
-:class:`Symfony\\Component\\EventDispatcher\\GenericEvent` has a simple
-API in addition to the base class
-:class:`Symfony\\Component\\EventDispatcher\\Event`
+:class:`Symfony\\Component\\EventDispatcher\\GenericEvent` adds some more
+methods in addition to the base class
+:class:`Symfony\\Contracts\\EventDispatcher\\Event`
 
 * :method:`Symfony\\Component\\EventDispatcher\\GenericEvent::__construct`:
   Constructor takes the event subject and any arguments;
@@ -48,12 +48,12 @@ the event subject.
 The following examples show use-cases to give a general idea of the flexibility.
 The examples assume event listeners have been added to the dispatcher.
 
-Simply passing a subject::
+Passing a subject::
 
     use Symfony\Component\EventDispatcher\GenericEvent;
 
     $event = new GenericEvent($subject);
-    $dispatcher->dispatch('foo', $event);
+    $dispatcher->dispatch($event, 'foo');
 
     class FooListener
     {
@@ -72,17 +72,15 @@ access the event arguments::
 
     $event = new GenericEvent(
         $subject,
-        array('type' => 'foo', 'counter' => 0)
+        ['type' => 'foo', 'counter' => 0]
     );
-    $dispatcher->dispatch('foo', $event);
-
-    var_dump($event['counter']);
+    $dispatcher->dispatch($event, 'foo');
 
     class FooListener
     {
         public function handler(GenericEvent $event)
         {
-            if (isset($event['type']) && $event['type'] === 'foo') {
+            if (isset($event['type']) && 'foo' === $event['type']) {
                 // ... do something
             }
 
@@ -94,10 +92,8 @@ Filtering data::
 
     use Symfony\Component\EventDispatcher\GenericEvent;
 
-    $event = new GenericEvent($subject, array('data' => 'Foo'));
-    $dispatcher->dispatch('foo', $event);
-
-    var_dump($event['data']);
+    $event = new GenericEvent($subject, ['data' => 'Foo']);
+    $dispatcher->dispatch($event, 'foo');
 
     class FooListener
     {

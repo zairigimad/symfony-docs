@@ -1,24 +1,24 @@
-preferred_choices
-~~~~~~~~~~~~~~~~~
+``preferred_choices``
+~~~~~~~~~~~~~~~~~~~~~
 
-**type**: ``array``, ``callable`` or ``string`` **default**: ``array()``
+**type**: ``array``, ``callable``, ``string`` or :class:`Symfony\\Component\\PropertyAccess\\PropertyPath` **default**: ``[]``
 
-This option allows you to move certain choices to the top of your list with a visual
-separator between them and the rest of the options. If you have a form of languages,
-you can list the most popular on top, like Bork Bork and Pirate::
+This option allows you to display certain choices at the top of your list with a
+visual separator between them and the complete list of options. If you have a
+form of languages, you can list the most popular on top, like Bork and Pirate::
 
     use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
     // ...
 
-    $builder->add('language', ChoiceType::class, array(
-        'choices' => array(
+    $builder->add('language', ChoiceType::class, [
+        'choices' => [
             'English' => 'en',
             'Spanish' => 'es',
-            'Bork'   => 'muppets',
+            'Bork' => 'muppets',
             'Pirate' => 'arr',
-        ),
-        'preferred_choices' => array('muppets', 'arr'),
-    ));
+        ],
+        'preferred_choices' => ['muppets', 'arr'],
+    ]);
 
 This options can also be a callback function to give you more flexibility. This might
 be especially useful if your values are objects::
@@ -26,18 +26,18 @@ be especially useful if your values are objects::
     use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
     // ...
 
-    $builder->add('publishAt', ChoiceType::class, array(
-        'choices' => array(
+    $builder->add('publishAt', ChoiceType::class, [
+        'choices' => [
             'now' => new \DateTime('now'),
             'tomorrow' => new \DateTime('+1 day'),
             '1 week' => new \DateTime('+1 week'),
             '1 month' => new \DateTime('+1 month'),
-        ),
-        'preferred_choices' => function ($value, $key) {
+        ],
+        'preferred_choices' => function ($choice, $key, $value) {
             // prefer options within 3 days
-            return $value <= new \DateTime('+3 days');
+            return $choice <= new \DateTime('+3 days');
         },
-    ));
+    ]);
 
 This will "prefer" the "now" and "tomorrow" choices only:
 
@@ -58,8 +58,22 @@ when rendering the field:
 
         {{ form_widget(form.publishAt, { 'separator': '=====' }) }}
 
-    .. code-block:: php
+    .. code-block:: html+php
 
-        <?php echo $view['form']->widget($form['publishAt'], array(
-                  'separator' => '====='
-        )) ?>
+        <?= $view['form']->widget($form['publishAt'], [
+            'separator' => '=====',
+        ]) ?>
+
+.. tip::
+
+    When defining a custom type, you should use the
+    :class:`Symfony\\Component\\Form\\ChoiceList\\ChoiceList` class helper::
+
+        use Symfony\Component\Form\ChoiceList\ChoiceList;
+
+        // ...
+        $builder->add('choices', ChoiceType::class, [
+            'preferred_choices' => ChoiceList::preferred($this, 'taggedAsFavorite'),
+        ]);
+
+    See the :ref:`"choice_loader" option documentation <reference-form-choice-loader>`.

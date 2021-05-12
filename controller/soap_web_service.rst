@@ -6,15 +6,15 @@
 How to Create a SOAP Web Service in a Symfony Controller
 ========================================================
 
-Setting up a controller to act as a SOAP server is simple with a couple
-tools. You must, of course, have the `PHP SOAP`_ extension installed.
+Setting up a controller to act as a SOAP server is aided by a couple
+tools. Those tools expect you to have the `PHP SOAP`_ extension installed.
 As the PHP SOAP extension cannot currently generate a WSDL, you must either
 create one from scratch or use a 3rd party generator.
 
 .. note::
 
     There are several SOAP server implementations available for use with
-    PHP. `Zend SOAP`_ and `NuSOAP`_ are two examples. Although the PHP SOAP
+    PHP. `Laminas SOAP`_ and `NuSOAP`_ are two examples. Although the PHP SOAP
     extension is used in these examples, the general idea should still
     be applicable to other implementations.
 
@@ -39,7 +39,7 @@ In this case, the SOAP service will allow the client to call a method called
         public function hello($name)
         {
 
-            $message = new \Swift_Message('Hello Service')
+            $message = (new \Swift_Message('Hello Service'))
                 ->setTo('me@example.com')
                 ->setBody($name.' says hi!');
 
@@ -57,12 +57,13 @@ Finally, below is an example of a controller that is capable of handling a SOAP
 request. Because ``index()`` is accessible via ``/soap``, the WSDL document
 can be retrieved via ``/soap?wsdl``::
 
+    // src/Controller/HelloServiceController.php
     namespace App\Controller;
 
+    use App\Service\HelloService;
     use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
     use Symfony\Component\HttpFoundation\Response;
     use Symfony\Component\Routing\Annotation\Route;
-    use App\Service\HelloService;
 
     class HelloServiceController extends AbstractController
     {
@@ -89,7 +90,7 @@ Take note of the calls to ``ob_start()`` and ``ob_get_clean()``. These
 methods control `output buffering`_ which allows you to "trap" the echoed
 output of ``$server->handle()``. This is necessary because Symfony expects
 your controller to return a ``Response`` object with the output as its "content".
-You must also remember to set the "Content-Type" header to "text/xml", as
+You must also remember to set the ``"Content-Type"`` header to ``"text/xml"``, as
 this is what the client will expect. So, you use ``ob_start()`` to start
 buffering the STDOUT and use ``ob_get_clean()`` to dump the echoed output
 into the content of the Response and clear the output buffer. Finally, you're
@@ -101,7 +102,7 @@ the route ``/soap``::
 
     $soapClient = new \SoapClient('http://example.com/index.php/soap?wsdl');
 
-    $result = $soapClient->call('hello', array('name' => 'Scott'));
+    $result = $soapClient->call('hello', ['name' => 'Scott']);
 
 An example WSDL is below.
 
@@ -112,7 +113,7 @@ An example WSDL is below.
         xmlns:xsd="http://www.w3.org/2001/XMLSchema"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
-        xmlns:tns="urn:arnleadservicewsdl"
+        xmlns:tns="urn:helloservicewsdl"
         xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
         xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
         xmlns="http://schemas.xmlsoap.org/wsdl/"
@@ -120,17 +121,17 @@ An example WSDL is below.
 
         <types>
             <xsd:schema targetNamespace="urn:hellowsdl">
-                <xsd:import namespace="http://schemas.xmlsoap.org/soap/encoding/" />
-                <xsd:import namespace="http://schemas.xmlsoap.org/wsdl/" />
+                <xsd:import namespace="http://schemas.xmlsoap.org/soap/encoding/"/>
+                <xsd:import namespace="http://schemas.xmlsoap.org/wsdl/"/>
             </xsd:schema>
         </types>
 
         <message name="helloRequest">
-            <part name="name" type="xsd:string" />
+            <part name="name" type="xsd:string"/>
         </message>
 
         <message name="helloResponse">
-            <part name="return" type="xsd:string" />
+            <part name="return" type="xsd:string"/>
         </message>
 
         <portType name="hellowsdlPortType">
@@ -160,12 +161,12 @@ An example WSDL is below.
 
         <service name="hellowsdl">
             <port name="hellowsdlPort" binding="tns:hellowsdlBinding">
-                <soap:address location="http://example.com/index.php/soap" />
+                <soap:address location="http://example.com/index.php/soap"/>
             </port>
         </service>
     </definitions>
 
-.. _`PHP SOAP`: https://php.net/manual/en/book.soap.php
-.. _`NuSOAP`: http://sourceforge.net/projects/nusoap
-.. _`output buffering`: https://php.net/manual/en/book.outcontrol.php
-.. _`Zend SOAP`: http://framework.zend.com/manual/current/en/modules/zend.soap.server.html
+.. _`PHP SOAP`: https://www.php.net/manual/en/book.soap.php
+.. _`NuSOAP`: https://sourceforge.net/projects/nusoap
+.. _`output buffering`: https://www.php.net/manual/en/book.outcontrol.php
+.. _`Laminas SOAP`: https://docs.laminas.dev/laminas-soap/server/

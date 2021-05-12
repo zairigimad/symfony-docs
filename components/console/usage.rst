@@ -10,7 +10,7 @@ built-in options as well as a couple of built-in commands for the Console compon
 .. note::
 
     These examples assume you have added a file ``application.php`` to run at
-    the cli::
+    the CLI::
 
         #!/usr/bin/env php
         <?php
@@ -139,7 +139,7 @@ commands, then you can run ``help`` like this:
 
     $ php application.php h
 
-If you have commands using ``:`` to namespace commands then you just have
+If you have commands using ``:`` to namespace commands then you only need
 to type the shortest unambiguous text for each part. If you have created the
 ``demo:greet`` as shown in :doc:`/components/console` then you
 can run it with:

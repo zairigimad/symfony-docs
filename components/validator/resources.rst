@@ -35,8 +35,8 @@ method of the validator builder::
 In this example, the validation metadata is retrieved executing the
 ``loadValidatorMetadata()`` method of the class::
 
-    use Symfony\Component\Validator\Mapping\ClassMetadata;
     use Symfony\Component\Validator\Constraints as Assert;
+    use Symfony\Component\Validator\Mapping\ClassMetadata;
 
     class User
     {
@@ -45,10 +45,10 @@ In this example, the validation metadata is retrieved executing the
         public static function loadValidatorMetadata(ClassMetadata $metadata)
         {
             $metadata->addPropertyConstraint('name', new Assert\NotBlank());
-            $metadata->addPropertyConstraint('name', new Assert\Length(array(
+            $metadata->addPropertyConstraint('name', new Assert\Length([
                 'min' => 5,
                 'max' => 20,
-            )));
+            ]));
         }
     }
 
@@ -71,7 +71,7 @@ configure the locations of these files::
     use Symfony\Component\Validator\Validation;
 
     $validator = Validation::createValidatorBuilder()
-        ->addYamlMapping('config/validation.yaml')
+        ->addYamlMapping('validator/validation.yaml')
         ->getValidator();
 
 .. note::
@@ -100,20 +100,21 @@ prefixed classes included in doc block comments (``/** ... */``). For example::
     class User
     {
         /**
-        * @Assert\NotBlank()
-        */
+         * @Assert\NotBlank
+         */
         protected $name;
     }
 
 To enable the annotation loader, call the
-:method:`Symfony\\Component\\Validator\\ValidatorBuilder::enableAnnotationMapping`
-method. It takes an optional annotation reader instance, which defaults to
-``Doctrine\Common\Annotations\AnnotationReader``::
+:method:`Symfony\\Component\\Validator\\ValidatorBuilder::enableAnnotationMapping` method
+and then call ``addDefaultDoctrineAnnotationReader()`` to use Doctrine's
+annotation reader::
 
     use Symfony\Component\Validator\Validation;
 
     $validator = Validation::createValidatorBuilder()
-        ->enableAnnotationMapping()
+        ->enableAnnotationMapping(true)
+        ->addDefaultDoctrineAnnotationReader()
         ->getValidator();
 
 To disable the annotation loader after it was enabled, call
@@ -134,9 +135,10 @@ multiple mappings::
     use Symfony\Component\Validator\Validation;
 
     $validator = Validation::createValidatorBuilder()
-        ->enableAnnotationMapping()
+        ->enableAnnotationMapping(true)
+        ->addDefaultDoctrineAnnotationReader()
         ->addMethodMapping('loadValidatorMetadata')
-        ->addXmlMapping('config/validation.xml')
+        ->addXmlMapping('validator/validation.xml')
         ->getValidator();
 
 Caching
@@ -147,15 +149,15 @@ can slow down your application because each file needs to be parsed, validated
 and converted into a :class:`Symfony\\Component\\Validator\\Mapping\\ClassMetadata`
 instance.
 
-To solve this problem, call the :method:`Symfony\\Component\\Validator\\ValidatorBuilder::setMetadataCache`
+To solve this problem, call the :method:`Symfony\\Component\\Validator\\ValidatorBuilder::setMappingCache`
 method of the Validator builder and pass your own caching class (which must
-implement :class:`Symfony\\Component\\Validator\\Mapping\\Cache\\CacheInterface`)::
+implement the PSR-6 interface :class:`Psr\\Cache\\CacheItemPoolInterface`)::
 
     use Symfony\Component\Validator\Validation;
 
     $validator = Validation::createValidatorBuilder()
         // ... add loaders
-        ->setMetadataCache(new SomeImplementCacheInterface());
+        ->setMappingCache(new SomePsr6Cache())
         ->getValidator();
 
 .. note::
@@ -192,5 +194,3 @@ You can set this custom implementation using
     Since you are using a custom metadata factory, you can't configure loaders
     and caches using the ``add*Mapping()`` methods anymore. You now have to
     inject them into your custom metadata factory yourself.
-
-.. _`Packagist`: https://packagist.org

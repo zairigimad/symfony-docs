@@ -5,50 +5,93 @@ PercentType Field
 =================
 
 The ``PercentType`` renders an input text field and specializes in handling
-percentage data. If your percentage data is stored as a decimal (e.g. ``.95``),
+percentage data. If your percentage data is stored as a decimal (e.g. ``0.95``),
 you can use this field out-of-the-box. If you store your data as a number
 (e.g. ``95``), you should set the ``type`` option to ``integer``.
 
-This field adds a percentage sign "``%``" after the input box.
+When ``symbol`` is not ``false``, the field will render the given string after
+the input.
 
-+-------------+-----------------------------------------------------------------------+
-| Rendered as | ``input`` ``text`` field                                              |
-+-------------+-----------------------------------------------------------------------+
-| Options     | - `scale`_                                                            |
-|             | - `type`_                                                             |
-+-------------+-----------------------------------------------------------------------+
-| Overridden  | - `compound`_                                                         |
-| options     |                                                                       |
-+-------------+-----------------------------------------------------------------------+
-| Inherited   | - `data`_                                                             |
-| options     | - `disabled`_                                                         |
-|             | - `empty_data`_                                                       |
-|             | - `error_bubbling`_                                                   |
-|             | - `error_mapping`_                                                    |
-|             | - `help`_                                                             |
-|             | - `invalid_message`_                                                  |
-|             | - `invalid_message_parameters`_                                       |
-|             | - `label`_                                                            |
-|             | - `label_attr`_                                                       |
-|             | - `label_format`_                                                     |
-|             | - `mapped`_                                                           |
-|             | - `required`_                                                         |
-+-------------+-----------------------------------------------------------------------+
-| Parent type | :doc:`FormType </reference/forms/types/form>`                         |
-+-------------+-----------------------------------------------------------------------+
-| Class       | :class:`Symfony\\Component\\Form\\Extension\\Core\\Type\\PercentType` |
-+-------------+-----------------------------------------------------------------------+
++---------------------------+-----------------------------------------------------------------------+
+| Rendered as               | ``input`` ``text`` field                                              |
++---------------------------+-----------------------------------------------------------------------+
+| Options                   | - `html5`_                                                            |
+|                           | - `rounding_mode`_                                                    |
+|                           | - `scale`_                                                            |
+|                           | - `symbol`_                                                           |
+|                           | - `type`_                                                             |
++---------------------------+-----------------------------------------------------------------------+
+| Overridden options        | - `compound`_                                                         |
+|                           | - `invalid_message`_                                                  |
++---------------------------+-----------------------------------------------------------------------+
+| Inherited options         | - `attr`_                                                             |
+|                           | - `data`_                                                             |
+|                           | - `disabled`_                                                         |
+|                           | - `empty_data`_                                                       |
+|                           | - `error_bubbling`_                                                   |
+|                           | - `error_mapping`_                                                    |
+|                           | - `help`_                                                             |
+|                           | - `help_attr`_                                                        |
+|                           | - `help_html`_                                                        |
+|                           | - `invalid_message_parameters`_                                       |
+|                           | - `label`_                                                            |
+|                           | - `label_attr`_                                                       |
+|                           | - `label_format`_                                                     |
+|                           | - `mapped`_                                                           |
+|                           | - `required`_                                                         |
+|                           | - `row_attr`_                                                         |
++---------------------------+-----------------------------------------------------------------------+
+| Default invalid message   | Please enter a percentage value.                                      |
++---------------------------+-----------------------------------------------------------------------+
+| Legacy invalid message    | The value {{ value }} is not valid.                                   |
++---------------------------+-----------------------------------------------------------------------+
+| Parent type               | :doc:`FormType </reference/forms/types/form>`                         |
++---------------------------+-----------------------------------------------------------------------+
+| Class                     | :class:`Symfony\\Component\\Form\\Extension\\Core\\Type\\PercentType` |
++---------------------------+-----------------------------------------------------------------------+
+
+.. include:: /reference/forms/types/options/_debug_form.rst.inc
 
 Field Options
 -------------
+
+.. include:: /reference/forms/types/options/rounding_mode.rst.inc
+
+.. versionadded:: 5.1
+
+    The ``rounding_mode`` option was introduced in Symfony 5.1.
+
+html5
+~~~~~
+
+**type**: ``boolean`` **default**: ``false``
+
+.. versionadded:: 5.2
+
+    This option was introduced in Symfony 5.2.
+
+If set to ``true``, the HTML input will be rendered as a native HTML5
+``<input type="number">`` element.
 
 scale
 ~~~~~
 
 **type**: ``integer`` **default**: ``0``
 
-By default, the input numbers are rounded. To allow for more decimal places,
-use this option.
+This specifies how many decimals will be allowed until the field rounds
+the submitted value (via ``rounding_mode``). For example, if ``scale`` is set
+to ``2``, a submitted value of ``20.123`` will be rounded to, for example,
+``20.12`` (depending on your `rounding_mode`_).
+
+symbol
+~~~~~~
+
+**type**: ``boolean`` or ``string`` **default**: ``%``
+
+By default, fields are rendered with a percentage sign ``%`` after the input.
+Setting the value to ``false`` will not display the percentage sign. Setting the
+value to a ``string`` (e.g. ``‱``), will show that string instead of the default
+``%`` sign.
 
 type
 ~~~~
@@ -56,14 +99,14 @@ type
 **type**: ``string`` **default**: ``fractional``
 
 This controls how your data is stored on your object. For example, a percentage
-corresponding to "55%", might be stored as ``.55`` or ``55`` on your
+corresponding to "55%", might be stored as ``0.55`` or ``55`` on your
 object. The two "types" handle these two cases:
 
 *   ``fractional``
-    If your data is stored as a decimal (e.g. ``.55``), use this type.
+    If your data is stored as a decimal (e.g. ``0.55``), use this type.
     The data will be multiplied by ``100`` before being shown to the
     user (e.g. ``55``). The submitted data will be divided by ``100``
-    on form submit so that the decimal value is stored (``.55``);
+    on form submit so that the decimal value is stored (``0.55``);
 
 *   ``integer``
     If your data is stored as an integer (e.g. 55), then use this option.
@@ -75,10 +118,14 @@ Overridden Options
 
 .. include:: /reference/forms/types/options/compound_type.rst.inc
 
+.. include:: /reference/forms/types/options/invalid_message.rst.inc
+
 Inherited Options
 -----------------
 
 These options inherit from the :doc:`FormType </reference/forms/types/form>`:
+
+.. include:: /reference/forms/types/options/attr.rst.inc
 
 .. include:: /reference/forms/types/options/data.rst.inc
 
@@ -98,7 +145,9 @@ The default value is ``''`` (the empty string).
 
 .. include:: /reference/forms/types/options/help.rst.inc
 
-.. include:: /reference/forms/types/options/invalid_message.rst.inc
+.. include:: /reference/forms/types/options/help_attr.rst.inc
+
+.. include:: /reference/forms/types/options/help_html.rst.inc
 
 .. include:: /reference/forms/types/options/invalid_message_parameters.rst.inc
 
@@ -111,3 +160,5 @@ The default value is ``''`` (the empty string).
 .. include:: /reference/forms/types/options/mapped.rst.inc
 
 .. include:: /reference/forms/types/options/required.rst.inc
+
+.. include:: /reference/forms/types/options/row_attr.rst.inc

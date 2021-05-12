@@ -11,20 +11,23 @@ constraint.
 This constraint can also make sure that certain collection keys are present
 and that extra keys are not present.
 
-+----------------+--------------------------------------------------------------------------+
-| Applies to     | :ref:`property or method <validation-property-target>`                   |
-+----------------+--------------------------------------------------------------------------+
-| Options        | - `fields`_                                                              |
-|                | - `allowExtraFields`_                                                    |
-|                | - `extraFieldsMessage`_                                                  |
-|                | - `allowMissingFields`_                                                  |
-|                | - `missingFieldsMessage`_                                                |
-|                | - `payload`_                                                             |
-+----------------+--------------------------------------------------------------------------+
-| Class          | :class:`Symfony\\Component\\Validator\\Constraints\\Collection`          |
-+----------------+--------------------------------------------------------------------------+
-| Validator      | :class:`Symfony\\Component\\Validator\\Constraints\\CollectionValidator` |
-+----------------+--------------------------------------------------------------------------+
+.. seealso::
+
+    If you want to validate that all the elements of the collection are unique
+    use the :doc:`Unique constraint </reference/constraints/Unique>`.
+
+==========  ===================================================================
+Applies to  :ref:`property or method <validation-property-target>`
+Options     - `allowExtraFields`_
+            - `allowMissingFields`_
+            - `extraFieldsMessage`_
+            - `fields`_
+            - `groups`_
+            - `missingFieldsMessage`_
+            - `payload`_
+Class       :class:`Symfony\\Component\\Validator\\Constraints\\Collection`
+Validator   :class:`Symfony\\Component\\Validator\\Constraints\\CollectionValidator`
+==========  ===================================================================
 
 Basic Usage
 -----------
@@ -37,10 +40,10 @@ of a collection individually. Take the following example::
 
     class Author
     {
-        protected $profileData = array(
+        protected $profileData = [
             'personal_email' => '...',
             'short_bio' => '...',
-        );
+        ];
 
         public function setProfileData($key, $value)
         {
@@ -69,7 +72,7 @@ following:
              *     fields = {
              *         "personal_email" = @Assert\Email,
              *         "short_bio" = {
-             *             @Assert\NotBlank(),
+             *             @Assert\NotBlank,
              *             @Assert\Length(
              *                 max = 100,
              *                 maxMessage = "Your short bio is too long!"
@@ -79,10 +82,10 @@ following:
              *     allowMissingFields = true
              * )
              */
-             protected $profileData = array(
-                 'personal_email' => '...',
-                 'short_bio' => '...',
-             );
+            protected $profileData = [
+                'personal_email' => '...',
+                'short_bio' => '...',
+            ];
         }
 
     .. code-block:: yaml
@@ -93,7 +96,8 @@ following:
                 profileData:
                     - Collection:
                         fields:
-                            personal_email: Email
+                            personal_email:
+                                - Email: ~
                             short_bio:
                                 - NotBlank: ~
                                 - Length:
@@ -107,17 +111,17 @@ following:
         <?xml version="1.0" encoding="UTF-8" ?>
         <constraint-mapping xmlns="http://symfony.com/schema/dic/constraint-mapping"
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-            xsi:schemaLocation="http://symfony.com/schema/dic/constraint-mapping http://symfony.com/schema/dic/constraint-mapping/constraint-mapping-1.0.xsd">
+            xsi:schemaLocation="http://symfony.com/schema/dic/constraint-mapping https://symfony.com/schema/dic/constraint-mapping/constraint-mapping-1.0.xsd">
 
             <class name="App\Entity\Author">
                 <property name="profileData">
                     <constraint name="Collection">
                         <option name="fields">
                             <value key="personal_email">
-                                <constraint name="Email" />
+                                <constraint name="Email"/>
                             </value>
                             <value key="short_bio">
-                                <constraint name="NotBlank" />
+                                <constraint name="NotBlank"/>
                                 <constraint name="Length">
                                     <option name="max">100</option>
                                     <option name="maxMessage">Your short bio is too long!</option>
@@ -135,35 +139,33 @@ following:
         // src/Entity/Author.php
         namespace App\Entity;
 
-        use Symfony\Component\Validator\Mapping\ClassMetadata;
         use Symfony\Component\Validator\Constraints as Assert;
+        use Symfony\Component\Validator\Mapping\ClassMetadata;
 
         class Author
         {
-            private $options = array();
-
             public static function loadValidatorMetadata(ClassMetadata $metadata)
             {
-                $metadata->addPropertyConstraint('profileData', new Assert\Collection(array(
-                    'fields' => array(
+                $metadata->addPropertyConstraint('profileData', new Assert\Collection([
+                    'fields' => [
                         'personal_email' => new Assert\Email(),
-                        'short_bio' => array(
+                        'short_bio' => [
                             new Assert\NotBlank(),
-                            new Assert\Length(array(
+                            new Assert\Length([
                                 'max' => 100,
                                 'maxMessage' => 'Your short bio is too long!',
-                            )),
-                        ),
-                    ),
+                            ]),
+                        ],
+                    ],
                     'allowMissingFields' => true,
-                )));
+                ]));
             }
         }
 
 Presence and Absence of Fields
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-By default, this constraint validates more than simply whether or not the
+By default, this constraint validates more than whether or not the
 individual fields in the collection pass their assigned constraints. In
 fact, if any keys of a collection are missing or if there are any unrecognized
 keys in the collection, validation errors will be thrown.
@@ -207,7 +209,7 @@ you can do the following:
              *     }
              * )
              */
-             protected $profileData = array('personal_email');
+            protected $profileData = ['personal_email' => 'email@example.com'];
         }
 
     .. code-block:: yaml
@@ -232,7 +234,7 @@ you can do the following:
         <?xml version="1.0" encoding="UTF-8" ?>
         <constraint-mapping xmlns="http://symfony.com/schema/dic/constraint-mapping"
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-            xsi:schemaLocation="http://symfony.com/schema/dic/constraint-mapping http://symfony.com/schema/dic/constraint-mapping/constraint-mapping-1.0.xsd">
+            xsi:schemaLocation="http://symfony.com/schema/dic/constraint-mapping https://symfony.com/schema/dic/constraint-mapping/constraint-mapping-1.0.xsd">
 
             <class name="App\Entity\Author">
                 <property name="profile_data">
@@ -240,13 +242,13 @@ you can do the following:
                         <option name="fields">
                             <value key="personal_email">
                                 <constraint name="Required">
-                                    <constraint name="NotBlank" />
-                                    <constraint name="Email" />
+                                    <constraint name="NotBlank"/>
+                                    <constraint name="Email"/>
                                 </constraint>
                             </value>
                             <value key="alternate_email">
                                 <constraint name="Optional">
-                                    <constraint name="Email" />
+                                    <constraint name="Email"/>
                                 </constraint>
                             </value>
                         </option>
@@ -260,23 +262,24 @@ you can do the following:
         // src/Entity/Author.php
         namespace App\Entity;
 
-        use Symfony\Component\Validator\Mapping\ClassMetadata;
         use Symfony\Component\Validator\Constraints as Assert;
+        use Symfony\Component\Validator\Mapping\ClassMetadata;
 
         class Author
         {
-            protected $profileData = array('personal_email');
+            protected $profileData = ['personal_email'];
 
             public static function loadValidatorMetadata(ClassMetadata $metadata)
             {
-                $metadata->addPropertyConstraint('profileData', new Assert\Collection(array(
-                    'fields' => array(
-                        'personal_email'  => new Assert\Required(
-                            array(new Assert\NotBlank(), new Assert\Email())
-                        ),
+                $metadata->addPropertyConstraint('profileData', new Assert\Collection([
+                    'fields' => [
+                        'personal_email'  => new Assert\Required([
+                            new Assert\NotBlank(),
+                            new Assert\Email(),
+                        ]),
                         'alternate_email' => new Assert\Optional(new Assert\Email()),
-                    ),
-                )));
+                    ],
+                ]));
             }
         }
 
@@ -286,11 +289,80 @@ However, if the ``personal_email`` field does not exist in the array,
 the ``NotBlank`` constraint will still be applied (since it is wrapped in
 ``Required``) and you will receive a constraint violation.
 
+When you define groups in nested constraints they are automatically added to
+the ``Collection`` constraint itself so it can be traversed for all nested
+groups. Take the following example::
+
+    use Symfony\Component\Validator\Constraints as Assert;
+
+    $constraint = new Assert\Collection([
+        'fields' => [
+            'name' => new Assert\NotBlank(['groups' => 'basic']),
+            'email' => new Assert\NotBlank(['groups' => 'contact']),
+        ],
+    ]);
+
+This will result in the following configuration::
+
+    $constraint = new Assert\Collection([
+        'fields' => [
+            'name' => new Assert\Required([
+                'constraints' => new Assert\NotBlank(['groups' => 'basic']),
+                'groups' => ['basic', 'strict'],
+            ]),
+            'email' => new Assert\Required([
+                "constraints" => new Assert\NotBlank(['groups' => 'contact']),
+                'groups' => ['basic', 'strict'],
+            ]),
+        ],
+        'groups' => ['basic', 'strict'],
+    ]);
+
+The default ``allowMissingFields`` option requires the fields in all groups.
+So when validating in ``contact`` group, ``$name`` can be empty but the key is
+still required. If this is not the intended behavior, use the ``Optional``
+constraint explicitly instead of ``Required``.
+
 Options
 -------
 
-fields
-~~~~~~
+``allowExtraFields``
+~~~~~~~~~~~~~~~~~~~~
+
+**type**: ``boolean`` **default**: false
+
+If this option is set to ``false`` and the underlying collection contains
+one or more elements that are not included in the `fields`_ option, a validation
+error will be returned. If set to ``true``, extra fields are OK.
+
+``allowMissingFields``
+~~~~~~~~~~~~~~~~~~~~~~
+
+**type**: ``boolean`` **default**: false
+
+If this option is set to ``false`` and one or more fields from the `fields`_
+option are not present in the underlying collection, a validation error
+will be returned. If set to ``true``, it's OK if some fields in the `fields`_
+option are not present in the underlying collection.
+
+``extraFieldsMessage``
+~~~~~~~~~~~~~~~~~~~~~~
+
+**type**: ``string`` **default**: ``This field was not expected.``
+
+The message shown if `allowExtraFields`_ is false and an extra field is
+detected.
+
+You can use the following parameters in this message:
+
+===============  ==============================================================
+Parameter        Description
+===============  ==============================================================
+``{{ field }}``  The key of the extra field detected
+===============  ==============================================================
+
+``fields``
+~~~~~~~~~~
 
 **type**: ``array`` [:ref:`default option <validation-default-option>`]
 
@@ -298,39 +370,22 @@ This option is required and is an associative array defining all of the
 keys in the collection and, for each key, exactly which validator(s) should
 be executed against that element of the collection.
 
-allowExtraFields
-~~~~~~~~~~~~~~~~
+.. include:: /reference/constraints/_groups-option.rst.inc
 
-**type**: ``boolean`` **default**: false
-
-If this option is set to ``false`` and the underlying collection contains
-one or more elements that are not included in the `fields`_ option, a validation
-error will be returned. If set to ``true``, extra fields are ok.
-
-extraFieldsMessage
-~~~~~~~~~~~~~~~~~~
-
-**type**: ``string`` **default**: ``This field was not expected.``
-
-The message shown if `allowExtraFields`_ is false and an extra field is
-detected.
-
-allowMissingFields
-~~~~~~~~~~~~~~~~~~
-
-**type**: ``boolean`` **default**: false
-
-If this option is set to ``false`` and one or more fields from the `fields`_
-option are not present in the underlying collection, a validation error
-will be returned. If set to ``true``, it's ok if some fields in the `fields`_
-option are not present in the underlying collection.
-
-missingFieldsMessage
-~~~~~~~~~~~~~~~~~~~~
+``missingFieldsMessage``
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 **type**: ``string`` **default**: ``This field is missing.``
 
 The message shown if `allowMissingFields`_ is false and one or more fields
 are missing from the underlying collection.
+
+You can use the following parameters in this message:
+
+===============  ==============================================================
+Parameter        Description
+===============  ==============================================================
+``{{ field }}``  The key of the missing field defined in ``fields``
+===============  ==============================================================
 
 .. include:: /reference/constraints/_payload-option.rst.inc

@@ -6,6 +6,13 @@ ready to contribute code or patches, reviewing issues and pull requests (PRs)
 can be a great start to get involved and give back. In fact, people who "triage"
 issues are the backbone to Symfony's success!
 
+.. note::
+
+    Communicating in a way where your words come across as intended can be
+    difficult. Please read through the
+    :doc:`Respectful Review Comments </contributing/community/review-comments>`
+    guidelines.
+
 Why Reviewing Is Important
 --------------------------
 
@@ -17,7 +24,7 @@ On the `Symfony issue tracker`_, you can find many items in a `Needs Review`_
 status:
 
 * **Bug Reports**: Bug reports need to be checked for completeness.
-  Is any important information missing? Can the bug be *easily* reproduced?
+  Is any important information missing? Can the bug be reproduced?
 
 * **Pull Requests**: Pull requests contain code that fixes a bug or implements
   new functionality. Reviews of pull requests ensure that they are implemented
@@ -38,7 +45,7 @@ next step.
 Create a GitHub Account
 -----------------------
 
-Symfony uses GitHub_ to manage bug reports and pull requests. If you want to
+Symfony uses `GitHub`_ to manage bug reports and pull requests. If you want to
 do reviews, you need to `create a GitHub account`_ and log in.
 
 The Bug Report Review Process
@@ -51,16 +58,16 @@ The steps for the review are:
 
 #. **Is the Report Complete?**
 
-   Good bug reports contain a link to a fork of the `Symfony Standard Edition`_
-   (the "reproduction project") that reproduces the bug. If it doesn't, the
-   report should at least contain enough information and code samples to
-   reproduce the bug.
+   Good bug reports contain a link to a project (the "reproduction project")
+   created with the `Symfony skeleton`_ or the `Symfony website skeleton`_
+   that reproduces the bug. If it doesn't, the report should at least contain
+   enough information and code samples to reproduce the bug.
 
 #. **Reproduce the Bug**
 
    Download the reproduction project and test whether the bug can be reproduced
    on your system. If the reporter did not provide a reproduction project,
-   create one by forking_ the `Symfony Standard Edition`_.
+   create one based on one `Symfony skeleton`_ (or the `Symfony website skeleton`_).
 
 #. **Update the Issue Status**
 
@@ -89,7 +96,7 @@ The steps for the review are:
 
         Thank you @weaverryan for creating this bug report! This indeed looks
         like a bug. I reproduced the bug in the "kernel-bug" branch of
-        https://github.com/webmozart/symfony-standard.
+        https://github.com/webmozart/some-project.
 
         Status: Reviewed
 
@@ -127,9 +134,9 @@ Pick a pull request from the `PRs in need of review`_ and follow these steps:
 #. **Reproduce the Problem**
 
    Read the issue that the pull request is supposed to fix. Reproduce the
-   problem on a clean `Symfony Standard Edition`_ project and try to understand
-   why it exists. If the linked issue already contains such a project, install
-   it and run it on your system.
+   problem on a new project created with the `Symfony skeleton`_ (or the
+   `Symfony website skeleton`_) and try to understand why it exists. If the
+   linked issue already contains such a project, install it and run it on your system.
 
 #. **Review the Code**
 
@@ -139,11 +146,11 @@ Pick a pull request from the `PRs in need of review`_ and follow these steps:
    * Does the PR stay within scope to address *only* that issue?
    * Does the PR contain automated tests? Do those tests cover all relevant
      edge cases?
-   * Does the PR contain sufficient comments to easily understand its code?
+   * Does the PR contain sufficient comments to understand its code?
    * Does the code break backward compatibility? If yes, does the PR header say
      so?
    * Does the PR contain deprecations? If yes, does the PR header say so? Does
-     the code contain ``trigger_error()`` statements for all deprecated
+     the code contain ``trigger_deprecation()`` statements for all deprecated
      features?
    * Are all deprecations and backward compatibility breaks documented in the
      latest UPGRADE-X.X.md file? Do those explanations contain "Before"/"After"
@@ -204,13 +211,11 @@ Pick a pull request from the `PRs in need of review`_ and follow these steps:
 
 .. _GitHub: https://github.com
 .. _Symfony issue tracker: https://github.com/symfony/symfony/issues
-.. _Symfony Standard Edition: https://github.com/symfony/symfony-standard
-.. _create a GitHub account: https://help.github.com/articles/signing-up-for-a-new-github-account/
-.. _forking: https://help.github.com/articles/fork-a-repo/
+.. _`Symfony skeleton`: https://github.com/symfony/skeleton
+.. _`Symfony website skeleton`: https://github.com/symfony/website-skeleton
+.. _create a GitHub account: https://help.github.com/github/getting-started-with-github/signing-up-for-a-new-github-account
 .. _bug reports in need of review: https://github.com/symfony/symfony/issues?utf8=%E2%9C%93&q=is%3Aopen+is%3Aissue+label%3A%22Bug%22+label%3A%22Status%3A+Needs+Review%22+
-.. _PRs in need of review: https://github.com/symfony/symfony/issues?utf8=%E2%9C%93&q=is%3Aopen+is%3Apr+label%3A%22Status%3A+Needs+Review%22+
-.. _Contribution Guidelines: https://github.com/symfony/symfony/blob/master/CONTRIBUTING.md
-.. _Symfony's Release Schedule: https://symfony.com/doc/current/contributing/community/releases.html#schedule
-.. _Symfony Roadmap: https://symfony.com/roadmap
+.. _PRs in need of review: https://github.com/symfony/symfony/pulls?q=is%3Aopen+is%3Apr+label%3A%22Status%3A+Needs+Review%22
+.. _Symfony Roadmap: https://symfony.com/releases
 .. _Carson Bot: https://github.com/carsonbot/carsonbot
 .. _`Needs Review`: https://github.com/symfony/symfony/labels/Status%3A%20Needs%20Review

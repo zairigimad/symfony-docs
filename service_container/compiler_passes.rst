@@ -52,7 +52,7 @@ and process the services inside the ``process()`` method::
 
         // ...
 
-        public function process(ContainerBuilder $container)
+        public function process(ContainerBuilder $container): void
         {
             // in this method you can manipulate the service container:
             // for example, changing some container service:
@@ -68,20 +68,20 @@ and process the services inside the ``process()`` method::
 Working with Compiler Passes in Bundles
 ---------------------------------------
 
-`Bundles </bundles>`_ can define compiler passes in the ``build()`` method of
+:doc:`Bundles </bundles>` can define compiler passes in the ``build()`` method of
 the main bundle class (this is not needed when implementing the ``process()``
 method in the extension)::
 
     // src/MyBundle/MyBundle.php
     namespace App\MyBundle;
 
-    use Symfony\Component\HttpKernel\Bundle\Bundle;
-    use Symfony\Component\DependencyInjection\ContainerBuilder;
     use App\DependencyInjection\Compiler\CustomPass;
+    use Symfony\Component\DependencyInjection\ContainerBuilder;
+    use Symfony\Component\HttpKernel\Bundle\Bundle;
 
     class MyBundle extends Bundle
     {
-        public function build(ContainerBuilder $container)
+        public function build(ContainerBuilder $container): void
         {
             parent::build($container);
 

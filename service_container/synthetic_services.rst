@@ -11,11 +11,14 @@ For instance, the ``kernel`` service in Symfony is injected into the container
 from within the ``Kernel`` class::
 
     // ...
+    use Symfony\Component\HttpKernel\KernelInterface;
+    use Symfony\Component\HttpKernel\TerminableInterface;
+
     abstract class Kernel implements KernelInterface, TerminableInterface
     {
         // ...
 
-        protected function initializeContainer()
+        protected function initializeContainer(): void
         {
             // ...
             $this->container->set('kernel', $this);
@@ -48,12 +51,12 @@ configuration:
         <container xmlns="http://symfony.com/schema/dic/services"
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
             xsi:schemaLocation="http://symfony.com/schema/dic/services
-                http://symfony.com/schema/dic/services/services-1.0.xsd">
+                https://symfony.com/schema/dic/services/services-1.0.xsd">
 
             <services>
 
                 <!-- synthetic services don't specify a class -->
-                <service id="app.synthetic_service" synthetic="true" />
+                <service id="app.synthetic_service" synthetic="true"/>
 
             </services>
         </container>
@@ -61,10 +64,16 @@ configuration:
     .. code-block:: php
 
         // config/services.php
-        // synthetic services don't specify a class
-        $container->register('app.synthetic_service')
-            ->setSynthetic(true)
-        ;
+        namespace Symfony\Component\DependencyInjection\Loader\Configurator;
+
+        return function(ContainerConfigurator $configurator) {
+            $services = $configurator->services();
+
+            // synthetic services don't specify a class
+            $services->set('app.synthetic_service')
+                ->synthetic();
+        };
+
 
 Now, you can inject the instance in the container using
 :method:`Container::set() <Symfony\\Component\\DependencyInjection\\Container::set>`::

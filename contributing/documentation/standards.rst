@@ -53,7 +53,7 @@ Code Examples
   as well as the `Twig Coding Standards`_;
 * The code examples should look real for a web application context. Avoid abstract
   or trivial examples (``foo``, ``bar``, ``demo``, etc.);
-* The code should follow the :doc:`Symfony Best Practices </best_practices/introduction>`.
+* The code should follow the :doc:`Symfony Best Practices </best_practices>`.
 * Use ``Acme`` when the code requires a vendor name;
 * Use ``example.com`` as the domain of sample URLs and ``example.org`` and
   ``example.net`` when additional domains are required. All of these domains are
@@ -61,8 +61,8 @@ Code Examples
 * To avoid horizontal scrolling on code blocks, we prefer to break a line
   correctly if it crosses the 85th character;
 * When you fold one or more lines of code, place ``...`` in a comment at the point
-  of the fold. These comments are: ``// ...`` (php), ``# ...`` (yaml/bash), ``{# ... #}``
-  (twig), ``<!-- ... -->`` (xml/html), ``; ...`` (ini), ``...`` (text);
+  of the fold. These comments are: ``// ...`` (PHP), ``# ...`` (Yaml/bash), ``{# ... #}``
+  (Twig), ``<!-- ... -->`` (XML/HTML), ``; ...`` (INI), ``...`` (text);
 * When you fold a part of a line, e.g. a variable value, put ``...`` (without comment)
   at the place of the fold;
 * Description of the folded code: (optional)
@@ -135,7 +135,7 @@ Files and Directories
 * When referencing file extensions explicitly, you should include a leading dot
   for every extension (e.g. "XML files use the ``.xml`` extension").
 * When you list a Symfony file/directory hierarchy, use ``your-project/`` as the
-  top level directory. E.g.
+  top-level directory. E.g.
 
   .. code-block:: text
 
@@ -173,11 +173,28 @@ In addition, documentation follows these rules:
   * his or hers, use theirs
   * himself or herself, use themselves
 
-.. _`the Sphinx documentation`: http://sphinx-doc.org/rest.html#source-code
+* **Avoid belittling words**: Things that seem "obvious" or "simple" for the
+  person documenting it, can be the exact opposite for the reader. To make sure
+  everybody feels comfortable when reading the documentation, try to avoid words
+  like:
+
+  * basically
+  * clearly
+  * easy/easily
+  * just
+  * logically
+  * merely
+  * obviously
+  * of course
+  * quick/quickly
+  * simply
+  * trivial
+
+.. _`the Sphinx documentation`: https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html#literal-blocks
 .. _`Twig Coding Standards`: https://twig.symfony.com/doc/2.x/coding_standards.html
-.. _`reserved by the IANA`: http://tools.ietf.org/html/rfc2606#section-3
+.. _`reserved by the IANA`: https://tools.ietf.org/html/rfc2606#section-3
 .. _`American English`: https://en.wikipedia.org/wiki/American_English
-.. _`American English Oxford Dictionary`: http://en.oxforddictionaries.com/definition/american_english/
+.. _`American English Oxford Dictionary`: https://www.lexico.com/definition/american_english
 .. _`headings and titles`: https://en.wikipedia.org/wiki/Letter_case#Headings_and_publication_titles
 .. _`Serial (Oxford) Commas`: https://en.wikipedia.org/wiki/Serial_comma
 .. _`nosism`: https://en.wikipedia.org/wiki/Nosism

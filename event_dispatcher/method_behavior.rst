@@ -7,9 +7,9 @@ How to Customize a Method Behavior without Using Inheritance
 Doing something before or after a Method Call
 ---------------------------------------------
 
-If you want to do something just before, or just after a method is called, you
-can dispatch an event respectively at the beginning or at the end of the
-method::
+If you want to do something right before, or directly after a method is
+called, you can dispatch an event respectively at the beginning or at the
+end of the method::
 
     class CustomMailer
     {
@@ -19,9 +19,9 @@ method::
         {
             // dispatch an event before the method
             $event = new BeforeSendMailEvent($subject, $message);
-            $this->dispatcher->dispatch('mailer.pre_send', $event);
+            $this->dispatcher->dispatch($event, 'mailer.pre_send');
 
-            // get $foo and $bar from the event, they may have been modified
+            // get $subject and $message from the event, they may have been modified
             $subject = $event->getSubject();
             $message = $event->getMessage();
 
@@ -30,21 +30,25 @@ method::
 
             // do something after the method
             $event = new AfterSendMailEvent($returnValue);
-            $this->dispatcher->dispatch('mailer.post_send', $event);
+            $this->dispatcher->dispatch($event, 'mailer.post_send');
 
             return $event->getReturnValue();
         }
     }
 
-In this example, two events are thrown: ``mailer.pre_send``, before the method is
-executed, and ``mailer.post_send`` after the method is executed. Each uses a
-custom Event class to communicate information to the listeners of the two
-events. For example, ``BeforeSendMailEvent`` might look like this::
+In this example, two events are dispatched:
+
+#. ``mailer.pre_send``, before the method is called,
+#. and ``mailer.post_send`` after the method is called.
+
+Each uses a custom Event class to communicate information to the listeners
+of the two events. For example, ``BeforeSendMailEvent`` might look like
+this::
 
     // src/Event/BeforeSendMailEvent.php
     namespace App\Event;
 
-    use Symfony\Component\EventDispatcher\Event;
+    use Symfony\Contracts\EventDispatcher\Event;
 
     class BeforeSendMailEvent extends Event
     {
@@ -83,7 +87,7 @@ And the ``AfterSendMailEvent`` even like this::
     // src/Event/AfterSendMailEvent.php
     namespace App\Event;
 
-    use Symfony\Component\EventDispatcher\Event;
+    use Symfony\Contracts\EventDispatcher\Event;
 
     class AfterSendMailEvent extends Event
     {
@@ -114,8 +118,8 @@ could listen to the ``mailer.post_send`` event and change the method's return va
     // src/EventSubscriber/MailPostSendSubscriber.php
     namespace App\EventSubscriber;
 
-    use Symfony\Component\EventDispatcher\EventSubscriberInterface;
     use App\Event\AfterSendMailEvent;
+    use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
     class MailPostSendSubscriber implements EventSubscriberInterface
     {
@@ -129,9 +133,9 @@ could listen to the ``mailer.post_send`` event and change the method's return va
 
         public static function getSubscribedEvents()
         {
-            return array(
-                'mailer.post_send' => 'onMailerPostSend'
-            );
+            return [
+                'mailer.post_send' => 'onMailerPostSend',
+            ];
         }
     }
 

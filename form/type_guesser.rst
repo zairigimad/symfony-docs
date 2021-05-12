@@ -13,8 +13,6 @@ type guessers.
 
     Symfony also provides some form type guessers in the bridges:
 
-    * :class:`Symfony\\Bridge\\Propel1\\Form\\PropelTypeGuesser` provided by
-      the Propel1 bridge;
     * :class:`Symfony\\Bridge\\Doctrine\\Form\\DoctrineOrmTypeGuesser`
       provided by the Doctrine bridge.
 
@@ -42,22 +40,24 @@ Start by creating the class and these methods. Next, you'll learn how to fill ea
     namespace App\Form\TypeGuesser;
 
     use Symfony\Component\Form\FormTypeGuesserInterface;
+    use Symfony\Component\Form\Guess\TypeGuess;
+    use Symfony\Component\Form\Guess\ValueGuess;
 
     class PHPDocTypeGuesser implements FormTypeGuesserInterface
     {
-        public function guessType($class, $property)
+        public function guessType(string $class, string $property): ?TypeGuess
         {
         }
 
-        public function guessRequired($class, $property)
+        public function guessRequired(string $class, string $property): ?ValueGuess
         {
         }
 
-        public function guessMaxLength($class, $property)
+        public function guessMaxLength(string $class, string $property): ?ValueGuess
         {
         }
 
-        public function guessPattern($class, $property)
+        public function guessPattern(string $class, string $property): ?ValueGuess
         {
         }
     }
@@ -81,26 +81,27 @@ The ``TypeGuess`` constructor requires three options:
   ``VERY_HIGH_CONFIDENCE``. After all type guessers have been executed, the
   type with the highest confidence is used.
 
-With this knowledge, you can easily implement the ``guessType()`` method of the
+With this knowledge, you can implement the ``guessType()`` method of the
 ``PHPDocTypeGuesser``::
 
+    // src/Form/TypeGuesser/PHPDocTypeGuesser.php
     namespace App\Form\TypeGuesser;
 
-    use Symfony\Component\Form\Guess\Guess;
-    use Symfony\Component\Form\Guess\TypeGuess;
-    use Symfony\Component\Form\Extension\Core\Type\TextType;
+    use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
     use Symfony\Component\Form\Extension\Core\Type\IntegerType;
     use Symfony\Component\Form\Extension\Core\Type\NumberType;
-    use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
+    use Symfony\Component\Form\Extension\Core\Type\TextType;
+    use Symfony\Component\Form\Guess\Guess;
+    use Symfony\Component\Form\Guess\TypeGuess;
 
     class PHPDocTypeGuesser implements FormTypeGuesserInterface
     {
-        public function guessType($class, $property)
+        public function guessType(string $class, string $property): ?TypeGuess
         {
             $annotations = $this->readPhpDocAnnotations($class, $property);
 
             if (!isset($annotations['var'])) {
-                return; // guess nothing if the @var annotation is not available
+                return null; // guess nothing if the @var annotation is not available
             }
 
             // otherwise, base the type on the @var annotation
@@ -108,35 +109,35 @@ With this knowledge, you can easily implement the ``guessType()`` method of the
                 case 'string':
                     // there is a high confidence that the type is text when
                     // @var string is used
-                    return new TypeGuess(TextType::class, array(), Guess::HIGH_CONFIDENCE);
+                    return new TypeGuess(TextType::class, [], Guess::HIGH_CONFIDENCE);
 
                 case 'int':
                 case 'integer':
                     // integers can also be the id of an entity or a checkbox (0 or 1)
-                    return new TypeGuess(IntegerType::class, array(), Guess::MEDIUM_CONFIDENCE);
+                    return new TypeGuess(IntegerType::class, [], Guess::MEDIUM_CONFIDENCE);
 
                 case 'float':
                 case 'double':
                 case 'real':
-                    return new TypeGuess(NumberType::class, array(), Guess::MEDIUM_CONFIDENCE);
+                    return new TypeGuess(NumberType::class, [], Guess::MEDIUM_CONFIDENCE);
 
                 case 'boolean':
                 case 'bool':
-                    return new TypeGuess(CheckboxType::class, array(), Guess::HIGH_CONFIDENCE);
+                    return new TypeGuess(CheckboxType::class, [], Guess::HIGH_CONFIDENCE);
 
                 default:
                     // there is a very low confidence that this one is correct
-                    return new TypeGuess(TextType::class, array(), Guess::LOW_CONFIDENCE);
+                    return new TypeGuess(TextType::class, [], Guess::LOW_CONFIDENCE);
             }
         }
 
-        protected function readPhpDocAnnotations($class, $property)
+        protected function readPhpDocAnnotations(string $class, string $property): array
         {
             $reflectionProperty = new \ReflectionProperty($class, $property);
             $phpdoc = $reflectionProperty->getDocComment();
 
             // parse the $phpdoc into an array like:
-            // array('var' => 'string', 'since' => '1.0')
+            // ['var' => 'string', 'since' => '1.0']
             $phpdocTags = ...;
 
             return $phpdocTags;
@@ -146,7 +147,7 @@ With this knowledge, you can easily implement the ``guessType()`` method of the
     }
 
 This type guesser can now guess the field type for a property if it has
-PHPdoc!
+PHPDoc!
 
 Guessing Field Options
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -198,7 +199,7 @@ and tag it with ``form.type_guesser``:
         <container xmlns="http://symfony.com/schema/dic/services"
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
             xsi:schemaLocation="http://symfony.com/schema/dic/services
-                http://symfony.com/schema/dic/services/services-1.0.xsd">
+                https://symfony.com/schema/dic/services/services-1.0.xsd">
 
             <services>
                 <service id="App\Form\TypeGuesser\PHPDocTypeGuesser">
@@ -223,8 +224,8 @@ and tag it with ``form.type_guesser``:
     :method:`Symfony\\Component\\Form\\FormFactoryBuilder::addTypeGuessers` of
     the ``FormFactoryBuilder`` to register new type guessers::
 
+        use App\Form\TypeGuesser\PHPDocTypeGuesser;
         use Symfony\Component\Form\Forms;
-        use Acme\Form\PHPDocTypeGuesser;
 
         $formFactory = Forms::createFormFactoryBuilder()
             // ...
@@ -232,3 +233,12 @@ and tag it with ``form.type_guesser``:
             ->getFormFactory();
 
         // ...
+
+.. tip::
+
+    Run the following command to verify that the form type guesser was
+    successfully registered in the application:
+
+    .. code-block:: terminal
+
+        $ php bin/console debug:form

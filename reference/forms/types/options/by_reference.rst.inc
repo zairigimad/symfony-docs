@@ -1,5 +1,5 @@
-by_reference
-~~~~~~~~~~~~
+``by_reference``
+~~~~~~~~~~~~~~~~
 
 **type**: ``boolean`` **default**: ``true``
 
@@ -10,16 +10,16 @@ called in all cases.
 
 To explain this further, here's a simple example::
 
-    use Symfony\Component\Form\Extension\Core\Type\TextType;
     use Symfony\Component\Form\Extension\Core\Type\EmailType;
     use Symfony\Component\Form\Extension\Core\Type\FormType;
+    use Symfony\Component\Form\Extension\Core\Type\TextType;
     // ...
 
     $builder = $this->createFormBuilder($article);
     $builder
         ->add('title', TextType::class)
         ->add(
-            $builder->create('author', FormType::class, array('by_reference' => ?))
+            $builder->create('author', FormType::class, ['by_reference' => ?])
                 ->add('name', TextType::class)
                 ->add('email', EmailType::class)
         )
@@ -41,8 +41,8 @@ If you set ``by_reference`` to false, submitting looks like this::
     $author->setEmail('...');
     $article->setAuthor($author);
 
-So, all that ``by_reference=false`` really does is force the framework to
-call the setter on the parent object.
+So, all that ``by_reference=false`` really does is that it clones the object,
+which enforces the framework to call the setter on the parent object.
 
 Similarly, if you're using the :doc:`CollectionType </reference/forms/types/collection>`
 field where your underlying collection data is an object (like with

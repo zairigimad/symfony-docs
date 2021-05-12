@@ -5,7 +5,7 @@
 The CssSelector Component
 =========================
 
-    The CssSelector component converts CSS selectors to XPath expressions.
+    The CssSelector component converts CSS selectors to `XPath`_ expressions.
 
 Installation
 ------------
@@ -13,8 +13,6 @@ Installation
 .. code-block:: terminal
 
     $ composer require symfony/css-selector
-
-Alternatively, you can clone the `<https://github.com/symfony/css-selector>`_ repository.
 
 .. include:: /components/require_autoload.rst.inc
 
@@ -27,11 +25,11 @@ Usage
     component in any PHP application. Read the :ref:`Symfony Functional Tests <functional-tests>`
     article to learn about how to use it when creating Symfony tests.
 
-Why to Use CSS selectors?
-~~~~~~~~~~~~~~~~~~~~~~~~~
+Why Use CSS selectors?
+~~~~~~~~~~~~~~~~~~~~~~
 
 When you're parsing an HTML or an XML document, by far the most powerful
-method is XPath.
+method is `XPath`_.
 
 XPath expressions are incredibly flexible, so there is almost always an
 XPath expression that will find the element you need. Unfortunately, they
@@ -79,7 +77,7 @@ You can use this expression with, for instance, :phpclass:`DOMXPath` or
 Limitations of the CssSelector Component
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Not all CSS selectors can be converted to XPath equivalents.
+Not all CSS selectors can be converted to `XPath`_ equivalents.
 
 There are several CSS selectors that only make sense in the context of a
 web-browser.
@@ -93,16 +91,17 @@ Pseudo-elements (``:before``, ``:after``, ``:first-line``,
 ``:first-letter``) are not supported because they select portions of text
 rather than elements.
 
-Several pseudo-classes are not yet supported:
+Pseudo-classes are partially supported:
 
-* ``*:first-of-type``, ``*:last-of-type``, ``*:nth-of-type``,
-  ``*:nth-last-of-type``, ``*:only-of-type``. (These work with an element
-  name (e.g. ``li:first-of-type``) but not with ``*``.
-
-.. _Packagist: https://packagist.org/packages/symfony/css-selector
+* Not supported: ``*:first-of-type``, ``*:last-of-type``, ``*:nth-of-type`` and
+  ``*:nth-last-of-type`` (all these work with an element name (e.g.
+  ``li:first-of-type``) but not with the ``*`` selector).
+* Supported: ``*:only-of-type``.
 
 Learn more
 ----------
 
 * :doc:`/testing`
 * :doc:`/components/dom_crawler`
+
+.. _`XPath`: https://en.wikipedia.org/wiki/XPath

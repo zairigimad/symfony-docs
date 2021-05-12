@@ -11,38 +11,40 @@ of the image.
 See the :doc:`File </reference/constraints/File>` constraint for the bulk
 of the documentation on this constraint.
 
-+----------------+-----------------------------------------------------------------------+
-| Applies to     | :ref:`property or method <validation-property-target>`                |
-+----------------+-----------------------------------------------------------------------+
-| Options        | - `mimeTypes`_                                                        |
-|                | - `minWidth`_                                                         |
-|                | - `maxWidth`_                                                         |
-|                | - `maxHeight`_                                                        |
-|                | - `minHeight`_                                                        |
-|                | - `maxRatio`_                                                         |
-|                | - `minRatio`_                                                         |
-|                | - `allowSquare`_                                                      |
-|                | - `allowLandscape`_                                                   |
-|                | - `allowPortrait`_                                                    |
-|                | - `detectCorrupted`_                                                  |
-|                | - `mimeTypesMessage`_                                                 |
-|                | - `sizeNotDetectedMessage`_                                           |
-|                | - `maxWidthMessage`_                                                  |
-|                | - `minWidthMessage`_                                                  |
-|                | - `maxHeightMessage`_                                                 |
-|                | - `minHeightMessage`_                                                 |
-|                | - `maxRatioMessage`_                                                  |
-|                | - `minRatioMessage`_                                                  |
-|                | - `allowSquareMessage`_                                               |
-|                | - `allowLandscapeMessage`_                                            |
-|                | - `allowPortraitMessage`_                                             |
-|                | - `corruptedMessage`_                                                 |
-|                | - See :doc:`File </reference/constraints/File>` for inherited options |
-+----------------+-----------------------------------------------------------------------+
-| Class          | :class:`Symfony\\Component\\Validator\\Constraints\\Image`            |
-+----------------+-----------------------------------------------------------------------+
-| Validator      | :class:`Symfony\\Component\\Validator\\Constraints\\ImageValidator`   |
-+----------------+-----------------------------------------------------------------------+
+==========  ===================================================================
+Applies to  :ref:`property or method <validation-property-target>`
+Options     - `allowLandscape`_
+            - `allowLandscapeMessage`_
+            - `allowPortrait`_
+            - `allowPortraitMessage`_
+            - `allowSquare`_
+            - `allowSquareMessage`_
+            - `corruptedMessage`_
+            - `detectCorrupted`_
+            - `groups`_
+            - `maxHeight`_
+            - `maxHeightMessage`_
+            - `maxPixels`_
+            - `maxPixelsMessage`_
+            - `maxRatio`_
+            - `maxRatioMessage`_
+            - `maxWidth`_
+            - `maxWidthMessage`_
+            - `mimeTypes`_
+            - `mimeTypesMessage`_
+            - `minHeight`_
+            - `minHeightMessage`_
+            - `minPixels`_
+            - `minPixelsMessage`_
+            - `minRatio`_
+            - `minRatioMessage`_
+            - `minWidth`_
+            - `minWidthMessage`_
+            - `sizeNotDetectedMessage`_
+            - See :doc:`File </reference/constraints/File>` for inherited options
+Class       :class:`Symfony\\Component\\Validator\\Constraints\\Image`
+Validator   :class:`Symfony\\Component\\Validator\\Constraints\\ImageValidator`
+==========  ===================================================================
 
 Basic Usage
 -----------
@@ -98,6 +100,24 @@ that it is between a certain size, add the following:
             protected $headshot;
         }
 
+    .. code-block:: php-attributes
+
+        // src/Entity/Author.php
+        namespace App\Entity;
+
+        use Symfony\Component\Validator\Constraints as Assert;
+
+        class Author
+        {
+            #[Assert\Image(
+                minWidth: 200,
+                maxWidth: 400,
+                minHeight: 200,
+                maxHeight: 400,
+            )]
+            protected $headshot;
+        }
+
     .. code-block:: yaml
 
         # config/validator/validation.yaml
@@ -116,7 +136,7 @@ that it is between a certain size, add the following:
         <?xml version="1.0" encoding="UTF-8" ?>
         <constraint-mapping xmlns="http://symfony.com/schema/dic/constraint-mapping"
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-            xsi:schemaLocation="http://symfony.com/schema/dic/constraint-mapping http://symfony.com/schema/dic/constraint-mapping/constraint-mapping-1.0.xsd">
+            xsi:schemaLocation="http://symfony.com/schema/dic/constraint-mapping https://symfony.com/schema/dic/constraint-mapping/constraint-mapping-1.0.xsd">
 
             <class name="App\Entity\Author">
                 <property name="headshot">
@@ -135,19 +155,19 @@ that it is between a certain size, add the following:
         // src/Entity/Author.php
         namespace App\Entity;
 
-        use Symfony\Component\Validator\Mapping\ClassMetadata;
         use Symfony\Component\Validator\Constraints as Assert;
+        use Symfony\Component\Validator\Mapping\ClassMetadata;
 
         class Author
         {
             public static function loadValidatorMetadata(ClassMetadata $metadata)
             {
-                $metadata->addPropertyConstraint('headshot', new Assert\Image(array(
+                $metadata->addPropertyConstraint('headshot', new Assert\Image([
                     'minWidth' => 200,
                     'maxWidth' => 400,
                     'minHeight' => 200,
                     'maxHeight' => 400,
-                )));
+                ]));
             }
         }
 
@@ -178,6 +198,22 @@ following code:
             protected $headshot;
         }
 
+    .. code-block:: php-attributes
+
+        // src/Entity/Author.php
+        namespace App\Entity;
+
+        use Symfony\Component\Validator\Constraints as Assert;
+
+        class Author
+        {
+            #[Assert\Image(
+                allowLandscape: false,
+                allowPortrait: false,
+            )]
+            protected $headshot;
+        }
+
     .. code-block:: yaml
 
         # config/validator/validation.yaml
@@ -205,19 +241,17 @@ following code:
         // src/Entity/Author.php
         namespace App\Entity;
 
-        use Symfony\Component\Validator\Mapping\ClassMetadata;
         use Symfony\Component\Validator\Constraints as Assert;
+        use Symfony\Component\Validator\Mapping\ClassMetadata;
 
         class Author
         {
-            // ...
-
             public static function loadValidatorMetadata(ClassMetadata $metadata)
             {
-                $metadata->addPropertyConstraint('headshot', new Assert\Image(array(
-                    'allowLandscape'    => false,
-                    'allowPortrait'     => false,
-                )));
+                $metadata->addPropertyConstraint('headshot', new Assert\Image([
+                    'allowLandscape' => false,
+                    'allowPortrait' => false,
+                ]));
             }
         }
 
@@ -230,107 +264,92 @@ This constraint shares all of its options with the :doc:`File </reference/constr
 constraint. It does, however, modify two of the default option values and
 add several other options.
 
-mimeTypes
-~~~~~~~~~
-
-**type**: ``array`` or ``string`` **default**: ``image/*``
-
-You can find a list of existing image mime types on the `IANA website`_.
-
-mimeTypesMessage
-~~~~~~~~~~~~~~~~
-
-**type**: ``string`` **default**: ``This file is not a valid image.``
-
-minWidth
-~~~~~~~~
-
-**type**: ``integer``
-
-If set, the width of the image file must be greater than or equal to this
-value in pixels.
-
-maxWidth
-~~~~~~~~
-
-**type**: ``integer``
-
-If set, the width of the image file must be less than or equal to this
-value in pixels.
-
-minHeight
-~~~~~~~~~
-
-**type**: ``integer``
-
-If set, the height of the image file must be greater than or equal to this
-value in pixels.
-
-maxHeight
-~~~~~~~~~
-
-**type**: ``integer``
-
-If set, the height of the image file must be less than or equal to this
-value in pixels.
-
-minPixels
-~~~~~~~~~
-
-**type**: ``integer``
-
-If set, the amount of pixels of the image file must be greater than or equal to this
-value.
-
-maxPixels
-~~~~~~~~~
-
-**type**: ``integer``
-
-If set, the amount of pixels of the image file must be less than or equal to this
-value.
-
-maxRatio
-~~~~~~~~
-
-**type**: ``float``
-
-If set, the aspect ratio (``width / height``) of the image file must be less
-than or equal to this value.
-
-minRatio
-~~~~~~~~
-
-**type**: ``float``
-
-If set, the aspect ratio (``width / height``) of the image file must be greater
-than or equal to this value.
-
-allowSquare
-~~~~~~~~~~~
-
-**type**: ``Boolean`` **default**: ``true``
-
-If this option is false, the image cannot be a square. If you want to force
-a square image, then set leave this option as its default ``true`` value
-and set `allowLandscape`_ and `allowPortrait`_ both to ``false``.
-
-allowLandscape
-~~~~~~~~~~~~~~
+``allowLandscape``
+~~~~~~~~~~~~~~~~~~
 
 **type**: ``Boolean`` **default**: ``true``
 
 If this option is false, the image cannot be landscape oriented.
 
-allowPortrait
-~~~~~~~~~~~~~
+``allowLandscapeMessage``
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+**type**: ``string`` **default**: ``The image is landscape oriented ({{ width }}x{{ height }}px).
+Landscape oriented images are not allowed``
+
+The error message if the image is landscape oriented and you set `allowLandscape`_ to ``false``.
+
+You can use the following parameters in this message:
+
+================  =============================================================
+Parameter         Description
+================  =============================================================
+``{{ height }}``  The current height
+``{{ width }}``   The current width
+================  =============================================================
+
+``allowPortrait``
+~~~~~~~~~~~~~~~~~
 
 **type**: ``Boolean`` **default**: ``true``
 
 If this option is false, the image cannot be portrait oriented.
 
-detectCorrupted
+``allowPortraitMessage``
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+**type**: ``string`` **default**: ``The image is portrait oriented ({{ width }}x{{ height }}px).
+Portrait oriented images are not allowed``
+
+The error message if the image is portrait oriented and you set `allowPortrait`_ to ``false``.
+
+You can use the following parameters in this message:
+
+================  =============================================================
+Parameter         Description
+================  =============================================================
+``{{ height }}``  The current height
+``{{ width }}``   The current width
+================  =============================================================
+
+``allowSquare``
 ~~~~~~~~~~~~~~~
+
+**type**: ``Boolean`` **default**: ``true``
+
+If this option is false, the image cannot be a square. If you want to force
+a square image, then leave this option as its default ``true`` value
+and set `allowLandscape`_ and `allowPortrait`_ both to ``false``.
+
+``allowSquareMessage``
+~~~~~~~~~~~~~~~~~~~~~~
+
+**type**: ``string`` **default**: ``The image is square ({{ width }}x{{ height }}px).
+Square images are not allowed``
+
+The error message if the image is square and you set `allowSquare`_ to ``false``.
+
+You can use the following parameters in this message:
+
+================  =============================================================
+Parameter         Description
+================  =============================================================
+``{{ height }}``  The current height
+``{{ width }}``   The current width
+================  =============================================================
+
+``corruptedMessage``
+~~~~~~~~~~~~~~~~~~~~
+
+**type**: ``string`` **default**: ``The image file is corrupted.``
+
+The error message when the `detectCorrupted`_ option is enabled and the image
+is corrupted.
+
+This message has no parameters.
+
+``detectCorrupted``
+~~~~~~~~~~~~~~~~~~~
 
 **type**: ``boolean`` **default**: ``false``
 
@@ -338,8 +357,226 @@ If this option is true, the image contents are validated to ensure that the
 image is not corrupted. This validation is done with PHP's :phpfunction:`imagecreatefromstring`
 function, which requires the `PHP GD extension`_ to be enabled.
 
-sizeNotDetectedMessage
-~~~~~~~~~~~~~~~~~~~~~~
+.. include:: /reference/constraints/_groups-option.rst.inc
+
+``maxHeight``
+~~~~~~~~~~~~~
+
+**type**: ``integer``
+
+If set, the height of the image file must be less than or equal to this
+value in pixels.
+
+``maxHeightMessage``
+~~~~~~~~~~~~~~~~~~~~
+
+**type**: ``string`` **default**: ``The image height is too big ({{ height }}px).
+Allowed maximum height is {{ max_height }}px.``
+
+The error message if the height of the image exceeds `maxHeight`_.
+
+You can use the following parameters in this message:
+
+====================  =========================================================
+Parameter             Description
+====================  =========================================================
+``{{ height }}``      The current (invalid) height
+``{{ max_height }}``  The maximum allowed height
+====================  =========================================================
+
+``maxPixels``
+~~~~~~~~~~~~~
+
+**type**: ``integer``
+
+If set, the amount of pixels of the image file must be less than or equal to this
+value.
+
+``maxPixelsMessage``
+~~~~~~~~~~~~~~~~~~~~
+
+**type**: ``string`` **default**: ``The image has to many pixels ({{ pixels }} pixels).
+Maximum amount expected is {{ max_pixels }} pixels.``
+
+The error message if the amount of pixels of the image exceeds `maxPixels`_.
+
+You can use the following parameters in this message:
+
+====================  =========================================================
+Parameter             Description
+====================  =========================================================
+``{{ height }}``      The current image height
+``{{ max_pixels }}``  The maximum allowed amount of pixels
+``{{ pixels }}``      The current amount of pixels
+``{{ width }}``       The current image width
+====================  =========================================================
+
+``maxRatio``
+~~~~~~~~~~~~
+
+**type**: ``float``
+
+If set, the aspect ratio (``width / height``) of the image file must be less
+than or equal to this value.
+
+``maxRatioMessage``
+~~~~~~~~~~~~~~~~~~~
+
+**type**: ``string`` **default**: ``The image ratio is too big ({{ ratio }}).
+Allowed maximum ratio is {{ max_ratio }}``
+
+The error message if the aspect ratio of the image exceeds `maxRatio`_.
+
+You can use the following parameters in this message:
+
+===================  ==========================================================
+Parameter            Description
+===================  ==========================================================
+``{{ max_ratio }}``  The maximum required ratio
+``{{ ratio }}``      The current (invalid) ratio
+===================  ==========================================================
+
+``maxWidth``
+~~~~~~~~~~~~
+
+**type**: ``integer``
+
+If set, the width of the image file must be less than or equal to this
+value in pixels.
+
+``maxWidthMessage``
+~~~~~~~~~~~~~~~~~~~
+
+**type**: ``string`` **default**: ``The image width is too big ({{ width }}px).
+Allowed maximum width is {{ max_width }}px.``
+
+The error message if the width of the image exceeds `maxWidth`_.
+
+You can use the following parameters in this message:
+
+===================  ==========================================================
+Parameter            Description
+===================  ==========================================================
+``{{ max_width }}``  The maximum allowed width
+``{{ width }}``      The current (invalid) width
+===================  ==========================================================
+
+``mimeTypes``
+~~~~~~~~~~~~~
+
+**type**: ``array`` or ``string`` **default**: ``image/*``
+
+You can find a list of existing image mime types on the `IANA website`_.
+
+``mimeTypesMessage``
+~~~~~~~~~~~~~~~~~~~~
+
+**type**: ``string`` **default**: ``This file is not a valid image.``
+
+``minHeight``
+~~~~~~~~~~~~~
+
+**type**: ``integer``
+
+If set, the height of the image file must be greater than or equal to this
+value in pixels.
+
+``minHeightMessage``
+~~~~~~~~~~~~~~~~~~~~
+
+**type**: ``string`` **default**: ``The image height is too small ({{ height }}px).
+Minimum height expected is {{ min_height }}px.``
+
+The error message if the height of the image is less than `minHeight`_.
+
+You can use the following parameters in this message:
+
+====================  =========================================================
+Parameter             Description
+====================  =========================================================
+``{{ height }}``      The current (invalid) height
+``{{ min_height }}``  The minimum required height
+====================  =========================================================
+
+``minPixels``
+~~~~~~~~~~~~~
+
+**type**: ``integer``
+
+If set, the amount of pixels of the image file must be greater than or equal to this
+value.
+
+``minPixelsMessage``
+~~~~~~~~~~~~~~~~~~~~
+
+**type**: ``string`` **default**: ``The image has too few pixels ({{ pixels }} pixels).
+Minimum amount expected is {{ min_pixels }} pixels.``
+
+The error message if the amount of pixels of the image is less than `minPixels`_.
+
+You can use the following parameters in this message:
+
+====================  =========================================================
+Parameter             Description
+====================  =========================================================
+``{{ height }}``      The current image height
+``{{ min_pixels }}``  The minimum required amount of pixels
+``{{ pixels }}``      The current amount of pixels
+``{{ width }}``       The current image width
+====================  =========================================================
+
+``minRatio``
+~~~~~~~~~~~~
+
+**type**: ``float``
+
+If set, the aspect ratio (``width / height``) of the image file must be greater
+than or equal to this value.
+
+``minRatioMessage``
+~~~~~~~~~~~~~~~~~~~
+
+**type**: ``string`` **default**: ``The image ratio is too small ({{ ratio }}).
+Minimum ratio expected is {{ min_ratio }}``
+
+The error message if the aspect ratio of the image is less than `minRatio`_.
+
+You can use the following parameters in this message:
+
+===================  ==========================================================
+Parameter            Description
+===================  ==========================================================
+``{{ min_ratio }}``  The minimum required ratio
+``{{ ratio }}``      The current (invalid) ratio
+===================  ==========================================================
+
+``minWidth``
+~~~~~~~~~~~~
+
+**type**: ``integer``
+
+If set, the width of the image file must be greater than or equal to this
+value in pixels.
+
+``minWidthMessage``
+~~~~~~~~~~~~~~~~~~~
+
+**type**: ``string`` **default**: ``The image width is too small ({{ width }}px).
+Minimum width expected is {{ min_width }}px.``
+
+The error message if the width of the image is less than `minWidth`_.
+
+You can use the following parameters in this message:
+
+===================  ==========================================================
+Parameter            Description
+===================  ==========================================================
+``{{ min_width }}``  The minimum required width
+``{{ width }}``      The current (invalid) width
+===================  ==========================================================
+
+``sizeNotDetectedMessage``
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 **type**: ``string`` **default**: ``The size of the image could not be detected.``
 
@@ -347,101 +584,7 @@ If the system is unable to determine the size of the image, this error will
 be displayed. This will only occur when at least one of the size constraint
 options has been set.
 
-maxWidthMessage
-~~~~~~~~~~~~~~~
+This message has no parameters.
 
-**type**: ``string`` **default**: ``The image width is too big ({{ width }}px).
-Allowed maximum width is {{ max_width }}px.``
-
-The error message if the width of the image exceeds `maxWidth`_.
-
-minWidthMessage
-~~~~~~~~~~~~~~~
-
-**type**: ``string`` **default**: ``The image width is too small ({{ width }}px).
-Minimum width expected is {{ min_width }}px.``
-
-The error message if the width of the image is less than `minWidth`_.
-
-maxHeightMessage
-~~~~~~~~~~~~~~~~
-
-**type**: ``string`` **default**: ``The image height is too big ({{ height }}px).
-Allowed maximum height is {{ max_height }}px.``
-
-The error message if the height of the image exceeds `maxHeight`_.
-
-minHeightMessage
-~~~~~~~~~~~~~~~~
-
-**type**: ``string`` **default**: ``The image height is too small ({{ height }}px).
-Minimum height expected is {{ min_height }}px.``
-
-The error message if the height of the image is less than `minHeight`_.
-
-maxPixelsMessage
-~~~~~~~~~~~~~~~~
-
-**type**: ``string`` **default**: ``The image has to many pixels ({{ pixels }} pixels).
-Maximum amount expected is {{ max_pixels }} pixels.``
-
-The error message if the amount of pixels of the image exceeds `maxPixels`_.
-
-minPixelsMessage
-~~~~~~~~~~~~~~~~
-
-**type**: ``string`` **default**: ``The image has to few pixels ({{ pixels }} pixels).
-Minimum amount expected is {{ min_pixels }} pixels.``
-
-The error message if the amount of pixels of the image is less than `minPixels`_.
-
-maxRatioMessage
-~~~~~~~~~~~~~~~
-
-**type**: ``string`` **default**: ``The image ratio is too big ({{ ratio }}).
-Allowed maximum ratio is {{ max_ratio }}``
-
-The error message if the aspect ratio of the image exceeds `maxRatio`_.
-
-minRatioMessage
-~~~~~~~~~~~~~~~
-
-**type**: ``string`` **default**: ``The image ratio is too small ({{ ratio }}).
-Minimum ratio expected is {{ min_ratio }}``
-
-The error message if the aspect ratio of the image is less than `minRatio`_.
-
-allowSquareMessage
-~~~~~~~~~~~~~~~~~~
-
-**type**: ``string`` **default**: ``The image is square ({{ width }}x{{ height }}px).
-Square images are not allowed``
-
-The error message if the image is square and you set `allowSquare`_ to ``false``.
-
-allowLandscapeMessage
-~~~~~~~~~~~~~~~~~~~~~
-
-**type**: ``string`` **default**: ``The image is landscape oriented ({{ width }}x{{ height }}px).
-Landscape oriented images are not allowed``
-
-The error message if the image is landscape oriented and you set `allowLandscape`_ to ``false``.
-
-allowPortraitMessage
-~~~~~~~~~~~~~~~~~~~~
-
-**type**: ``string`` **default**: ``The image is portrait oriented ({{ width }}x{{ height }}px).
-Portrait oriented images are not allowed``
-
-The error message if the image is portrait oriented and you set `allowPortrait`_ to ``false``.
-
-corruptedMessage
-~~~~~~~~~~~~~~~~
-
-**type**: ``string`` **default**: ``The image file is corrupted.``
-
-The error message when the `detectCorrupted`_ option is enabled and the image
-is corrupted.
-
-.. _`IANA website`: http://www.iana.org/assignments/media-types/image/index.html
-.. _`PHP GD extension`: http://php.net/manual/en/book.image.php
+.. _`IANA website`: http://www.iana.org/assignments/media-types/media-types.xhtml
+.. _`PHP GD extension`: https://www.php.net/manual/en/book.image.php

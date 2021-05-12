@@ -14,9 +14,9 @@ the channel).
 
 .. note::
 
-    Each channel corresponds to a logger service (``monolog.logger.XXX``)
-    in the container (use the ``debug:container`` command to see a full list)
-    and those are injected into different services.
+    Each channel corresponds to a different logger service (``monolog.logger.XXX``)
+    Use the ``php bin/console debug:container monolog`` command to see a full
+    list of services and learn :ref:`how to autowire monolog channels <monolog-autowire-channels>`.
 
 .. _logging-channel-handler:
 
@@ -24,8 +24,10 @@ Switching a Channel to a different Handler
 ------------------------------------------
 
 Now, suppose you want to log the ``security`` channel to a different file.
-To do this, just create a new handler and configure it to log only messages
-from the ``security`` channel:
+To do this, create a new handler and configure it to log only messages
+from the ``security`` channel. The following example does that only in the
+``prod`` :ref:`configuration environment <configuration-environments>` but you
+can do it in any (or all) environments:
 
 .. configuration-block::
 
@@ -53,9 +55,9 @@ from the ``security`` channel:
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
             xmlns:monolog="http://symfony.com/schema/dic/monolog"
             xsi:schemaLocation="http://symfony.com/schema/dic/services
-                http://symfony.com/schema/dic/services/services-1.0.xsd
+                https://symfony.com/schema/dic/services/services-1.0.xsd
                 http://symfony.com/schema/dic/monolog
-                http://symfony.com/schema/dic/monolog/monolog-1.0.xsd">
+                https://symfony.com/schema/dic/monolog/monolog-1.0.xsd">
 
             <monolog:config>
                 <monolog:handler name="security" type="stream" path="%kernel.logs_dir%/security.log">
@@ -76,27 +78,23 @@ from the ``security`` channel:
     .. code-block:: php
 
         // config/packages/prod/monolog.php
-        $container->loadFromExtension('monolog', array(
-            'handlers' => array(
-                'security' => array(
-                    'type'     => 'stream',
-                    'path'     => '%kernel.logs_dir%/security.log',
-                    'channels' => array(
-                        'security',
-                    ),
-                ),
-                'main'     => array(
-                    // ...
-                    'channels' => array(
-                        '!security',
-                    ),
-                ),
-            ),
-        ));
+        use Symfony\Config\MonologConfig;
+
+        return static function (MonologConfig $monolog) {
+            $monolog->handler('security')
+                ->type('stream')
+                ->path('%kernel.logs_dir%/security.log')
+                ->channels()->elements(['security']);
+
+            $monolog->handler('main')
+                 // ...
+
+                ->channels()->elements(['!security']);
+        };
 
 .. caution::
 
-    The ``channels`` configuration only works for top level handlers. Handlers
+    The ``channels`` configuration only works for top-level handlers. Handlers
     that are nested inside a group, buffer, filter, fingers crossed or other
     such handler will ignore this configuration and will process every message
     passed to them.
@@ -119,9 +117,9 @@ You can specify the configuration by many forms:
 Creating your own Channel
 -------------------------
 
-You can change the channel monolog logs to one service at a time. This is done
+You can change the channel Monolog logs to one service at a time. This is done
 either via the :ref:`configuration <monolog-channels-config>` below
-or by tagging your service with :ref:`monolog.logger<dic_tags-monolog>` and
+or by tagging your service with :ref:`monolog.logger <dic_tags-monolog>` and
 specifying which channel the service should log to. With the tag, the logger
 that is injected into that service is preconfigured to use the channel you've
 specified.
@@ -148,9 +146,9 @@ You can also configure additional channels without the need to tag your services
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
             xmlns:monolog="http://symfony.com/schema/dic/monolog"
             xsi:schemaLocation="http://symfony.com/schema/dic/services
-                http://symfony.com/schema/dic/services/services-1.0.xsd
+                https://symfony.com/schema/dic/services/services-1.0.xsd
                 http://symfony.com/schema/dic/monolog
-                http://symfony.com/schema/dic/monolog/monolog-1.0.xsd">
+                https://symfony.com/schema/dic/monolog/monolog-1.0.xsd">
 
             <monolog:config>
                 <monolog:channel>foo</monolog:channel>
@@ -161,14 +159,36 @@ You can also configure additional channels without the need to tag your services
     .. code-block:: php
 
         // config/packages/prod/monolog.php
-        $container->loadFromExtension('monolog', array(
-            'channels' => array(
-                'foo',
-                'bar',
-            ),
-        ));
+        use Symfony\Config\MonologConfig;
+
+        return static function (MonologConfig $monolog) {
+            $monolog->channels(['foo', 'bar']);
+        };
 
 Symfony automatically registers one service per channel (in this example, the
 channel ``foo`` creates a service called ``monolog.logger.foo``). In order to
 inject this service into others, you must update the service configuration to
 :ref:`choose the specific service to inject <services-wire-specific-service>`.
+
+.. _monolog-autowire-channels:
+
+How to Autowire Logger Channels
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Starting from `MonologBundle`_ 3.5 you can autowire different Monolog channels
+by type-hinting your service arguments with the following syntax:
+``Psr\Log\LoggerInterface $<channel>Logger``. The ``<channel>`` must have been
+:ref:`predefined in your Monolog configuration <monolog-channels-config>`.
+
+For example to inject the service related to the ``app`` logger channel,
+change your constructor like this:
+
+.. code-block:: diff
+
+    -     public function __construct(LoggerInterface $logger)
+    +     public function __construct(LoggerInterface $appLogger)
+        {
+            $this->logger = $appLogger;
+        }
+
+.. _`MonologBundle`: https://github.com/symfony/monolog-bundle

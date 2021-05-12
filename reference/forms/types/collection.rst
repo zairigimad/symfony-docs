@@ -11,33 +11,45 @@ forms, which is useful when creating forms that expose one-to-many
 relationships (e.g. a product from where you can manage many related product
 photos).
 
-+-------------+-----------------------------------------------------------------------------+
-| Rendered as | depends on the `entry_type`_ option                                         |
-+-------------+-----------------------------------------------------------------------------+
-| Options     | - `allow_add`_                                                              |
-|             | - `allow_delete`_                                                           |
-|             | - `delete_empty`_                                                           |
-|             | - `entry_options`_                                                          |
-|             | - `entry_type`_                                                             |
-|             | - `prototype`_                                                              |
-|             | - `prototype_data`_                                                         |
-|             | - `prototype_name`_                                                         |
-+-------------+-----------------------------------------------------------------------------+
-| Inherited   | - `by_reference`_                                                           |
-| options     | - `empty_data`_                                                             |
-|             | - `error_bubbling`_                                                         |
-|             | - `error_mapping`_                                                          |
-|             | - `help`_                                                                   |
-|             | - `label`_                                                                  |
-|             | - `label_attr`_                                                             |
-|             | - `label_format`_                                                           |
-|             | - `mapped`_                                                                 |
-|             | - `required`_                                                               |
-+-------------+-----------------------------------------------------------------------------+
-| Parent type | :doc:`FormType </reference/forms/types/form>`                               |
-+-------------+-----------------------------------------------------------------------------+
-| Class       | :class:`Symfony\\Component\\Form\\Extension\\Core\\Type\\CollectionType`    |
-+-------------+-----------------------------------------------------------------------------+
++---------------------------+--------------------------------------------------------------------------+
+| Rendered as               | depends on the `entry_type`_ option                                      |
++---------------------------+--------------------------------------------------------------------------+
+| Options                   | - `allow_add`_                                                           |
+|                           | - `allow_delete`_                                                        |
+|                           | - `delete_empty`_                                                        |
+|                           | - `entry_options`_                                                       |
+|                           | - `entry_type`_                                                          |
+|                           | - `prototype`_                                                           |
+|                           | - `prototype_data`_                                                      |
+|                           | - `prototype_name`_                                                      |
++---------------------------+--------------------------------------------------------------------------+
+| Overridden options        | - `invalid_message`_                                                     |
++---------------------------+--------------------------------------------------------------------------+
+| Inherited options         | - `attr`_                                                                |
+|                           | - `by_reference`_                                                        |
+|                           | - `empty_data`_                                                          |
+|                           | - `error_bubbling`_                                                      |
+|                           | - `error_mapping`_                                                       |
+|                           | - `help`_                                                                |
+|                           | - `help_attr`_                                                           |
+|                           | - `help_html`_                                                           |
+|                           | - `label`_                                                               |
+|                           | - `label_attr`_                                                          |
+|                           | - `label_format`_                                                        |
+|                           | - `mapped`_                                                              |
+|                           | - `required`_                                                            |
+|                           | - `row_attr`_                                                            |
++---------------------------+--------------------------------------------------------------------------+
+| Default invalid message   | The collection is invalid.                                               |
++---------------------------+--------------------------------------------------------------------------+
+| Legacy invalid message    | The value {{ value }} is not valid.                                      |
++---------------------------+--------------------------------------------------------------------------+
+| Parent type               | :doc:`FormType </reference/forms/types/form>`                            |
++---------------------------+--------------------------------------------------------------------------+
+| Class                     | :class:`Symfony\\Component\\Form\\Extension\\Core\\Type\\CollectionType` |
++---------------------------+--------------------------------------------------------------------------+
+
+.. include:: /reference/forms/types/options/_debug_form.rst.inc
 
 .. note::
 
@@ -58,14 +70,14 @@ address as its own input text box::
     use Symfony\Component\Form\Extension\Core\Type\EmailType;
     // ...
 
-    $builder->add('emails', CollectionType::class, array(
+    $builder->add('emails', CollectionType::class, [
         // each entry in the array will be an "email" field
         'entry_type' => EmailType::class,
         // these options are passed to each "email" type
-        'entry_options' => array(
-            'attr' => array('class' => 'email-box'),
-        ),
-    ));
+        'entry_options' => [
+            'attr' => ['class' => 'email-box'],
+        ],
+    ]);
 
 The simplest way to render this is all at once:
 
@@ -112,8 +124,8 @@ your form):
 
 .. code-block:: html
 
-    <input type="email" id="form_emails_0" name="form[emails][0]" value="foo@foo.com" />
-    <input type="email" id="form_emails_1" name="form[emails][1]" value="bar@bar.com" />
+    <input type="email" id="form_emails_0" name="form[emails][0]" value="foo@foo.com"/>
+    <input type="email" id="form_emails_1" name="form[emails][1]" value="bar@bar.com"/>
 
 To allow your user to add another email, just set `allow_add`_ to ``true``
 and - via JavaScript - render another field with the name ``form[emails][2]``
@@ -146,11 +158,9 @@ you need is this JavaScript code:
     // add-collection-widget.js
     jQuery(document).ready(function () {
         jQuery('.add-another-collection-widget').click(function (e) {
-            var list = jQuery(jQuery(this).attr('data-list'));
-            // Try to find the counter of the list
-            var counter = list.data('widget-counter') | list.children().length;
-            // If the counter does not exist, use the length of the list
-            if (!counter) { counter = list.children().length; }
+            var list = jQuery(jQuery(this).attr('data-list-selector'));
+            // Try to find the counter of the list or use the length of the list
+            var counter = list.data('widget-counter') || list.children().length;
 
             // grab the prototype template
             var newWidget = list.attr('data-prototype');
@@ -161,7 +171,7 @@ you need is this JavaScript code:
             // Increase the counter
             counter++;
             // And store it, the length cannot be used if deleting widgets is allowed
-            list.data(' widget-counter', counter);
+            list.data('widget-counter', counter);
 
             // create a new list element and add it to the list
             var newElem = jQuery(list.attr('data-widget-tags')).html(newWidget);
@@ -179,7 +189,8 @@ And update the template as follows:
         {# store the prototype on the data-prototype attribute #}
         <ul id="email-fields-list"
             data-prototype="{{ form_widget(form.emails.vars.prototype)|e }}"
-            data-widget-tags="{{ '<li></li>'|e }}">
+            data-widget-tags="{{ '<li></li>'|e }}"
+            data-widget-counter="{{ form.emails|length }}">
         {% for emailField in form.emails %}
             <li>
                 {{ form_errors(emailField) }}
@@ -190,7 +201,7 @@ And update the template as follows:
 
         <button type="button"
             class="add-another-collection-widget"
-            data-list="#email-fields-list">Add another email</button>
+            data-list-selector="#email-fields-list">Add another email</button>
 
         {# ... #}
     {{ form_end(form) }}
@@ -238,9 +249,9 @@ allow_delete
 
 If set to ``true``, then if an existing item is not contained in the submitted
 data, it will be correctly absent from the final array of items. This means
-that you can implement a "delete" button via JavaScript which simply removes
-a form element from the DOM. When the user submits the form, its absence
-from the submitted data will mean that it's removed from the final array.
+that you can implement a "delete" button via JavaScript which removes a form
+element from the DOM. When the user submits the form, its absence from the
+submitted data will mean that it's removed from the final array.
 
 For more information, see :ref:`form-collections-remove`.
 
@@ -281,12 +292,12 @@ the value is removed from the collection. For example::
     use Symfony\Component\Form\Extension\Core\Type\CollectionType;
     // ...
 
-    $builder->add('users', CollectionType::class, array(
+    $builder->add('users', CollectionType::class, [
         // ...
         'delete_empty' => function (User $user = null) {
             return null === $user || empty($user->getFirstName());
         },
-    ));
+    ]);
 
 Using a callable is particularly useful in case of compound form types, which
 may define complex conditions for considering them empty.
@@ -294,7 +305,7 @@ may define complex conditions for considering them empty.
 entry_options
 ~~~~~~~~~~~~~
 
-**type**: ``array`` **default**: ``array()``
+**type**: ``array`` **default**: ``[]``
 
 This is the array that's passed to the form type specified in the `entry_type`_
 option. For example, if you used the :doc:`ChoiceType </reference/forms/types/choice>`
@@ -302,26 +313,26 @@ as your `entry_type`_ option (e.g. for a collection of drop-down menus),
 then you'd need to at least pass the ``choices`` option to the underlying
 type::
 
-    use Symfony\Component\Form\Extension\Core\Type\CollectionType;
     use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
+    use Symfony\Component\Form\Extension\Core\Type\CollectionType;
     // ...
 
-    $builder->add('favorite_cities', CollectionType::class, array(
+    $builder->add('favoriteCities', CollectionType::class, [
         'entry_type'   => ChoiceType::class,
-        'entry_options'  => array(
-            'choices'  => array(
+        'entry_options'  => [
+            'choices'  => [
                 'Nashville' => 'nashville',
                 'Paris'     => 'paris',
                 'Berlin'    => 'berlin',
                 'London'    => 'london',
-            ),
-        ),
-    ));
+            ],
+        ],
+    ]);
 
 entry_type
 ~~~~~~~~~~
 
-**type**: ``string`` **default**: ``Symfony\\Component\\Form\\Extension\\Core\\Type\\TextType``
+**type**: ``string`` **default**: ``'Symfony\Component\Form\Extension\Core\Type\TextType'``
 
 This is the field type for each item in this collection (e.g. ``TextType``,
 ``ChoiceType``, etc). For example, if you have an array of email addresses,
@@ -369,20 +380,18 @@ prototype_data
 
 Allows you to define specific data for the prototype. Each new row added will
 initially contain the data set by this option. By default, the data configured
-for all entries with the `entry_options`_ option will be used.
-
-.. code-block:: php
+for all entries with the `entry_options`_ option will be used::
 
     use Symfony\Component\Form\Extension\Core\Type\CollectionType;
     use Symfony\Component\Form\Extension\Core\Type\TextType;
     // ...
 
-    $builder->add('tags', CollectionType::class, array(
+    $builder->add('tags', CollectionType::class, [
         'entry_type' => TextType::class,
         'allow_add' => true,
         'prototype' => true,
         'prototype_data' => 'New Tag Placeholder',
-    ));
+    ]);
 
 prototype_name
 ~~~~~~~~~~~~~~
@@ -393,11 +402,18 @@ If you have several collections in your form, or worse, nested collections
 you may want to change the placeholder so that unrelated placeholders are
 not replaced with the same value.
 
+Overridden Options
+------------------
+
+.. include:: /reference/forms/types/options/invalid_message.rst.inc
+
 Inherited Options
 -----------------
 
 These options inherit from the :doc:`FormType </reference/forms/types/form>`.
 Not all options are listed here - only the most applicable to this type:
+
+.. include:: /reference/forms/types/options/attr.rst.inc
 
 .. _reference-form-types-by-reference:
 
@@ -406,7 +422,7 @@ Not all options are listed here - only the most applicable to this type:
 .. include:: /reference/forms/types/options/empty_data.rst.inc
     :end-before: DEFAULT_PLACEHOLDER
 
-The default value is ``array()`` (empty array).
+The default value is ``[]`` (empty array).
 
 .. include:: /reference/forms/types/options/empty_data.rst.inc
     :start-after: DEFAULT_PLACEHOLDER
@@ -422,6 +438,10 @@ error_bubbling
 
 .. include:: /reference/forms/types/options/help.rst.inc
 
+.. include:: /reference/forms/types/options/help_attr.rst.inc
+
+.. include:: /reference/forms/types/options/help_html.rst.inc
+
 .. include:: /reference/forms/types/options/label.rst.inc
 
 .. include:: /reference/forms/types/options/label_attr.rst.inc
@@ -431,6 +451,8 @@ error_bubbling
 .. include:: /reference/forms/types/options/mapped.rst.inc
 
 .. include:: /reference/forms/types/options/required.rst.inc
+
+.. include:: /reference/forms/types/options/row_attr.rst.inc
 
 Field Variables
 ---------------

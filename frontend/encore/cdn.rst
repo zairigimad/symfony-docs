@@ -1,21 +1,20 @@
 Using a CDN
 ===========
 
-Are you deploying to a CDN? That's awesome :) - and configuring Encore for that is
-easy. Once you've made sure that your built files are uploaded to the CDN, configure
-it in Encore:
+Are you deploying to a CDN? That's awesome :) Once you've made sure that your
+built files are uploaded to the CDN, configure it in Encore:
 
 .. code-block:: diff
 
-    // webpack.config.js
-    // ...
+      // webpack.config.js
+      // ...
 
-    Encore
-        .setOutputPath('public/build/')
-        // in dev mode, don't use the CDN
-        .setPublicPath('/build');
-        // ...
-    ;
+      Encore
+          .setOutputPath('public/build/')
+          // in dev mode, don't use the CDN
+          .setPublicPath('/build');
+          // ...
+      ;
 
     + if (Encore.isProduction()) {
     +     Encore.setPublicPath('https://my-cool-app.com.global.prod.fastly.net');
@@ -36,12 +35,17 @@ e.g. ``https://my-cool-app.com.global.prod.fastly.net/dashboard.js``.
     directly from your web server.
 
 You *do* need to make sure that the ``script`` and ``link`` tags you include on your
-pages also use the CDN. Fortunately, the ``manifest.json`` paths are updated to
-point to the CDN. In Symfony, as long as you've configured
-:doc:`Asset Versioning </frontend/encore/versioning>`, you're done! The ``manifest.json``
-file includes the full CDN URL:
+pages also use the CDN. Fortunately, the
+:ref:`entrypoints.json <encore-entrypointsjson-simple-description>` paths are updated
+to include the full URL to the CDN.
 
-.. code-block:: twig
+When deploying to a subdirectory of your CDN, you must add the path at the end of your URL -
+e.g. ``Encore.setPublicPath('https://my-cool-app.com.global.prod.fastly.net/awesome-website')``
+will generate assets URLs like ``https://my-cool-app.com.global.prod.fastly.net/awesome-website/dashboard.js``
 
-    {# Your script/link tags don't need to change at all to support the CDN #}
-    <script src="{{ asset('build/dashboard.js') }}"></script>
+If you are using ``Encore.enableIntegrityHashes()`` and your CDN and your domain
+are not the `same-origin`_, you may need to set the ``crossorigin`` option in
+your webpack_encore.yaml configuration to ``anonymous`` or ``use-credentials``
+to overcome CORS errors.
+
+.. _`same-origin`: https://en.wikipedia.org/wiki/Same-origin_policy

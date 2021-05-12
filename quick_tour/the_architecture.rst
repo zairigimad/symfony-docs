@@ -21,12 +21,13 @@ Want a logging system? No problem:
 This installs and configures (via a recipe) the powerful `Monolog`_ library. To
 use the logger in a controller, add a new argument type-hinted with ``LoggerInterface``::
 
+    <?php
     // src/Controller/DefaultController.php
     namespace App\Controller;
 
     use Psr\Log\LoggerInterface;
-    use Symfony\Component\Routing\Annotation\Route;
     use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+    use Symfony\Component\Routing\Annotation\Route;
 
     class DefaultController extends AbstractController
     {
@@ -41,8 +42,9 @@ use the logger in a controller, add a new argument type-hinted with ``LoggerInte
         }
     }
 
-That's it! The new log message will be written to ``var/log/dev.log``. Of course, this
-can be configured by updating one of the config files added by the recipe.
+That's it! The new log message will be written to ``var/log/dev.log``. The log
+file path or even a different method of logging can be configured by updating
+one of the config files added by the recipe.
 
 Services & Autowiring
 ---------------------
@@ -62,16 +64,18 @@ What other possible classes or interfaces could you use? Find out by running:
 
     $ php bin/console debug:autowiring
 
-=============================================================== =====================================
-Class/Interface Type                                            Alias Service ID
-=============================================================== =====================================
-``Psr\Cache\CacheItemPoolInterface``                            alias for "cache.app.recorder"
-``Psr\Log\LoggerInterface``                                     alias for "monolog.logger"
-``Symfony\Component\EventDispatcher\EventDispatcherInterface``  alias for "debug.event_dispatcher"
-``Symfony\Component\HttpFoundation\RequestStack``               alias for "request_stack"
-``Symfony\Component\HttpFoundation\Session\SessionInterface``   alias for "session"
-``Symfony\Component\Routing\RouterInterface``                   alias for "router.default"
-=============================================================== =====================================
+      # this is just a *small* sample of the output...
+
+      Describes a logger instance.
+      Psr\Log\LoggerInterface (monolog.logger)
+
+      Request stack that controls the lifecycle of requests.
+      Symfony\Component\HttpFoundation\RequestStack (request_stack)
+
+      RouterInterface is the interface that all Router classes must implement.
+      Symfony\Component\Routing\RouterInterface (router.default)
+
+      [...]
 
 This is just a short summary of the full list! And as you add more packages, this
 list of tools will grow!
@@ -83,6 +87,7 @@ To keep your code organized, you can even create your own services! Suppose you
 want to generate a random greeting (e.g. "Hello", "Yo", etc). Instead of putting
 this code directly in your controller, create a new class::
 
+    <?php
     // src/GreetingGenerator.php
     namespace App;
 
@@ -99,13 +104,14 @@ this code directly in your controller, create a new class::
 
 Great! You can use this immediately in your controller::
 
+    <?php
     // src/Controller/DefaultController.php
     namespace App\Controller;
 
     use App\GreetingGenerator;
     use Psr\Log\LoggerInterface;
-    use Symfony\Component\Routing\Annotation\Route;
     use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+    use Symfony\Component\Routing\Annotation\Route;
 
     class DefaultController extends AbstractController
     {
@@ -129,11 +135,12 @@ difference is that it's done in the constructor:
 
 .. code-block:: diff
 
-    // src/GreetingGenerator.php
+      <?php
+      // src/GreetingGenerator.php
     + use Psr\Log\LoggerInterface;
 
-    class GreetingGenerator
-    {
+      class GreetingGenerator
+      {
     +     private $logger;
     +
     +     public function __construct(LoggerInterface $logger)
@@ -141,15 +148,15 @@ difference is that it's done in the constructor:
     +         $this->logger = $logger;
     +     }
 
-        public function getRandomGreeting()
-        {
-            // ...
+          public function getRandomGreeting()
+          {
+              // ...
 
-     +        $this->logger->info('Using the greeting: '.$greeting);
+    +        $this->logger->info('Using the greeting: '.$greeting);
 
-             return $greeting;
-        }
-    }
+               return $greeting;
+          }
+      }
 
 Yes! This works too: no configuration, no time wasted. Keep coding!
 
@@ -158,9 +165,10 @@ Twig Extension & Autoconfiguration
 
 Thanks to Symfony's service handling, you can *extend* Symfony in many ways, like
 by creating an event subscriber or a security voter for complex authorization
-rules. Let's add a new filter to Twig called ``greet``. How? Just create a class
+rules. Let's add a new filter to Twig called ``greet``. How? Create a class
 that extends ``AbstractExtension``::
 
+    <?php
     // src/Twig/GreetExtension.php
     namespace App\Twig;
 
@@ -194,7 +202,7 @@ that extends ``AbstractExtension``::
 
 After creating just *one* file, you can use this immediately:
 
-.. code-block:: twig
+.. code-block:: html+twig
 
     {# templates/default/index.html.twig #}
     {# Will print something like "Hey Symfony!" #}
@@ -202,7 +210,7 @@ After creating just *one* file, you can use this immediately:
 
 How does this work? Symfony notices that your class extends ``AbstractExtension``
 and so *automatically* registers it as a Twig extension. This is called autoconfiguration,
-and it works for *many* many things. Just create a class and then extend a base class
+and it works for *many* many things. Create a class and then extend a base class
 (or implement an interface). Symfony takes care of the rest.
 
 Blazing Speed: The Cached Container
@@ -268,7 +276,7 @@ from ``dev`` to ``prod``:
 
 .. code-block:: diff
 
-    # .env
+      # .env
     - APP_ENV=dev
     + APP_ENV=prod
 
@@ -287,9 +295,8 @@ as *environment* variables. This means that Symfony works *perfectly* with
 Platform as a Service (PaaS) deployment systems as well as Docker.
 
 But setting environment variables while developing can be a pain. That's why your
-app automatically loads a ``.env`` file, if the ``APP_ENV`` environment variable
-isn't set in the environment. The keys in this file then become environment variables
-and are read by your app:
+app automatically loads a ``.env`` file. The keys in this file then become environment
+variables and are read by your app:
 
 .. code-block:: bash
 
@@ -311,10 +318,10 @@ Thanks to a new recipe installed by Flex, look at the ``.env`` file again:
 
 .. code-block:: diff
 
-    ###> symfony/framework-bundle ###
-    APP_ENV=dev
-    APP_SECRET=cc86c7ca937636d5ddf1b754beb22a10
-    ###< symfony/framework-bundle ###
+      ###> symfony/framework-bundle ###
+      APP_ENV=dev
+      APP_SECRET=cc86c7ca937636d5ddf1b754beb22a10
+      ###< symfony/framework-bundle ###
 
     + ###> doctrine/doctrine-bundle ###
     + # ...

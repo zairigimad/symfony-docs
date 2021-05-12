@@ -55,10 +55,10 @@ controller... your choice.
 As a convention, for each route, the associated controller is configured via
 the ``_controller`` route attribute::
 
-    $routes->add('hello', new Routing\Route('/hello/{name}', array(
+    $routes->add('hello', new Routing\Route('/hello/{name}', [
         'name' => 'World',
         '_controller' => 'render_template',
-    )));
+    ]));
 
     try {
         $request->attributes->add($matcher->match($request->getPathInfo()));
@@ -69,20 +69,20 @@ the ``_controller`` route attribute::
         $response = new Response('An error occurred', 500);
     }
 
-A route can now be associated with any controller and of course, within a
-controller, you can still use the ``render_template()`` to render a template::
+A route can now be associated with any controller and within a controller, you
+can still use the ``render_template()`` to render a template::
 
-    $routes->add('hello', new Routing\Route('/hello/{name}', array(
+    $routes->add('hello', new Routing\Route('/hello/{name}', [
         'name' => 'World',
         '_controller' => function ($request) {
             return render_template($request);
         }
-    )));
+    ]));
 
 This is rather flexible as you can change the Response object afterwards and
 you can even pass additional arguments to the template::
 
-    $routes->add('hello', new Routing\Route('/hello/{name}', array(
+    $routes->add('hello', new Routing\Route('/hello/{name}', [
         'name' => 'World',
         '_controller' => function ($request) {
             // $foo will be available in the template
@@ -95,7 +95,7 @@ you can even pass additional arguments to the template::
 
             return $response;
         }
-    )));
+    ]));
 
 Here is the updated and improved version of our framework::
 
@@ -138,12 +138,12 @@ application that needs some simple logic. Our application has one page that
 says whether a given year is a leap year or not. When calling
 ``/is_leap_year``, you get the answer for the current year, but you can
 also specify a year like in ``/is_leap_year/2009``. Being generic, the
-framework does not need to be modified in any way, just create a new
+framework does not need to be modified in any way, create a new
 ``app.php`` file::
 
     // example.com/src/app.php
-    use Symfony\Component\Routing;
     use Symfony\Component\HttpFoundation\Response;
+    use Symfony\Component\Routing;
 
     function is_leap_year($year = null) {
         if (null === $year) {
@@ -154,7 +154,7 @@ framework does not need to be modified in any way, just create a new
     }
 
     $routes = new Routing\RouteCollection();
-    $routes->add('leap_year', new Routing\Route('/is_leap_year/{year}', array(
+    $routes->add('leap_year', new Routing\Route('/is_leap_year/{year}', [
         'year' => null,
         '_controller' => function ($request) {
             if (is_leap_year($request->attributes->get('year'))) {
@@ -163,13 +163,13 @@ framework does not need to be modified in any way, just create a new
 
             return new Response('Nope, this is not a leap year.');
         }
-    )));
+    ]));
 
     return $routes;
 
 The ``is_leap_year()`` function returns ``true`` when the given year is a leap
 year, ``false`` otherwise. If the year is ``null``, the current year is
-tested. The controller is simple: it gets the year from the request
+tested. The controller does little: it gets the year from the request
 attributes, pass it to the ``is_leap_year()`` function, and according to the
 return value it creates a new Response object.
 
@@ -177,5 +177,5 @@ As always, you can decide to stop here and use the framework as is; it's
 probably all you need to create simple websites like those fancy one-page
 `websites`_ and hopefully a few others.
 
-.. _`callbacks`: https://php.net/callback#language.types.callback
+.. _`callbacks`: https://www.php.net/callback#language.types.callback
 .. _`websites`: https://kottke.org/08/02/single-serving-sites

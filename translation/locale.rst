@@ -18,7 +18,7 @@ To set the user's locale, you may want to create a custom event listener so
 that it's set before any other parts of the system (i.e. the translator) need
 it::
 
-        public function onKernelRequest(GetResponseEvent $event)
+        public function onKernelRequest(RequestEvent $event)
         {
             $request = $event->getRequest();
 
@@ -59,10 +59,32 @@ this violates a fundamental rule of the Web: that a particular URL returns
 the same resource regardless of the user. To further muddy the problem, which
 version of the content would be indexed by search engines?
 
-A better policy is to include the locale in the URL. This is fully-supported
-by the routing system using the special ``_locale`` parameter:
+A better policy is to include the locale in the URL using the
+:ref:`special _locale parameter <routing-locale-parameter>`:
 
 .. configuration-block::
+
+    .. code-block:: php-annotations
+
+        // src/Controller/ContactController.php
+        namespace App\Controller;
+
+        // ...
+        class ContactController extends AbstractController
+        {
+            /**
+             * @Route(
+             *     "/{_locale}/contact",
+             *     name="contact",
+             *     requirements={
+             *         "_locale": "en|fr|de",
+             *     }
+             * )
+             */
+            public function contact()
+            {
+            }
+        }
 
     .. code-block:: yaml
 
@@ -80,10 +102,10 @@ by the routing system using the special ``_locale`` parameter:
         <routes xmlns="http://symfony.com/schema/routing"
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
             xsi:schemaLocation="http://symfony.com/schema/routing
-                http://symfony.com/schema/routing/routing-1.0.xsd">
+                https://symfony.com/schema/routing/routing-1.0.xsd">
 
             <route id="contact" path="/{_locale}/contact">
-                <default key="_controller">App\Controller\ContactContorller::index</default>
+                controller="App\Controller\ContactController::index">
                 <requirement key="_locale">en|fr|de</requirement>
             </route>
         </routes>
@@ -91,22 +113,17 @@ by the routing system using the special ``_locale`` parameter:
     .. code-block:: php
 
         // config/routes.php
-        use Symfony\Component\Routing\RouteCollection;
-        use Symfony\Component\Routing\Route;
         use App\Controller\ContactController;
+        use Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator;
 
-        $routes = new RouteCollection();
-        $routes->add('contact', new Route(
-            '/{_locale}/contact',
-            array(
-                '_controller' => array(ContactController::class, 'index']),
-            ),
-            array(
-                '_locale' => 'en|fr|de',
-            )
-        ));
-
-        return $routes;
+        return function (RoutingConfigurator $routes) {
+            $routes->add('contact', '/{_locale}/contact')
+                ->controller([ContactController::class, 'index'])
+                ->requirements([
+                    '_locale' => 'en|fr|de',
+                ])
+            ;
+        };
 
 When using the special ``_locale`` parameter in a route, the matched locale
 is *automatically set on the Request* and can be retrieved via the
@@ -119,8 +136,8 @@ application.
 
 .. tip::
 
-    Read :doc:`/routing/service_container_parameters` to learn how to avoid
-    hardcoding the ``_locale`` requirement in all your routes.
+    Define the locale requirement as a :ref:`container parameter <configuration-parameters>`
+    to avoid hardcoding its value in all your routes.
 
 .. index::
     single: Translations; Fallback and default locale
@@ -150,16 +167,18 @@ the framework:
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
             xmlns:framework="http://symfony.com/schema/dic/symfony"
             xsi:schemaLocation="http://symfony.com/schema/dic/services
-                http://symfony.com/schema/dic/services/services-1.0.xsd
+                https://symfony.com/schema/dic/services/services-1.0.xsd
                 http://symfony.com/schema/dic/symfony
-                http://symfony.com/schema/dic/symfony/symfony-1.0.xsd">
+                https://symfony.com/schema/dic/symfony/symfony-1.0.xsd">
 
-            <framework:config default-locale="en" />
+            <framework:config default-locale="en"/>
         </container>
 
     .. code-block:: php
 
         // config/packages/translation.php
-        $container->loadFromExtension('framework', array(
-            'default_locale' => 'en',
-        ));
+        use Symfony\Config\FrameworkConfig;
+
+        return static function (FrameworkConfig $framework) {
+            $framework->defaultLocale('en');
+        };

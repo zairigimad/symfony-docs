@@ -8,46 +8,72 @@ Renders an input text field and specializes in handling number input. This
 type offers different options for the scale, rounding and grouping
 that you want to use for your number.
 
-+-------------+----------------------------------------------------------------------+
-| Rendered as | ``input`` ``text`` field                                             |
-+-------------+----------------------------------------------------------------------+
-| Options     | - `grouping`_                                                        |
-|             | - `scale`_                                                           |
-|             | - `rounding_mode`_                                                   |
-+-------------+----------------------------------------------------------------------+
-| Overridden  | - `compound`_                                                        |
-| options     |                                                                      |
-+-------------+----------------------------------------------------------------------+
-| Inherited   | - `data`_                                                            |
-| options     | - `disabled`_                                                        |
-|             | - `empty_data`_                                                      |
-|             | - `error_bubbling`_                                                  |
-|             | - `error_mapping`_                                                   |
-|             | - `help`_                                                            |
-|             | - `invalid_message`_                                                 |
-|             | - `invalid_message_parameters`_                                      |
-|             | - `label`_                                                           |
-|             | - `label_attr`_                                                      |
-|             | - `label_format`_                                                    |
-|             | - `mapped`_                                                          |
-|             | - `required`_                                                        |
-+-------------+----------------------------------------------------------------------+
-| Parent type | :doc:`FormType </reference/forms/types/form>`                        |
-+-------------+----------------------------------------------------------------------+
-| Class       | :class:`Symfony\\Component\\Form\\Extension\\Core\\Type\\NumberType` |
-+-------------+----------------------------------------------------------------------+
++---------------------------+----------------------------------------------------------------------+
+| Rendered as               | ``input`` ``text`` field                                             |
++---------------------------+----------------------------------------------------------------------+
+| Options                   | - `grouping`_                                                        |
+|                           | - `html5`_                                                           |
+|                           | - `input`_                                                           |
+|                           | - `scale`_                                                           |
+|                           | - `rounding_mode`_                                                   |
++---------------------------+----------------------------------------------------------------------+
+| Overridden options        | - `compound`_                                                        |
+|                           | - `invalid_message`_                                                 |
++---------------------------+----------------------------------------------------------------------+
+| Inherited options         | - `attr`_                                                            |
+|                           | - `data`_                                                            |
+|                           | - `disabled`_                                                        |
+|                           | - `empty_data`_                                                      |
+|                           | - `error_bubbling`_                                                  |
+|                           | - `error_mapping`_                                                   |
+|                           | - `help`_                                                            |
+|                           | - `help_attr`_                                                       |
+|                           | - `help_html`_                                                       |
+|                           | - `invalid_message_parameters`_                                      |
+|                           | - `label`_                                                           |
+|                           | - `label_attr`_                                                      |
+|                           | - `label_format`_                                                    |
+|                           | - `mapped`_                                                          |
+|                           | - `required`_                                                        |
+|                           | - `row_attr`_                                                        |
++---------------------------+----------------------------------------------------------------------+
+| Default invalid message   | Please enter a number.                                               |
++---------------------------+----------------------------------------------------------------------+
+| Legacy invalid message    | The value {{ value }} is not valid.                                  |
++---------------------------+----------------------------------------------------------------------+
+| Parent type               | :doc:`FormType </reference/forms/types/form>`                        |
++---------------------------+----------------------------------------------------------------------+
+| Class                     | :class:`Symfony\\Component\\Form\\Extension\\Core\\Type\\NumberType` |
++---------------------------+----------------------------------------------------------------------+
+
+.. include:: /reference/forms/types/options/_debug_form.rst.inc
 
 Field Options
 -------------
 
 .. include:: /reference/forms/types/options/grouping.rst.inc
 
-scale
+html5
 ~~~~~
 
-.. versionadded:: 2.7
-    The ``scale`` option was introduced in Symfony 2.7. Prior to Symfony 2.7,
-    it was known as ``precision``.
+**type**: ``boolean`` **default**: ``false``
+
+If set to ``true``, the HTML input will be rendered as a native HTML5 ``type="number"``
+form.
+
+input
+~~~~~
+
+**type**: ``string`` **default**: ``number``
+
+The format of the input data - i.e. the format that the number is stored on
+your underlying object. Valid values are ``number`` and ``string``. Setting
+this option to ``string`` can be useful if the underlying data is a string
+for precision reasons (for example, Doctrine uses strings for the ``decimal``
+type).
+
+scale
+~~~~~
 
 **type**: ``integer`` **default**: Locale-specific (usually around ``3``)
 
@@ -63,10 +89,14 @@ Overridden Options
 
 .. include:: /reference/forms/types/options/compound_type.rst.inc
 
+.. include:: /reference/forms/types/options/invalid_message.rst.inc
+
 Inherited Options
 -----------------
 
 These options inherit from the :doc:`FormType </reference/forms/types/form>`:
+
+.. include:: /reference/forms/types/options/attr.rst.inc
 
 .. include:: /reference/forms/types/options/data.rst.inc
 
@@ -86,7 +116,9 @@ The default value is ``''`` (the empty string).
 
 .. include:: /reference/forms/types/options/help.rst.inc
 
-.. include:: /reference/forms/types/options/invalid_message.rst.inc
+.. include:: /reference/forms/types/options/help_attr.rst.inc
+
+.. include:: /reference/forms/types/options/help_html.rst.inc
 
 .. include:: /reference/forms/types/options/invalid_message_parameters.rst.inc
 
@@ -99,3 +131,5 @@ The default value is ``''`` (the empty string).
 .. include:: /reference/forms/types/options/mapped.rst.inc
 
 .. include:: /reference/forms/types/options/required.rst.inc
+
+.. include:: /reference/forms/types/options/row_attr.rst.inc

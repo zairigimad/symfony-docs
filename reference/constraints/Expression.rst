@@ -6,18 +6,17 @@ for more complex, dynamic validation. See `Basic Usage`_ for an example.
 See :doc:`/reference/constraints/Callback` for a different constraint that
 gives you similar flexibility.
 
-+----------------+-----------------------------------------------------------------------------------------------+
-| Applies to     | :ref:`class <validation-class-target>` or :ref:`property/method <validation-property-target>` |
-+----------------+-----------------------------------------------------------------------------------------------+
-| Options        | - :ref:`expression <reference-constraint-expression-option>`                                  |
-|                | - `message`_                                                                                  |
-|                | - `payload`_                                                                                  |
-|                | - `values`_                                                                                   |
-+----------------+-----------------------------------------------------------------------------------------------+
-| Class          | :class:`Symfony\\Component\\Validator\\Constraints\\Expression`                               |
-+----------------+-----------------------------------------------------------------------------------------------+
-| Validator      | :class:`Symfony\\Component\\Validator\\Constraints\\ExpressionValidator`                      |
-+----------------+-----------------------------------------------------------------------------------------------+
+==========  ===================================================================
+Applies to  :ref:`class <validation-class-target>`
+            or :ref:`property/method <validation-property-target>`
+Options     - :ref:`expression <reference-constraint-expression-option>`
+            - `groups`_
+            - `message`_
+            - `payload`_
+            - `values`_
+Class       :class:`Symfony\\Component\\Validator\\Constraints\\Expression`
+Validator   :class:`Symfony\\Component\\Validator\\Constraints\\ExpressionValidator`
+==========  ===================================================================
 
 Basic Usage
 -----------
@@ -79,6 +78,22 @@ One way to accomplish this is with the Expression constraint:
             // ...
         }
 
+    .. code-block:: php-attributes
+
+        // src/Model/BlogPost.php
+        namespace App\Model;
+
+        use Symfony\Component\Validator\Constraints as Assert;
+
+        #[Assert\Expression(
+            "this.getCategory() in ['php', 'symfony'] or !this.isTechnicalPost()",
+            message: 'If this is a tech post, the category should be either php or symfony!',
+        )]
+        class BlogPost
+        {
+            // ...
+        }
+
     .. code-block:: yaml
 
         # config/validator/validation.yaml
@@ -94,7 +109,7 @@ One way to accomplish this is with the Expression constraint:
         <?xml version="1.0" encoding="UTF-8" ?>
         <constraint-mapping xmlns="http://symfony.com/schema/dic/constraint-mapping"
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-            xsi:schemaLocation="http://symfony.com/schema/dic/constraint-mapping http://symfony.com/schema/dic/constraint-mapping/constraint-mapping-1.0.xsd">
+            xsi:schemaLocation="http://symfony.com/schema/dic/constraint-mapping https://symfony.com/schema/dic/constraint-mapping/constraint-mapping-1.0.xsd">
             <class name="App\Model\BlogPost">
                 <constraint name="Expression">
                     <option name="expression">
@@ -112,17 +127,17 @@ One way to accomplish this is with the Expression constraint:
         // src/Model/BlogPost.php
         namespace App\Model;
 
-        use Symfony\Component\Validator\Mapping\ClassMetadata;
         use Symfony\Component\Validator\Constraints as Assert;
+        use Symfony\Component\Validator\Mapping\ClassMetadata;
 
         class BlogPost
         {
             public static function loadValidatorMetadata(ClassMetadata $metadata)
             {
-                $metadata->addConstraint(new Assert\Expression(array(
+                $metadata->addConstraint(new Assert\Expression([
                     'expression' => 'this.getCategory() in ["php", "symfony"] or !this.isTechnicalPost()',
                     'message' => 'If this is a tech post, the category should be either php or symfony!',
-                )));
+                ]));
             }
 
             // ...
@@ -164,6 +179,26 @@ more about the expression language syntax, see
                 // ...
             }
 
+        .. code-block:: php-attributes
+
+            // src/Model/BlogPost.php
+            namespace App\Model;
+
+            use Symfony\Component\Validator\Constraints as Assert;
+
+            class BlogPost
+            {
+                // ...
+
+                #[Assert\Expression(
+                    "this.getCategory() in ['php', 'symfony'] or value == false",
+                    message: 'If this is a tech post, the category should be either php or symfony!',
+                )]
+                private $isTechnicalPost;
+
+                // ...
+            }
+
         .. code-block:: yaml
 
             # config/validator/validation.yaml
@@ -180,7 +215,7 @@ more about the expression language syntax, see
             <?xml version="1.0" encoding="UTF-8" ?>
             <constraint-mapping xmlns="http://symfony.com/schema/dic/constraint-mapping"
                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                xsi:schemaLocation="http://symfony.com/schema/dic/constraint-mapping http://symfony.com/schema/dic/constraint-mapping/constraint-mapping-1.0.xsd">
+                xsi:schemaLocation="http://symfony.com/schema/dic/constraint-mapping https://symfony.com/schema/dic/constraint-mapping/constraint-mapping-1.0.xsd">
 
                 <class name="App\Model\BlogPost">
                     <property name="isTechnicalPost">
@@ -208,10 +243,10 @@ more about the expression language syntax, see
             {
                 public static function loadValidatorMetadata(ClassMetadata $metadata)
                 {
-                    $metadata->addPropertyConstraint('isTechnicalPost', new Assert\Expression(array(
+                    $metadata->addPropertyConstraint('isTechnicalPost', new Assert\Expression([
                         'expression' => 'this.getCategory() in ["php", "symfony"] or value == false',
                         'message' => 'If this is a tech post, the category should be either php or symfony!',
-                    )));
+                    ]));
                 }
 
                 // ...
@@ -221,13 +256,13 @@ For more information about the expression and what variables are available
 to you, see the :ref:`expression <reference-constraint-expression-option>`
 option details below.
 
-Available Options
------------------
+Options
+-------
 
 .. _reference-constraint-expression-option:
 
-expression
-~~~~~~~~~~
+``expression``
+~~~~~~~~~~~~~~
 
 **type**: ``string`` [:ref:`default option <validation-default-option>`]
 
@@ -246,22 +281,34 @@ in your expression:
 * ``value``: The value of the property being validated (only available when
   the constraint is applied directly to a property);
 
-message
-~~~~~~~
+.. include:: /reference/constraints/_groups-option.rst.inc
+
+``message``
+~~~~~~~~~~~
 
 **type**: ``string`` **default**: ``This value is not valid.``
 
 The default message supplied when the expression evaluates to false.
 
+You can use the following parameters in this message:
+
+===============  ==============================================================
+Parameter        Description
+===============  ==============================================================
+``{{ value }}``  The current (invalid) value
+``{{ label }}``  Corresponding form field label
+===============  ==============================================================
+
+.. versionadded:: 5.2
+
+    The ``{{ label }}`` parameter was introduced in Symfony 5.2.
+
 .. include:: /reference/constraints/_payload-option.rst.inc
 
-values
-~~~~~~
+``values``
+~~~~~~~~~~
 
 **type**: ``array`` **default**: ``[]``
-
-.. versionadded:: 4.1
-    The ``values`` option was introduced in Symfony 4.1.
 
 The values of the custom variables used in the expression. Values can be of any
 type (numeric, boolean, strings, null, etc.)
@@ -288,6 +335,24 @@ type (numeric, boolean, strings, null, etc.)
             // ...
         }
 
+    .. code-block:: php-attributes
+
+        // src/Model/Analysis.php
+        namespace App\Model;
+
+        use Symfony\Component\Validator\Constraints as Assert;
+
+        class Analysis
+        {
+            #[Assert\Expression(
+                'value + error_margin < threshold',
+                values: ['error_margin' => 0.25, 'threshold' => 1.5],
+            )]
+            private $metric;
+
+            // ...
+        }
+
     .. code-block:: yaml
 
         # config/validator/validation.yaml
@@ -304,7 +369,7 @@ type (numeric, boolean, strings, null, etc.)
         <?xml version="1.0" encoding="UTF-8" ?>
         <constraint-mapping xmlns="http://symfony.com/schema/dic/constraint-mapping"
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-            xsi:schemaLocation="http://symfony.com/schema/dic/constraint-mapping http://symfony.com/schema/dic/constraint-mapping/constraint-mapping-1.0.xsd">
+            xsi:schemaLocation="http://symfony.com/schema/dic/constraint-mapping https://symfony.com/schema/dic/constraint-mapping/constraint-mapping-1.0.xsd">
 
             <class name="App\Model\Analysis">
                 <property name="metric">
@@ -333,10 +398,10 @@ type (numeric, boolean, strings, null, etc.)
         {
             public static function loadValidatorMetadata(ClassMetadata $metadata)
             {
-                $metadata->addPropertyConstraint('metric', new Assert\Expression(array(
+                $metadata->addPropertyConstraint('metric', new Assert\Expression([
                     'expression' => 'value + error_margin < threshold',
-                    'values' => array('error_margin' => 0.25, 'threshold' => 1.5),
-                )));
+                    'values' => ['error_margin' => 0.25, 'threshold' => 1.5],
+                ]));
             }
 
             // ...

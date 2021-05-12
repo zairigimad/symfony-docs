@@ -22,16 +22,16 @@ class::
 
 Update the route definition accordingly::
 
-    $routes->add('leap_year', new Routing\Route('/is_leap_year/{year}', array(
+    $routes->add('leap_year', new Routing\Route('/is_leap_year/{year}', [
         'year' => null,
-        '_controller' => array(new LeapYearController(), 'index'),
-    )));
+        '_controller' => [new LeapYearController(), 'index'],
+    ]));
 
 The move is pretty straightforward and makes a lot of sense as soon as you
-create more pages but you might have noticed a non-desirable side-effect...
+create more pages but you might have noticed a non-desirable side effect...
 The ``LeapYearController`` class is *always* instantiated, even if the
 requested URL does not match the ``leap_year`` route. This is bad for one main
-reason: performance wise, all controllers for all routes must now be
+reason: performance-wise, all controllers for all routes must now be
 instantiated for every request. It would be better if controllers were
 lazy-loaded so that only the controller associated with the matched route is
 instantiated.
@@ -62,10 +62,10 @@ controller associated with the Request. Besides the built-in PHP callbacks,
 ``getController()`` also supports strings composed of a class name followed by
 two colons and a method name as a valid callback, like 'class::method'::
 
-    $routes->add('leap_year', new Routing\Route('/is_leap_year/{year}', array(
+    $routes->add('leap_year', new Routing\Route('/is_leap_year/{year}', [
         'year' => null,
         '_controller' => 'LeapYearController::index',
-    )));
+    ]));
 
 To make this code work, modify the framework code to use the controller
 resolver from HttpKernel::
@@ -109,7 +109,7 @@ correctly::
     public function index($request)
 
 More interesting, ``getArguments()`` is also able to inject any Request
-attribute; the argument just needs to have the same name as the corresponding
+attribute; if the argument has the same name as the corresponding
 attribute::
 
     public function index($year)
@@ -127,7 +127,7 @@ optional attribute of the Request::
 
     public function index($year = 2012)
 
-Let's just inject the ``$year`` request attribute for our controller::
+Let's inject the ``$year`` request attribute for our controller::
 
     class LeapYearController
     {
@@ -162,8 +162,8 @@ Let's conclude with the new version of our framework::
 
     use Symfony\Component\HttpFoundation\Request;
     use Symfony\Component\HttpFoundation\Response;
-    use Symfony\Component\Routing;
     use Symfony\Component\HttpKernel;
+    use Symfony\Component\Routing;
 
     function render_template(Request $request)
     {
@@ -202,5 +202,4 @@ Let's conclude with the new version of our framework::
 Think about it once more: our framework is more robust and more flexible than
 ever and it still has less than 50 lines of code.
 
-.. _`reflection`: https://php.net/reflection
-.. _`FrameworkExtraBundle`: https://symfony.com/doc/current/bundles/SensioFrameworkExtraBundle/annotations/converters.html
+.. _`reflection`: https://www.php.net/reflection

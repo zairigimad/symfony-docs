@@ -47,12 +47,12 @@ Start with building two forms for these entities, ``CompanyType`` and ``Customer
     namespace App\Form\Type;
 
     use Symfony\Component\Form\AbstractType;
-    use Symfony\Component\Form\FormBuilderInterface;
     use Symfony\Component\Form\Extension\Core\Type\TextType;
+    use Symfony\Component\Form\FormBuilderInterface;
 
     class CompanyType extends AbstractType
     {
-        public function buildForm(FormBuilderInterface $builder, array $options)
+        public function buildForm(FormBuilderInterface $builder, array $options): void
         {
             $builder
                 ->add('name', TextType::class)
@@ -65,13 +65,13 @@ Start with building two forms for these entities, ``CompanyType`` and ``Customer
     // src/Form/Type/CustomerType.php
     namespace App\Form\Type;
 
-    use Symfony\Component\Form\FormBuilderInterface;
     use Symfony\Component\Form\AbstractType;
     use Symfony\Component\Form\Extension\Core\Type\TextType;
+    use Symfony\Component\Form\FormBuilderInterface;
 
     class CustomerType extends AbstractType
     {
-        public function buildForm(FormBuilderInterface $builder, array $options)
+        public function buildForm(FormBuilderInterface $builder, array $options): void
         {
             $builder
                 ->add('firstName', TextType::class)
@@ -87,14 +87,14 @@ for that::
     namespace App\Form\Type;
 
     use Symfony\Component\Form\AbstractType;
-    use Symfony\Component\Form\FormBuilderInterface;
-    use Symfony\Component\OptionsResolver\OptionsResolver;
     use Symfony\Component\Form\Extension\Core\Type\TextareaType;
     use Symfony\Component\Form\Extension\Core\Type\TextType;
+    use Symfony\Component\Form\FormBuilderInterface;
+    use Symfony\Component\OptionsResolver\OptionsResolver;
 
     class LocationType extends AbstractType
     {
-        public function buildForm(FormBuilderInterface $builder, array $options)
+        public function buildForm(FormBuilderInterface $builder, array $options): void
         {
             $builder
                 ->add('address', TextareaType::class)
@@ -103,11 +103,11 @@ for that::
                 ->add('country', TextType::class);
         }
 
-        public function configureOptions(OptionsResolver $resolver)
+        public function configureOptions(OptionsResolver $resolver): void
         {
-            $resolver->setDefaults(array(
+            $resolver->setDefaults([
                 'inherit_data' => true,
-            ));
+            ]);
         }
     }
 
@@ -115,7 +115,7 @@ The location form has an interesting option set, namely ``inherit_data``. This
 option lets the form inherit its data from its parent form. If embedded in
 the company form, the fields of the location form will access the properties of
 the ``Company`` instance. If embedded in the customer form, the fields will
-access the properties of the ``Customer`` instance instead. Easy, eh?
+access the properties of the ``Customer`` instance instead. Convenient, eh?
 
 .. note::
 
@@ -126,31 +126,43 @@ access the properties of the ``Customer`` instance instead. Easy, eh?
 Finally, make this work by adding the location form to your two original forms::
 
     // src/Form/Type/CompanyType.php
+    namespace App\Form\Type;
+
     use App\Entity\Company;
+    use Symfony\Component\Form\AbstractType;
+
     // ...
 
-    public function buildForm(FormBuilderInterface $builder, array $options)
+    class CompanyType extends AbstractType
     {
-        // ...
+        public function buildForm(FormBuilderInterface $builder, array $options): void
+        {
+            // ...
 
-        $builder->add('foo', LocationType::class, array(
-            'data_class' => Company::class,
-        ));
+            $builder->add('foo', LocationType::class, [
+                'data_class' => Company::class,
+            ]);
+        }
     }
 
 .. code-block:: php
 
     // src/Form/Type/CustomerType.php
+    namespace App\Form\Type;
+
     use App\Entity\Customer;
-    // ...
+    use Symfony\Component\Form\AbstractType;
 
-    public function buildForm(FormBuilderInterface $builder, array $options)
+    class CustomerType extends AbstractType
     {
-        // ...
+        public function buildForm(FormBuilderInterface $builder, array $options): void
+        {
+            // ...
 
-        $builder->add('bar', LocationType::class, array(
-            'data_class' => Customer::class,
-        ));
+            $builder->add('bar', LocationType::class, [
+                'data_class' => Customer::class,
+            ]);
+        }
     }
 
 That's it! You have extracted duplicated field definitions to a separate

@@ -34,31 +34,31 @@ tests significantly. That's why Symfony disables it by default:
         <container xmlns="http://symfony.com/schema/dic/services"
             xmlns:framework="http://symfony.com/schema/dic/symfony"
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-            xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd
-                        http://symfony.com/schema/dic/symfony http://symfony.com/schema/dic/symfony/symfony-1.0.xsd">
+            xsi:schemaLocation="http://symfony.com/schema/dic/services https://symfony.com/schema/dic/services/services-1.0.xsd
+                        http://symfony.com/schema/dic/symfony https://symfony.com/schema/dic/symfony/symfony-1.0.xsd">
 
             <!-- ... -->
 
             <framework:config>
-                <framework:profiler enabled="true" collect="false" />
+                <framework:profiler enabled="true" collect="false"/>
             </framework:config>
         </container>
 
     .. code-block:: php
 
         // config/packages/test/web_profiler.php
+        use Symfony\Config\FrameworkConfig;
 
-        // ...
-        $container->loadFromExtension('framework', array(
+        return static function (FrameworkConfig $framework) {
             // ...
-            'profiler' => array(
-                'enabled' => true,
-                'collect' => false,
-            ),
-        ));
+            $framework->profiler()
+                ->enabled(true)
+                ->collect(false)
+            ;
+        };
 
 Setting ``collect`` to ``true`` enables the profiler for all tests. However, if
-you need the profiler just in a few tests, you can keep it disabled globally and
+you need the profiler only in a few tests, you can keep it disabled globally and
 enable the profiler individually on each test by calling
 ``$client->enableProfiler()``.
 
@@ -68,6 +68,11 @@ Testing the Profiler Information
 The data collected by the Symfony Profiler can be used to check the number of
 database calls, the time spent in the framework, etc. All this information is
 provided by the collectors obtained through the ``$client->getProfile()`` call::
+
+    // tests/Controller/LuckyControllerTest.php
+    namespace App\Tests\Controller;
+
+    use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
     class LuckyControllerTest extends WebTestCase
     {
@@ -103,7 +108,7 @@ provided by the collectors obtained through the ``$client->getProfile()`` call::
 
 If a test fails because of profiling data (too many DB queries for instance),
 you might want to use the Web Profiler to analyze the request after the tests
-finish. It's easy to achieve if you embed the token in the error message::
+finish. It can be achieved by embedding the token in the error message::
 
     $this->assertLessThan(
         30,

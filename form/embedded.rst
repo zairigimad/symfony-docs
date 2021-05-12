@@ -6,16 +6,16 @@ How to Embed Forms
 
 Often, you'll want to build a form that will include fields from many different
 objects. For example, a registration form may contain data belonging to
-a ``User`` object as well as many ``Address`` objects. Fortunately, this
-is easy and natural with the Form component.
+a ``User`` object as well as many ``Address`` objects. Fortunately this can
+be achieved by the Form component.
 
 .. _forms-embedding-single-object:
 
 Embedding a Single Object
 -------------------------
 
-Suppose that each ``Task`` belongs to a simple ``Category`` object. Start,
-of course, by creating the ``Category`` object::
+Suppose that each ``Task`` belongs to a ``Category`` object. Start by
+creating the ``Category`` object::
 
     // src/Entity/Category.php
     namespace App\Entity;
@@ -25,7 +25,7 @@ of course, by creating the ``Category`` object::
     class Category
     {
         /**
-         * @Assert\NotBlank()
+         * @Assert\NotBlank
          */
         public $name;
     }
@@ -40,18 +40,18 @@ Next, add a new ``category`` property to the ``Task`` class::
 
         /**
          * @Assert\Type(type="App\Entity\Category")
-         * @Assert\Valid()
+         * @Assert\Valid
          */
         protected $category;
 
         // ...
 
-        public function getCategory()
+        public function getCategory(): ?Category
         {
             return $this->category;
         }
 
-        public function setCategory(Category $category = null)
+        public function setCategory(?Category $category)
         {
             $this->category = $category;
         }
@@ -60,7 +60,7 @@ Next, add a new ``category`` property to the ``Task`` class::
 .. tip::
 
     The ``Valid`` Constraint has been added to the property ``category``. This
-    cascades the validation to the corresponding entity. If you omit this constraint
+    cascades the validation to the corresponding entity. If you omit this constraint,
     the child entity would not be validated.
 
 Now that your application has been updated to reflect the new requirements,
@@ -76,16 +76,16 @@ create a form class so that a ``Category`` object can be modified by the user::
 
     class CategoryType extends AbstractType
     {
-        public function buildForm(FormBuilderInterface $builder, array $options)
+        public function buildForm(FormBuilderInterface $builder, array $options): void
         {
             $builder->add('name');
         }
 
-        public function configureOptions(OptionsResolver $resolver)
+        public function configureOptions(OptionsResolver $resolver): void
         {
-            $resolver->setDefaults(array(
+            $resolver->setDefaults([
                 'data_class' => Category::class,
-            ));
+            ]);
         }
     }
 
@@ -94,10 +94,10 @@ inside the task form itself. To accomplish this, add a ``category`` field
 to the ``TaskType`` object whose type is an instance of the new ``CategoryType``
 class::
 
-    use Symfony\Component\Form\FormBuilderInterface;
     use App\Form\CategoryType;
+    use Symfony\Component\Form\FormBuilderInterface;
 
-    public function buildForm(FormBuilderInterface $builder, array $options)
+    public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         // ...
 

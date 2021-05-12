@@ -7,4 +7,5 @@ Community
     releases
     review-comments
     reviews
-    other
+    mentoring
+    speaker-mentoring

@@ -7,20 +7,18 @@ they are released as stable versions.
 Creating a New Project Based on an Unstable Symfony Version
 -----------------------------------------------------------
 
+
 Suppose that the Symfony 4.0 version hasn't been released yet and you want to create
-a new project to test its features. First, :doc:`install the Composer </setup/composer>`
-package manager. Then, open a command console, enter your project's directory and
-execute the following command:
+a new project to test its features. First, `install the Composer package manager`_.
+Then, open a command console, enter your project's directory and
+run the following command:
 
 .. code-block:: terminal
 
-    # Download the latest beta version
-    $ composer create-project symfony/skeleton my_project "4.0.*" -s beta
-
     # Download the absolute latest commit
-    $ composer create-project symfony/skeleton my_project "4.0.*" -s dev
+    $ composer create-project symfony/skeleton my_project -s dev
 
-Once the command finishes its execution, you'll have a new Symfony project created
+Once the command finishes, you'll have a new Symfony project created
 in the ``my_project/`` directory.
 
 Upgrading your Project to an Unstable Symfony Version
@@ -35,14 +33,14 @@ new version and change your ``minimum-stability`` to ``beta``:
 
 .. code-block:: diff
 
-    {
-        "require": {
+      {
+          "require": {
     +         "symfony/framework-bundle": "^4.0",
     +         "symfony/finder": "^4.0",
-            "...": "..."
-        },
+              "...": "..."
+          },
     +     "minimum-stability": "beta"
-    }
+      }
 
 You can also use set ``minimum-stability`` to ``dev``, or omit this line
 entirely, and opt into your stability on each package by using constraints
@@ -70,8 +68,10 @@ Symfony version has deprecated some of its features.
         $ cd projects/my_project/
         $ git checkout -b testing_new_symfony
         # ... update composer.json configuration
-        $ composer update symfony/symfony
+        $ composer update "symfony/*"
 
         # ... after testing the new Symfony version
         $ git checkout master
         $ git branch -D testing_new_symfony
+
+.. _`install the Composer package manager`: https://getcomposer.org/download/

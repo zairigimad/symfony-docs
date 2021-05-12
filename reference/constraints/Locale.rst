@@ -8,17 +8,18 @@ the two letter `ISO 639-1`_ *language* code (e.g. ``fr``), or the language code
 followed by an underscore (``_``) and the `ISO 3166-1 alpha-2`_ *country* code
 (e.g. ``fr_FR`` for French/France).
 
-+----------------+------------------------------------------------------------------------+
-| Applies to     | :ref:`property or method <validation-property-target>`                 |
-+----------------+------------------------------------------------------------------------+
-| Options        | - `message`_                                                           |
-|                | - `payload`_                                                           |
-|                | - `canonicalize`_                                                      |
-+----------------+------------------------------------------------------------------------+
-| Class          | :class:`Symfony\\Component\\Validator\\Constraints\\Locale`            |
-+----------------+------------------------------------------------------------------------+
-| Validator      | :class:`Symfony\\Component\\Validator\\Constraints\\LocaleValidator`   |
-+----------------+------------------------------------------------------------------------+
+The given locale values are *canonicalized* before validating them to avoid
+issues with wrong uppercase/lowercase values and to remove unneeded elements
+(e.g. ``FR-fr.utf8`` will be validated as ``fr_FR``).
+
+==========  ===================================================================
+Applies to  :ref:`property or method <validation-property-target>`
+Options     - `groups`_
+            - `message`_
+            - `payload`_
+Class       :class:`Symfony\\Component\\Validator\\Constraints\\Locale`
+Validator   :class:`Symfony\\Component\\Validator\\Constraints\\LocaleValidator`
+==========  ===================================================================
 
 Basic Usage
 -----------
@@ -39,7 +40,22 @@ Basic Usage
              *     canonicalize = true
              * )
              */
-             protected $locale;
+            protected $locale;
+        }
+
+    .. code-block:: php-attributes
+
+        // src/Entity/User.php
+        namespace App\Entity;
+
+        use Symfony\Component\Validator\Constraints as Assert;
+
+        class User
+        {
+            #[Assert\Locale(
+                canonicalize: true,
+            )]
+            protected $locale;
         }
 
     .. code-block:: yaml
@@ -57,7 +73,7 @@ Basic Usage
         <?xml version="1.0" encoding="UTF-8" ?>
         <constraint-mapping xmlns="http://symfony.com/schema/dic/constraint-mapping"
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-            xsi:schemaLocation="http://symfony.com/schema/dic/constraint-mapping http://symfony.com/schema/dic/constraint-mapping/constraint-mapping-1.0.xsd">
+            xsi:schemaLocation="http://symfony.com/schema/dic/constraint-mapping https://symfony.com/schema/dic/constraint-mapping/constraint-mapping-1.0.xsd">
 
             <class name="App\Entity\User">
                 <property name="locale">
@@ -73,40 +89,47 @@ Basic Usage
         // src/Entity/User.php
         namespace App\Entity;
 
-        use Symfony\Component\Validator\Mapping\ClassMetadata;
         use Symfony\Component\Validator\Constraints as Assert;
+        use Symfony\Component\Validator\Mapping\ClassMetadata;
 
         class User
         {
             public static function loadValidatorMetadata(ClassMetadata $metadata)
             {
-                $metadata->addPropertyConstraint('locale', new Assert\Locale(array('canonicalize' => true)));
+                $metadata->addPropertyConstraint('locale', new Assert\Locale([
+                    'canonicalize' => true,
+                ]));
             }
         }
+
+.. include:: /reference/constraints/_empty-values-are-valid.rst.inc
 
 Options
 -------
 
-message
-~~~~~~~
+.. include:: /reference/constraints/_groups-option.rst.inc
+
+``message``
+~~~~~~~~~~~
 
 **type**: ``string`` **default**: ``This value is not a valid locale.``
 
 This message is shown if the string is not a valid locale.
 
+You can use the following parameters in this message:
+
+===============  ==============================================================
+Parameter        Description
+===============  ==============================================================
+``{{ value }}``  The current (invalid) value
+``{{ label }}``  Corresponding form field label
+===============  ==============================================================
+
+.. versionadded:: 5.2
+
+    The ``{{ label }}`` parameter was introduced in Symfony 5.2.
+
 .. include:: /reference/constraints/_payload-option.rst.inc
-
-canonicalize
-~~~~~~~~~~~~
-
-**type**: ``boolean`` **default**: ``false``
-
-.. versionadded:: 4.1
-    Using this option with value ``false`` was deprecated in Symfony 4.1 and it
-    will throw an exception in Symfony 5.0. Use ``true`` instead.
-
-If ``true``, the :phpmethod:`Locale::canonicalize` method will be applied before checking
-the validity of the given locale (e.g. ``FR-fr.utf8`` is transformed into ``fr_FR``).
 
 .. _`ICU format locale IDs`: http://userguide.icu-project.org/locale
 .. _`ISO 639-1`: https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes

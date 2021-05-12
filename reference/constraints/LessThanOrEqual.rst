@@ -5,18 +5,16 @@ Validates that a value is less than or equal to another value, defined in the
 options. To force that a value is less than another value, see
 :doc:`/reference/constraints/LessThan`.
 
-+----------------+-------------------------------------------------------------------------------+
-| Applies to     | :ref:`property or method<validation-property-target>`                         |
-+----------------+-------------------------------------------------------------------------------+
-| Options        | - `value`_                                                                    |
-|                | - `message`_                                                                  |
-|                | - `payload`_                                                                  |
-|                | - `propertyPath`_                                                             |
-+----------------+-------------------------------------------------------------------------------+
-| Class          | :class:`Symfony\\Component\\Validator\\Constraints\\LessThanOrEqual`          |
-+----------------+-------------------------------------------------------------------------------+
-| Validator      | :class:`Symfony\\Component\\Validator\\Constraints\\LessThanOrEqualValidator` |
-+----------------+-------------------------------------------------------------------------------+
+==========  ===================================================================
+Applies to  :ref:`property or method <validation-property-target>`
+Options     - `groups`_
+            - `message`_
+            - `payload`_
+            - `propertyPath`_
+            - `value`_
+Class       :class:`Symfony\\Component\\Validator\\Constraints\\LessThanOrEqual`
+Validator   :class:`Symfony\\Component\\Validator\\Constraints\\LessThanOrEqualValidator`
+==========  ===================================================================
 
 Basic Usage
 -----------
@@ -50,6 +48,24 @@ The following constraints ensure that:
             protected $age;
         }
 
+    .. code-block:: php-attributes
+
+        // src/Entity/Person.php
+        namespace App\Entity;
+
+        use Symfony\Component\Validator\Constraints as Assert;
+
+        class Person
+        {
+            #[Assert\LessThanOrEqual(5)]
+            protected $siblings;
+
+            #[Assert\LessThanOrEqual(
+                value: 80,
+            )]
+            protected $age;
+        }
+
     .. code-block:: yaml
 
         # config/validator/validation.yaml
@@ -67,12 +83,12 @@ The following constraints ensure that:
         <?xml version="1.0" encoding="UTF-8" ?>
         <constraint-mapping xmlns="http://symfony.com/schema/dic/constraint-mapping"
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-            xsi:schemaLocation="http://symfony.com/schema/dic/constraint-mapping http://symfony.com/schema/dic/constraint-mapping/constraint-mapping-1.0.xsd">
+            xsi:schemaLocation="http://symfony.com/schema/dic/constraint-mapping https://symfony.com/schema/dic/constraint-mapping/constraint-mapping-1.0.xsd">
 
             <class name="App\Entity\Person">
                 <property name="siblings">
                     <constraint name="LessThanOrEqual">
-                        <value>5</value>
+                        5
                     </constraint>
                 </property>
                 <property name="age">
@@ -88,8 +104,8 @@ The following constraints ensure that:
         // src/Entity/Person.php
         namespace App\Entity;
 
-        use Symfony\Component\Validator\Mapping\ClassMetadata;
         use Symfony\Component\Validator\Constraints as Assert;
+        use Symfony\Component\Validator\Mapping\ClassMetadata;
 
         class Person
         {
@@ -97,9 +113,9 @@ The following constraints ensure that:
             {
                 $metadata->addPropertyConstraint('siblings', new Assert\LessThanOrEqual(5));
 
-                $metadata->addPropertyConstraint('age', new Assert\LessThanOrEqual(array(
+                $metadata->addPropertyConstraint('age', new Assert\LessThanOrEqual([
                     'value' => 80,
-                )));
+                ]));
             }
         }
 
@@ -124,7 +140,20 @@ that a date must be today or in the past like this:
             /**
              * @Assert\LessThanOrEqual("today")
              */
-            protected $age;
+            protected $dateOfBirth;
+        }
+
+    .. code-block:: php-attributes
+
+        // src/Entity/Person.php
+        namespace App\Entity;
+
+        use Symfony\Component\Validator\Constraints as Assert;
+
+        class Person
+        {
+            #[Assert\LessThanOrEqual('today')]
+            protected $dateOfBirth;
         }
 
     .. code-block:: yaml
@@ -132,7 +161,7 @@ that a date must be today or in the past like this:
         # config/validator/validation.yaml
         App\Entity\Person:
             properties:
-                age:
+                dateOfBirth:
                     - LessThanOrEqual: today
 
     .. code-block:: xml
@@ -141,10 +170,10 @@ that a date must be today or in the past like this:
         <?xml version="1.0" encoding="UTF-8" ?>
         <constraint-mapping xmlns="http://symfony.com/schema/dic/constraint-mapping"
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-            xsi:schemaLocation="http://symfony.com/schema/dic/constraint-mapping http://symfony.com/schema/dic/constraint-mapping/constraint-mapping-1.0.xsd">
+            xsi:schemaLocation="http://symfony.com/schema/dic/constraint-mapping https://symfony.com/schema/dic/constraint-mapping/constraint-mapping-1.0.xsd">
 
             <class name="App\Entity\Person">
-                <property name="age">
+                <property name="dateOfBirth">
                     <constraint name="LessThanOrEqual">today</constraint>
                 </property>
             </class>
@@ -155,14 +184,14 @@ that a date must be today or in the past like this:
         // src/Entity/Person.php
         namespace App\Entity;
 
-        use Symfony\Component\Validator\Mapping\ClassMetadata;
         use Symfony\Component\Validator\Constraints as Assert;
+        use Symfony\Component\Validator\Mapping\ClassMetadata;
 
         class Person
         {
             public static function loadValidatorMetadata(ClassMetadata $metadata)
             {
-                $metadata->addPropertyConstraint('age', new Assert\LessThanOrEqual('today'));
+                $metadata->addPropertyConstraint('dateOfBirth', new Assert\LessThanOrEqual('today'));
             }
         }
 
@@ -183,7 +212,20 @@ dates. If you want to fix the timezone, append it to the date string:
             /**
              * @Assert\LessThanOrEqual("today UTC")
              */
-            protected $age;
+            protected $dateOfBirth;
+        }
+
+    .. code-block:: php-attributes
+
+        // src/Entity/Person.php
+        namespace App\Entity;
+
+        use Symfony\Component\Validator\Constraints as Assert;
+
+        class Person
+        {
+            #[Assert\LessThanOrEqual('today UTC')]
+            protected $dateOfBirth;
         }
 
     .. code-block:: yaml
@@ -191,7 +233,7 @@ dates. If you want to fix the timezone, append it to the date string:
         # config/validator/validation.yaml
         App\Entity\Person:
             properties:
-                age:
+                dateOfBirth:
                     - LessThanOrEqual: today UTC
 
     .. code-block:: xml
@@ -200,10 +242,10 @@ dates. If you want to fix the timezone, append it to the date string:
         <?xml version="1.0" encoding="UTF-8" ?>
         <constraint-mapping xmlns="http://symfony.com/schema/dic/constraint-mapping"
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-            xsi:schemaLocation="http://symfony.com/schema/dic/constraint-mapping http://symfony.com/schema/dic/constraint-mapping/constraint-mapping-1.0.xsd">
+            xsi:schemaLocation="http://symfony.com/schema/dic/constraint-mapping https://symfony.com/schema/dic/constraint-mapping/constraint-mapping-1.0.xsd">
 
             <class name="App\Entity\Person">
-                <property name="age">
+                <property name="dateOfBirth">
                     <constraint name="LessThanOrEqual">today UTC</constraint>
                 </property>
             </class>
@@ -214,14 +256,14 @@ dates. If you want to fix the timezone, append it to the date string:
         // src/Entity/Person.php
         namespace App\Entity;
 
-        use Symfony\Component\Validator\Mapping\ClassMetadata;
         use Symfony\Component\Validator\Constraints as Assert;
+        use Symfony\Component\Validator\Mapping\ClassMetadata;
 
         class Person
         {
             public static function loadValidatorMetadata(ClassMetadata $metadata)
             {
-                $metadata->addPropertyConstraint('age', new Assert\LessThanOrEqual('today UTC'));
+                $metadata->addPropertyConstraint('dateOfBirth', new Assert\LessThanOrEqual('today UTC'));
             }
         }
 
@@ -242,7 +284,20 @@ can check that a person must be at least 18 years old like this:
             /**
              * @Assert\LessThanOrEqual("-18 years")
              */
-            protected $age;
+            protected $dateOfBirth;
+        }
+
+    .. code-block:: php-attributes
+
+        // src/Entity/Person.php
+        namespace App\Entity;
+
+        use Symfony\Component\Validator\Constraints as Assert;
+
+        class Person
+        {
+            #[Assert\LessThanOrEqual('-18 years')]
+            protected $dateOfBirth;
         }
 
     .. code-block:: yaml
@@ -250,7 +305,7 @@ can check that a person must be at least 18 years old like this:
         # config/validator/validation.yaml
         App\Entity\Person:
             properties:
-                age:
+                dateOfBirth:
                     - LessThanOrEqual: -18 years
 
     .. code-block:: xml
@@ -259,10 +314,10 @@ can check that a person must be at least 18 years old like this:
         <?xml version="1.0" encoding="UTF-8" ?>
         <constraint-mapping xmlns="http://symfony.com/schema/dic/constraint-mapping"
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-            xsi:schemaLocation="http://symfony.com/schema/dic/constraint-mapping http://symfony.com/schema/dic/constraint-mapping/constraint-mapping-1.0.xsd">
+            xsi:schemaLocation="http://symfony.com/schema/dic/constraint-mapping https://symfony.com/schema/dic/constraint-mapping/constraint-mapping-1.0.xsd">
 
             <class name="App\Entity\Person">
-                <property name="age">
+                <property name="dateOfBirth">
                     <constraint name="LessThanOrEqual">-18 years</constraint>
                 </property>
             </class>
@@ -273,32 +328,44 @@ can check that a person must be at least 18 years old like this:
         // src/Entity/Person.php
         namespace App\Entity;
 
-        use Symfony\Component\Validator\Mapping\ClassMetadata;
         use Symfony\Component\Validator\Constraints as Assert;
+        use Symfony\Component\Validator\Mapping\ClassMetadata;
 
         class Person
         {
             public static function loadValidatorMetadata(ClassMetadata $metadata)
             {
-                $metadata->addPropertyConstraint('age', new Assert\LessThanOrEqual('-18 years'));
+                $metadata->addPropertyConstraint('dateOfBirth', new Assert\LessThanOrEqual('-18 years'));
             }
         }
 
 Options
 -------
 
-.. include:: /reference/constraints/_comparison-value-option.rst.inc
+.. include:: /reference/constraints/_groups-option.rst.inc
 
-message
-~~~~~~~
+``message``
+~~~~~~~~~~~
 
 **type**: ``string`` **default**: ``This value should be less than or equal to {{ compared_value }}.``
 
 This is the message that will be shown if the value is not less than or equal
 to the comparison value.
 
+You can use the following parameters in this message:
+
+=============================  ================================================
+Parameter                      Description
+=============================  ================================================
+``{{ compared_value }}``       The upper limit
+``{{ compared_value_type }}``  The expected value type
+``{{ value }}``                The current (invalid) value
+=============================  ================================================
+
 .. include:: /reference/constraints/_payload-option.rst.inc
 
 .. include:: /reference/constraints/_comparison-propertypath-option.rst.inc
 
-.. _`accepted by the DateTime constructor`: https://php.net/manual/en/datetime.formats.php
+.. include:: /reference/constraints/_comparison-value-option.rst.inc
+
+.. _`accepted by the DateTime constructor`: https://www.php.net/manual/en/datetime.formats.php

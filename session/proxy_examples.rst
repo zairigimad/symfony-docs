@@ -6,7 +6,7 @@ Session Proxy Examples
 
 The session proxy mechanism has a variety of uses and this article demonstrates
 two common uses. Rather than using the regular session handler, you can create
-a custom save handler just by defining a class that extends the
+a custom save handler by defining a class that extends the
 :class:`Symfony\\Component\\HttpFoundation\\Session\\Storage\\Proxy\\SessionHandlerProxy`
 class.
 
@@ -35,10 +35,10 @@ Symfony to use your session handler instead of the default one:
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
             xmlns:framework="http://symfony.com/schema/dic/symfony"
             xsi:schemaLocation="http://symfony.com/schema/dic/services
-                http://symfony.com/schema/dic/services/services-1.0.xsd">
+                https://symfony.com/schema/dic/services/services-1.0.xsd">
 
             <framework:config>
-                <framework:session handler-id="App\Session\CustomSessionHandler" />
+                <framework:session handler-id="App\Session\CustomSessionHandler"/>
             </framework:config>
         </container>
 
@@ -46,16 +46,17 @@ Symfony to use your session handler instead of the default one:
 
         // config/packages/framework.php
         use App\Session\CustomSessionHandler;
-        $container->loadFromExtension('framework', array(
+        use Symfony\Config\FrameworkConfig;
+
+        return static function (FrameworkConfig $framework) {
             // ...
-            'session' => array(
-                // ...
-                'handler_id' => CustomSessionHandler::class,
-            ),
-        ));
+            $framework->session()
+                ->handlerId(CustomSessionHandler::class)
+            ;
+        };
 
 Keep reading the next sections to learn how to use the session handlers in practice
-to solve two common use cases: encrypt session information and define readonly
+to solve two common use cases: encrypt session information and define read-only
 guest sessions.
 
 Encryption of Session Data
@@ -98,8 +99,8 @@ library, but you can adapt it to any other library that you may be using::
         }
     }
 
-Readonly Guest Sessions
------------------------
+Read-only Guest Sessions
+------------------------
 
 There are some applications where a session is required for guest users, but
 where there is no particular need to persist the session. In this case you

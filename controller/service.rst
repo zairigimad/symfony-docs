@@ -26,14 +26,31 @@ a service like: ``App\Controller\HelloController::index``:
     .. code-block:: php-annotations
 
         // src/Controller/HelloController.php
+        namespace App\Controller;
 
         use Symfony\Component\Routing\Annotation\Route;
 
         class HelloController
         {
             /**
-             * @Route("/hello", name="hello")
+             * @Route("/hello", name="hello", methods={"GET"})
              */
+            public function index()
+            {
+                // ...
+            }
+        }
+
+    .. code-block:: php-attributes
+
+        // src/Controller/HelloController.php
+        namespace App\Controller;
+
+        use Symfony\Component\Routing\Annotation\Route;
+
+        class HelloController
+        {
+            #[Route('/hello', name: 'hello', methods: ['GET'])]
             public function index()
             {
                 // ...
@@ -45,7 +62,8 @@ a service like: ``App\Controller\HelloController::index``:
         # config/routes.yaml
         hello:
             path:     /hello
-            defaults: { _controller: App\Controller\HelloController::index }
+            controller: App\Controller\HelloController::index
+            methods: GET
 
     .. code-block:: xml
 
@@ -54,29 +72,100 @@ a service like: ``App\Controller\HelloController::index``:
         <routes xmlns="http://symfony.com/schema/routing"
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
             xsi:schemaLocation="http://symfony.com/schema/routing
-                http://symfony.com/schema/routing/routing-1.0.xsd">
+                https://symfony.com/schema/routing/routing-1.0.xsd">
 
-            <route id="hello" path="/hello">
-                <default key="_controller">App\Controller\HelloController::index</default>
-            </route>
+            <route id="hello" path="/hello" controller="App\Controller\HelloController::index" methods="GET"/>
 
         </routes>
 
     .. code-block:: php
 
         // config/routes.php
-        $collection->add('hello', new Route('/hello', array(
-            '_controller' => 'App\Controller\HelloController::index',
-        )));
+        use App\Controller\HelloController;
+        use Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator;
+
+        return function (RoutingConfigurator $routes) {
+            $routes->add('hello', '/hello')
+                ->controller([HelloController::class, 'index'])
+                ->methods(['GET'])
+            ;
+        };
 
 .. _controller-service-invoke:
 
 Invokable Controllers
 ---------------------
 
-If your controller implements the ``__invoke()`` method - popular with the
-Action-Domain-Response (ADR) pattern, you can simply refer to the service id
-without the method (``App\Controller\HelloController`` for example).
+Controllers can also define a single action using the ``__invoke()`` method,
+which is a common practice when following the `ADR pattern`_
+(Action-Domain-Responder):
+
+.. configuration-block::
+
+    .. code-block:: php-annotations
+
+        // src/Controller/Hello.php
+        namespace App\Controller;
+
+        use Symfony\Component\HttpFoundation\Response;
+        use Symfony\Component\Routing\Annotation\Route;
+
+        /**
+         * @Route("/hello/{name}", name="hello")
+         */
+        class Hello
+        {
+            public function __invoke($name = 'World')
+            {
+                return new Response(sprintf('Hello %s!', $name));
+            }
+        }
+
+    .. code-block:: php-attributes
+
+        // src/Controller/Hello.php
+        namespace App\Controller;
+
+        use Symfony\Component\HttpFoundation\Response;
+        use Symfony\Component\Routing\Annotation\Route;
+
+        #[Route('/hello/{name}', name: 'hello')]
+        class Hello
+        {
+            public function __invoke($name = 'World')
+            {
+                return new Response(sprintf('Hello %s!', $name));
+            }
+        }
+
+    .. code-block:: yaml
+
+        # config/routes.yaml
+        hello:
+            path:     /hello/{name}
+            controller: app.hello_controller
+
+    .. code-block:: xml
+
+        <!-- config/routes.xml -->
+        <?xml version="1.0" encoding="UTF-8" ?>
+        <routes xmlns="http://symfony.com/schema/routing"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xsi:schemaLocation="http://symfony.com/schema/routing
+                https://symfony.com/schema/routing/routing-1.0.xsd">
+
+            <route id="hello" path="/hello/{name}">
+                <default key="_controller">app.hello_controller</default>
+            </route>
+
+        </routes>
+
+    .. code-block:: php
+
+        // app/config/routing.php
+        $collection->add('hello', new Route('/hello', [
+            '_controller' => 'app.hello_controller',
+        ]));
 
 Alternatives to base Controller Methods
 ---------------------------------------
@@ -112,7 +201,7 @@ service and use it directly::
         {
             $content = $this->twig->render(
                 'hello/index.html.twig',
-                array('name' => $name)
+                ['name' => $name]
             );
 
             return new Response($content);
@@ -126,12 +215,12 @@ Base Controller Methods and Their Service Replacements
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The best way to see how to replace base ``Controller`` convenience methods is to
-look at the `ControllerTrait`_ that holds its logic.
+look at the `AbstractController`_ class that holds its logic.
 
 If you want to know what type-hints to use for each service, see the
 ``getSubscribedServices()`` method in `AbstractController`_.
 
-.. _`Controller class source code`: https://github.com/symfony/symfony/blob/master/src/Symfony/Bundle/FrameworkBundle/Controller/ControllerTrait.php
-.. _`base Controller class`: https://github.com/symfony/symfony/blob/master/src/Symfony/Bundle/FrameworkBundle/Controller/ControllerTrait.php
-.. _`ControllerTrait`: https://github.com/symfony/symfony/blob/master/src/Symfony/Bundle/FrameworkBundle/Controller/ControllerTrait.php
+.. _`Controller class source code`: https://github.com/symfony/symfony/blob/master/src/Symfony/Bundle/FrameworkBundle/Controller/AbstractController.php
 .. _`AbstractController`: https://github.com/symfony/symfony/blob/master/src/Symfony/Bundle/FrameworkBundle/Controller/AbstractController.php
+.. _`AbstractController`: https://github.com/symfony/symfony/blob/master/src/Symfony/Bundle/FrameworkBundle/Controller/AbstractController.php
+.. _`ADR pattern`: https://en.wikipedia.org/wiki/Action%E2%80%93domain%E2%80%93responder

@@ -1,11 +1,11 @@
 How to Add extra Data to Log Messages via a Processor
 =====================================================
 
-Monolog allows you to process the record before logging it to add some
-extra data. A processor can be applied for the whole handler stack or
-only for a specific handler.
+`Monolog`_ allows you to process every record before logging it by adding some
+extra data. This is the role of a processor, which can be applied for the whole
+handler stack or only for a specific handler or channel.
 
-A processor is simply a callable receiving the record as its first argument.
+A processor is a callable receiving the record as its first argument.
 Processors are configured using the ``monolog.processor`` DIC tag. See the
 :ref:`reference about it <dic_tags-monolog-processor>`.
 
@@ -16,31 +16,36 @@ Sometimes it is hard to tell which entries in the log belong to which session
 and/or request. The following example will add a unique token for each request
 using a processor::
 
+    // src/Logger/SessionRequestProcessor.php
     namespace App\Logger;
 
-    use Symfony\Component\HttpFoundation\Session\SessionInterface;
+    use Symfony\Component\HttpFoundation\Exception\SessionNotFoundException;
+    use Symfony\Component\HttpFoundation\RequestStack;
 
     class SessionRequestProcessor
     {
-        private $session;
-        private $sessionId;
+        private $requestStack;
 
-        public function __construct(SessionInterface $session)
+        public function __construct(RequestStack $requestStack)
         {
-            $this->session = $session;
+            $this->requestStack = $requestStack;
         }
 
+        // this method is called for each log record; optimize it to not hurt performance
         public function __invoke(array $record)
         {
-            if (!$this->session->isStarted()) {
+            try {
+                $session = $requestStack->getSession();
+            } catch (SessionNotFoundException $e) {
+                return;
+            }
+            if (!$session->isStarted()) {
                 return $record;
             }
 
-            if (!$this->sessionId) {
-                $this->sessionId = substr($this->session->getId(), 0, 8) ?: '????????';
-            }
+            $sessionId = substr($session->getId(), 0, 8) ?: '????????';
 
-            $record['extra']['token'] = $this->sessionId.'-'.substr(uniqid('', true), -8);
+            $record['extra']['token'] = $sessionId.'-'.substr(uniqid('', true), -8);
 
             return $record;
         }
@@ -72,9 +77,9 @@ information:
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
             xmlns:monolog="http://symfony.com/schema/dic/monolog"
             xsi:schemaLocation="http://symfony.com/schema/dic/services
-                http://symfony.com/schema/dic/services/services-1.0.xsd
+                https://symfony.com/schema/dic/services/services-1.0.xsd
                 http://symfony.com/schema/dic/monolog
-                http://symfony.com/schema/dic/monolog/monolog-1.0.xsd">
+                https://symfony.com/schema/dic/monolog/monolog-1.0.xsd">
 
             <services>
                 <service id="monolog.formatter.session_request"
@@ -84,7 +89,7 @@ information:
                 </service>
 
                 <service id="App\Logger\SessionRequestProcessor">
-                    <tag name="monolog.processor" />
+                    <tag name="monolog.processor"/>
                 </service>
             </services>
         </container>
@@ -101,7 +106,7 @@ information:
 
         $container
             ->register(SessionRequestProcessor::class)
-            ->addTag('monolog.processor', array('method' => 'processRecord'));
+            ->addTag('monolog.processor');
 
 Finally, set the formatter to be used on whatever handler you want:
 
@@ -126,9 +131,9 @@ Finally, set the formatter to be used on whatever handler you want:
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
             xmlns:monolog="http://symfony.com/schema/dic/monolog"
             xsi:schemaLocation="http://symfony.com/schema/dic/services
-                http://symfony.com/schema/dic/services/services-1.0.xsd
+                https://symfony.com/schema/dic/services/services-1.0.xsd
                 http://symfony.com/schema/dic/monolog
-                http://symfony.com/schema/dic/monolog/monolog-1.0.xsd">
+                https://symfony.com/schema/dic/monolog/monolog-1.0.xsd">
 
             <monolog:config>
                 <monolog:handler
@@ -144,72 +149,53 @@ Finally, set the formatter to be used on whatever handler you want:
     .. code-block:: php
 
         // config/packages/prod/monolog.php
-        $container->loadFromExtension('monolog', array(
-            'handlers' => array(
-                'main' => array(
-                    'type'      => 'stream',
-                    'path'      => '%kernel.logs_dir%/%kernel.environment%.log',
-                    'level'     => 'debug',
-                    'formatter' => 'monolog.formatter.session_request',
-                ),
-            ),
-        ));
+        use Symfony\Config\MonologConfig;
+
+        return static function (MonologConfig $monolog) {
+            $monolog->handler('main')
+                ->type('stream')
+                ->path('%kernel.logs_dir%/%kernel.environment%.log')
+                ->level('debug')
+                ->formatter('monolog.formatter.session_request')
+            ;
+        };
 
 If you use several handlers, you can also register a processor at the
 handler level or at the channel level instead of registering it globally
 (see the following sections).
 
-.. tip::
+Symfony's MonologBridge provides processors that can be registered inside your application.
 
-    .. versionadded:: 4.2
-        The autoconfiguration of Monolog processors was introduced in Symfony 4.2.
+:class:`Symfony\\Bridge\\Monolog\\Processor\\DebugProcessor`
+    Adds additional information useful for debugging like a timestamp or an
+    error message to the record.
 
-    If you're using the :ref:`default services.yaml configuration <service-container-services-load-example>`,
-    processors implementing :class:`Symfony\\Bridge\\Monolog\\Processor\\ProcessorInterface`
-    are automatically registered as services and tagged with ``monolog.processor``,
-    so you can use them without adding any configuration. The same applies to the
-    built-in :class:`Symfony\\Bridge\\Monolog\\Processor\\TokenProcessor` and
-    :class:`Symfony\\Bridge\\Monolog\\Processor\\WebProcessor` processors, which
-    can be enabled as follows:
+:class:`Symfony\\Bridge\\Monolog\\Processor\\TokenProcessor`
+    Adds information from the current user's token to the record namely
+    username, roles and whether the user is authenticated.
 
-    .. configuration-block::
+:class:`Symfony\\Bridge\\Monolog\\Processor\\SwitchUserTokenProcessor`
+    Adds information about the user who is impersonating the logged in user,
+    namely username, roles and whether the user is authenticated.
 
-        .. code-block:: yaml
+    .. versionadded:: 5.2
 
-            # config/services.yaml
-            services:
-                # Adds the current security token to log entries
-                Symfony\Bridge\Monolog\Processor\TokenProcessor: ~
-                # Adds the real client IP to log entries
-                Symfony\Bridge\Monolog\Processor\WebProcessor: ~
+        The ``SwitchUserTokenProcessor`` was introduced in Symfony 5.2.
 
-        .. code-block:: xml
+:class:`Symfony\\Bridge\\Monolog\\Processor\\WebProcessor`
+    Overrides data from the request using the data inside Symfony's request
+    object.
 
-            <!-- config/services.xml -->
-            <?xml version="1.0" encoding="UTF-8" ?>
-            <container xmlns="http://symfony.com/schema/dic/services"
-                xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                xsi:schemaLocation="http://symfony.com/schema/dic/services
-                    http://symfony.com/schema/dic/services/services-1.0.xsd">
+:class:`Symfony\\Bridge\\Monolog\\Processor\\RouteProcessor`
+    Adds information about current route (controller, action, route parameters).
 
-                <services>
-                    <!-- Adds the current security token to log entries -->
-                    <service id="Symfony\Bridge\Monolog\Processor\TokenProcessor" />
-                    <!-- Adds the real client IP to log entries -->
-                    <service id="Symfony\Bridge\Monolog\Processor\WebProcessor" />
-                </services>
-            </container>
+:class:`Symfony\\Bridge\\Monolog\\Processor\\ConsoleCommandProcessor`
+    Adds information about current console command.
 
-        .. code-block:: php
+.. seealso::
 
-            // config/services.php
-            use Symfony\Bridge\Monolog\Processor\TokenProcessor;
-            use Symfony\Bridge\Monolog\Processor\WebProcessor;
-
-            // Adds the current security token to log entries
-            $container->register(TokenProcessor::class);
-            // Adds the real client IP to log entries
-            $container->register(WebProcessor::class);
+    Check out the `built-in Monolog processors`_ to learn more about how to
+    create these processors.
 
 Registering Processors per Handler
 ----------------------------------
@@ -235,13 +221,13 @@ the ``monolog.processor`` tag:
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
             xmlns:monolog="http://symfony.com/schema/dic/monolog"
             xsi:schemaLocation="http://symfony.com/schema/dic/services
-                http://symfony.com/schema/dic/services/services-1.0.xsd
+                https://symfony.com/schema/dic/services/services-1.0.xsd
                 http://symfony.com/schema/dic/monolog
-                http://symfony.com/schema/dic/monolog/monolog-1.0.xsd">
+                https://symfony.com/schema/dic/monolog/monolog-1.0.xsd">
 
             <services>
                 <service id="App\Logger\SessionRequestProcessor">
-                    <tag name="monolog.processor" handler="main" />
+                    <tag name="monolog.processor" handler="main"/>
                 </service>
             </services>
         </container>
@@ -253,7 +239,7 @@ the ``monolog.processor`` tag:
         // ...
         $container
             ->register(SessionRequestProcessor::class)
-            ->addTag('monolog.processor', array('handler' => 'main'));
+            ->addTag('monolog.processor', ['handler' => 'main']);
 
 Registering Processors per Channel
 ----------------------------------
@@ -279,13 +265,13 @@ the ``monolog.processor`` tag:
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
             xmlns:monolog="http://symfony.com/schema/dic/monolog"
             xsi:schemaLocation="http://symfony.com/schema/dic/services
-                http://symfony.com/schema/dic/services/services-1.0.xsd
+                https://symfony.com/schema/dic/services/services-1.0.xsd
                 http://symfony.com/schema/dic/monolog
-                http://symfony.com/schema/dic/monolog/monolog-1.0.xsd">
+                https://symfony.com/schema/dic/monolog/monolog-1.0.xsd">
 
             <services>
                 <service id="App\Logger\SessionRequestProcessor">
-                    <tag name="monolog.processor" channel="main" />
+                    <tag name="monolog.processor" channel="main"/>
                 </service>
             </services>
         </container>
@@ -297,4 +283,7 @@ the ``monolog.processor`` tag:
         // ...
         $container
             ->register(SessionRequestProcessor::class)
-            ->addTag('monolog.processor', array('channel' => 'main'));
+            ->addTag('monolog.processor', ['channel' => 'main']);
+
+.. _`Monolog`: https://github.com/Seldaek/monolog
+.. _`built-in Monolog processors`: https://github.com/Seldaek/monolog/tree/master/src/Monolog/Processor

@@ -1,12 +1,12 @@
 .. index::
     single: Upgrading; Patch Version
 
-Upgrading a Patch Version (e.g. 4.1.0 to 4.1.1)
+Upgrading a Patch Version (e.g. 5.0.0 to 5.0.1)
 ===============================================
 
 When a new patch version is released (only the last number changed), it is a
 release that only contains bug fixes. This means that upgrading to a new patch
-version is *really* easy.
+version should not cause any problems.
 
 To upgrade to a new "patch" release, read the
 :doc:`Upgrading a Minor Version </setup/upgrade_minor>` article. Thanks to

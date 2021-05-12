@@ -19,6 +19,7 @@ The component supports:
 * **hashes** - using JSON-like notation (e.g. ``{ foo: 'bar' }``)
 * **booleans** - ``true`` and ``false``
 * **null** - ``null``
+* **exponential** - also known as scientific (e.g. ``1.99E+3`` or ``1e-2``)
 
 .. caution::
 
@@ -56,9 +57,9 @@ to JavaScript::
 
     var_dump($expressionLanguage->evaluate(
         'fruit.variety',
-        array(
+        [
             'fruit' => $apple,
-        )
+        ]
     ));
 
 This will print out ``Honeycrisp``.
@@ -73,7 +74,7 @@ JavaScript::
     {
         public function sayHi($times)
         {
-            $greetings = array();
+            $greetings = [];
             for ($i = 0; $i < $times; $i++) {
                 $greetings[] = 'Hi';
             }
@@ -86,9 +87,9 @@ JavaScript::
 
     var_dump($expressionLanguage->evaluate(
         'robot.sayHi(3)',
-        array(
+        [
             'robot' => $robot,
-        )
+        ]
     ));
 
 This will print out ``Hi Hi Hi!``.
@@ -124,13 +125,13 @@ Working with Arrays
 If you pass an array into an expression, use the ``[]`` syntax to access
 array keys, similar to JavaScript::
 
-    $data = array('life' => 10, 'universe' => 10, 'everything' => 22);
+    $data = ['life' => 10, 'universe' => 10, 'everything' => 22];
 
     var_dump($expressionLanguage->evaluate(
         'data["life"] + data["universe"] + data["everything"]',
-        array(
+        [
             'data' => $data,
-        )
+        ]
     ));
 
 This will print out ``42``.
@@ -154,11 +155,11 @@ For example::
 
     var_dump($expressionLanguage->evaluate(
         'life + universe + everything',
-        array(
+        [
             'life' => 10,
             'universe' => 10,
             'everything' => 22,
-        )
+        ]
     ));
 
 This will print out ``42``.
@@ -197,20 +198,20 @@ Examples::
 
     $ret1 = $expressionLanguage->evaluate(
         'life == everything',
-        array(
+        [
             'life' => 10,
             'universe' => 10,
             'everything' => 22,
-        )
+        ]
     );
 
     $ret2 = $expressionLanguage->evaluate(
         'life > everything',
-        array(
+        [
             'life' => 10,
             'universe' => 10,
             'everything' => 22,
-        )
+        ]
     );
 
 Both variables would be set to ``false``.
@@ -226,11 +227,11 @@ For example::
 
     $ret = $expressionLanguage->evaluate(
         'life < universe or life < everything',
-        array(
+        [
             'life' => 10,
             'universe' => 10,
             'everything' => 22,
-        )
+        ]
     );
 
 This ``$ret`` variable will be set to ``true``.
@@ -244,10 +245,10 @@ For example::
 
     var_dump($expressionLanguage->evaluate(
         'firstName~" "~lastName',
-        array(
+        [
             'firstName' => 'Arthur',
             'lastName' => 'Dent',
-        )
+        ]
     ));
 
 This would print out ``Arthur Dent``.
@@ -270,9 +271,9 @@ For example::
 
     $inGroup = $expressionLanguage->evaluate(
         'user.group in ["human_resources", "marketing"]',
-        array(
+        [
             'user' => $user,
-        )
+        ]
     );
 
 The ``$inGroup`` would evaluate to ``true``.
@@ -294,9 +295,9 @@ For example::
 
     $expressionLanguage->evaluate(
         'user.age in 18..45',
-        array(
+        [
             'user' => $user,
-        )
+        ]
     );
 
 This will evaluate to ``true``, because ``user.age`` is in the range from
@@ -308,3 +309,14 @@ Ternary Operators
 * ``foo ? 'yes' : 'no'``
 * ``foo ?: 'no'`` (equal to ``foo ? foo : 'no'``)
 * ``foo ? 'yes'`` (equal to ``foo ? 'yes' : ''``)
+
+Built-in Objects and Variables
+------------------------------
+
+When using this component inside a Symfony application, certain objects and
+variables are automatically injected by Symfony so you can use them in your
+expressions (e.g. the request, the current user, etc.):
+
+* :doc:`Variables available in security expressions </security/expressions>`;
+* :doc:`Variables available in service container expressions </service_container/expression_language>`;
+* :ref:`Variables available in routing expressions <routing-matching-expressions>`.

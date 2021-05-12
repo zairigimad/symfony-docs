@@ -4,7 +4,7 @@ The HttpKernel Component: The HttpKernel Class
 If you were to use our framework right now, you would probably have to add
 support for custom error messages. We do have 404 and 500 error support but
 the responses are hardcoded in the framework itself. Making them customizable
-is easy enough though: dispatch a new event and listen to it. Doing it right
+is straightforward though: dispatch a new event and listen to it. Doing it right
 means that the listener has to call a regular controller. But what if the
 error controller throws an exception? You will end up in an infinite loop.
 There should be an easier way, right?
@@ -66,22 +66,22 @@ framework: it matches the incoming request and populates the request
 attributes with route parameters.
 
 Our code is now much more concise and surprisingly more robust and more
-powerful than ever. For instance, use the built-in ``ExceptionListener`` to
+powerful than ever. For instance, use the built-in ``ErrorListener`` to
 make your error management configurable::
 
-    $errorHandler = function (Symfony\Component\Debug\Exception\FlattenException $exception) {
+    $errorHandler = function (Symfony\Component\ErrorHandler\Exception\FlattenException $exception) {
         $msg = 'Something went wrong! ('.$exception->getMessage().')';
 
         return new Response($msg, $exception->getStatusCode());
     };
-    $dispatcher->addSubscriber(new HttpKernel\EventListener\ExceptionListener($errorHandler));
+    $dispatcher->addSubscriber(new HttpKernel\EventListener\ErrorListener($errorHandler));
 
-``ExceptionListener`` gives you a ``FlattenException`` instance instead of the
+``ErrorListener`` gives you a ``FlattenException`` instance instead of the
 thrown ``Exception`` or ``Error`` instance to ease exception manipulation and
 display. It can take any valid controller as an exception handler, so you can
 create an ErrorController class instead of using a Closure::
 
-    $listener = new HttpKernel\EventListener\ExceptionListener(
+    $listener = new HttpKernel\EventListener\ErrorListener(
         'Calendar\Controller\ErrorController::exception'
     );
     $dispatcher->addSubscriber($listener);
@@ -91,8 +91,8 @@ The error controller reads as follows::
     // example.com/src/Calendar/Controller/ErrorController.php
     namespace Calendar\Controller;
 
+    use Symfony\Component\ErrorHandler\Exception\FlattenException;
     use Symfony\Component\HttpFoundation\Response;
-    use Symfony\Component\Debug\Exception\FlattenException;
 
     class ErrorController
     {
@@ -104,8 +104,8 @@ The error controller reads as follows::
         }
     }
 
-Voilà! Clean and customizable error management without efforts. And of course,
-if your controller throws an exception, HttpKernel will handle it nicely.
+*Voilà!* Clean and customizable error management without efforts. And if your
+``ErrorController`` throws an exception, HttpKernel will handle it nicely.
 
 In chapter two, we talked about the ``Response::prepare()`` method, which
 ensures that a Response is compliant with the HTTP specification. It is
@@ -114,9 +114,8 @@ client; that's what the ``ResponseListener`` does::
 
     $dispatcher->addSubscriber(new HttpKernel\EventListener\ResponseListener('UTF-8'));
 
-This one was easy too! Let's take another one: do you want out of the box
-support for streamed responses? Just subscribe to
-``StreamedResponseListener``::
+If you want out of the box support for streamed responses, subscribe
+to ``StreamedResponseListener``::
 
     $dispatcher->addSubscriber(new HttpKernel\EventListener\StreamedResponseListener());
 
@@ -154,12 +153,12 @@ only if needed::
     namespace Simplex;
 
     use Symfony\Component\EventDispatcher\EventSubscriberInterface;
-    use Symfony\Component\HttpKernel\Event\GetResponseForControllerResultEvent;
     use Symfony\Component\HttpFoundation\Response;
+    use Symfony\Component\HttpKernel\Event\ViewEvent;
 
     class StringResponseListener implements EventSubscriberInterface
     {
-        public function onView(GetResponseForControllerResultEvent $event)
+        public function onView(ViewEvent $event)
         {
             $response = $event->getControllerResult();
 
@@ -170,7 +169,7 @@ only if needed::
 
         public static function getSubscribedEvents()
         {
-            return array('kernel.view' => 'onView');
+            return ['kernel.view' => 'onView'];
         }
     }
 

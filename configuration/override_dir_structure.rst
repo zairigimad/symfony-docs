@@ -4,9 +4,8 @@
 How to Override Symfony's default Directory Structure
 =====================================================
 
-Symfony automatically ships with a default directory structure. You can
-easily override this directory structure to create your own. The default
-directory structure is:
+Symfony applications have the following default directory structure, but you can
+override it to create your own structure:
 
 .. code-block:: text
 
@@ -28,13 +27,22 @@ directory structure is:
     │  └─ ...
     └─ vendor/
 
+.. _override-config-dir:
+
+Override the Configuration Directory
+------------------------------------
+
+The configuration directory is the only one which cannot be overridden in a
+Symfony application. Its location is hardcoded as the ``config/`` directory
+at your project root directory.
+
 .. _override-cache-dir:
 
-Override the ``cache`` Directory
---------------------------------
+Override the Cache Directory
+----------------------------
 
-You can change the default cache directory by overriding the ``getCacheDir()``
-method in the ``Kernel`` class of your application::
+Changing the cache directory can be achieved by overriding the
+``getCacheDir()`` method in the ``Kernel`` class of your application::
 
     // src/Kernel.php
 
@@ -51,23 +59,28 @@ method in the ``Kernel`` class of your application::
 
 In this code, ``$this->environment`` is the current environment (i.e. ``dev``).
 In this case you have changed the location of the cache directory to
-``var/{environment}/cache``.
+``var/{environment}/cache/``.
+
+You can also change the cache directory defining an environment variable named
+``APP_CACHE_DIR`` whose value is the full path of the cache folder.
 
 .. caution::
 
-    You should keep the ``cache`` directory different for each environment,
+    You should keep the cache directory different for each environment,
     otherwise some unexpected behavior may happen. Each environment generates
     its own cached configuration files, and so each needs its own directory to
     store those cache files.
 
 .. _override-logs-dir:
 
-Override the ``logs`` Directory
--------------------------------
+Override the Log Directory
+--------------------------
 
-Overriding the ``logs`` directory is the same as overriding the ``cache``
-directory. The only difference is that you need to override the ``getLogDir()``
-method::
+Overriding the ``var/log/`` directory is almost the same as overriding the
+``var/cache/`` directory.
+
+You can do it overriding the ``getLogDir()`` method in the ``Kernel`` class of
+your application::
 
     // src/Kernel.php
 
@@ -82,7 +95,10 @@ method::
         }
     }
 
-Here you have changed the location of the directory to ``var/{environment}/log``.
+Here you have changed the location of the directory to ``var/{environment}/log/``.
+
+You can also change the log directory defining an environment variable named
+``APP_LOG_DIR`` whose value is the full path of the log folder.
 
 .. _override-templates-dir:
 
@@ -90,8 +106,9 @@ Override the Templates Directory
 --------------------------------
 
 If your templates are not stored in the default ``templates/`` directory, use
-the :ref:`twig.paths <config-twig-paths>` configuration option to define your
-own templates directory (or directories):
+the :ref:`twig.default_path <config-twig-default-path>` configuration
+option to define your own templates directory (use :ref:`twig.paths <config-twig-paths>`
+for multiple directories):
 
 .. configuration-block::
 
@@ -100,22 +117,22 @@ own templates directory (or directories):
         # config/packages/twig.yaml
         twig:
             # ...
-            paths: ["%kernel.project_dir%/resources/views"]
+            default_path: "%kernel.project_dir%/resources/views"
 
     .. code-block:: xml
 
         <!-- config/packages/twig.xml -->
-        <?xml version="1.0" ?>
+        <?xml version="1.0" encoding="UTF-8" ?>
         <container xmlns="http://symfony.com/schema/dic/services"
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
             xmlns:twig="http://symfony.com/schema/dic/twig"
             xsi:schemaLocation="http://symfony.com/schema/dic/services
-                http://symfony.com/schema/dic/services/services-1.0.xsd
+                https://symfony.com/schema/dic/services/services-1.0.xsd
                 http://symfony.com/schema/dic/twig
-                http://symfony.com/schema/dic/twig/twig-1.0.xsd">
+                https://symfony.com/schema/dic/twig/twig-1.0.xsd">
 
             <twig:config>
-                <twig:path>%kernel.project_dir%/resources/views</twig:path>
+                <twig:default-path>%kernel.project_dir%/resources/views</twig:default-path>
             </twig:config>
 
         </container>
@@ -123,18 +140,18 @@ own templates directory (or directories):
     .. code-block:: php
 
         // config/packages/twig.php
-        $container->loadFromExtension('twig', array(
-            'paths' => array(
-                '%kernel.project_dir%/resources/views',
-            ),
-        ));
+        use Symfony\Config\TwigConfig;
+
+        return static function (TwigConfig $twig) {
+            $twig->defaultPath('%kernel.project_dir%/resources/views');
+        };
 
 Override the Translations Directory
 -----------------------------------
 
 If your translation files are not stored in the default ``translations/``
-directory, use the :ref:`framework.translator.paths <reference-translator-paths>`
-configuration option to define your own translations directory (or directories):
+directory, use the :ref:`framework.translator.default_path <reference-translator-default_path>`
+configuration option to define your own translations directory (use :ref:`framework.translator.paths <reference-translator-paths>` for multiple directories):
 
 .. configuration-block::
 
@@ -144,23 +161,23 @@ configuration option to define your own translations directory (or directories):
         framework:
             translator:
                 # ...
-                paths: ["%kernel.project_dir%/i18n"]
+                default_path: "%kernel.project_dir%/i18n"
 
     .. code-block:: xml
 
         <!-- config/packages/translation.xml -->
-        <?xml version="1.0" ?>
+        <?xml version="1.0" encoding="UTF-8" ?>
         <container xmlns="http://symfony.com/schema/dic/services"
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
             xmlns:twig="http://symfony.com/schema/dic/twig"
             xsi:schemaLocation="http://symfony.com/schema/dic/services
-                http://symfony.com/schema/dic/services/services-1.0.xsd
+                https://symfony.com/schema/dic/services/services-1.0.xsd
                 http://symfony.com/schema/dic/twig
-                http://symfony.com/schema/dic/twig/twig-1.0.xsd">
+                https://symfony.com/schema/dic/twig/twig-1.0.xsd">
 
             <framework:config>
                 <framework:translator>
-                    <framework:path>%kernel.project_dir%/i18n</framework:path>
+                    <framework:default-path>%kernel.project_dir%/i18n</framework:default-path>
                 </framework:translator>
             </framework:config>
 
@@ -169,30 +186,30 @@ configuration option to define your own translations directory (or directories):
     .. code-block:: php
 
         // config/packages/translation.php
-        $container->loadFromExtension('framework', array(
-            'translator' => array(
-                'paths' => array(
-                    '%kernel.project_dir%/i18n',
-                ),
-            ),
-        ));
+        use Symfony\Config\FrameworkConfig;
+
+        return static function (FrameworkConfig $framework) {
+            $framework->translator()
+                ->defaultPath('%kernel.project_dir%/i18n')
+            ;
+        };
 
 .. _override-web-dir:
 .. _override-the-web-directory:
 
-Override the ``public`` Directory
----------------------------------
+Override the Public Directory
+-----------------------------
 
-If you need to rename or move your ``public`` directory, the only thing you need
-to guarantee is that the path to the ``var`` directory is still correct in your
-``index.php`` front controller. If you simply renamed the directory, you're
-fine. But if you moved it in some way, you may need to modify these paths inside
-those files::
+If you need to rename or move your ``public/`` directory, the only thing you
+need to guarantee is that the path to the ``vendor/`` directory is still correct in
+your ``index.php`` front controller. If you renamed the directory, you're fine.
+But if you moved it in some way, you may need to modify these paths inside those
+files::
 
     require_once __DIR__.'/../path/to/vendor/autoload.php';
 
-You also need to change the ``extra.public-dir`` option in the
-``composer.json`` file:
+You also need to change the ``extra.public-dir`` option in the ``composer.json``
+file:
 
 .. code-block:: json
 
@@ -206,17 +223,17 @@ You also need to change the ``extra.public-dir`` option in the
 
 .. tip::
 
-    Some shared hosts have a ``public_html`` web directory root. Renaming
-    your web directory from ``public`` to ``public_html`` is one way to make
+    Some shared hosts have a ``public_html/`` web directory root. Renaming
+    your web directory from ``public/`` to ``public_html/`` is one way to make
     your Symfony project work on your shared host. Another way is to deploy
     your application to a directory outside of your web root, delete your
-    ``public_html`` directory, and then replace it with a symbolic link to
-    the ``public`` dir in your project.
+    ``public_html/`` directory, and then replace it with a symbolic link to
+    the ``public/`` dir in your project.
 
-Override the ``vendor`` Directory
----------------------------------
+Override the Vendor Directory
+-----------------------------
 
-To override the ``vendor`` directory, you need to define the ``vendor-dir``
+To override the ``vendor/`` directory, you need to define the ``vendor-dir``
 option in your ``composer.json`` file like this:
 
 .. code-block:: json
@@ -225,11 +242,11 @@ option in your ``composer.json`` file like this:
         "config": {
             "bin-dir": "bin",
             "vendor-dir": "/some/dir/vendor"
-        },
+        }
     }
 
 .. tip::
 
-    This modification can be of interest if you are working in a virtual environment
-    and cannot use NFS - for example, if you're running a Symfony application using
-    Vagrant/VirtualBox in a guest operating system.
+    This modification can be of interest if you are working in a virtual
+    environment and cannot use NFS - for example, if you're running a Symfony
+    application using Vagrant/VirtualBox in a guest operating system.

@@ -57,10 +57,10 @@ added but are processed when the container's ``compile()`` method is called.
 
 A very simple extension may just load configuration files into the container::
 
-    use Symfony\Component\DependencyInjection\ContainerBuilder;
-    use Symfony\Component\DependencyInjection\Loader\XmlFileLoader;
-    use Symfony\Component\DependencyInjection\Extension\ExtensionInterface;
     use Symfony\Component\Config\FileLocator;
+    use Symfony\Component\DependencyInjection\ContainerBuilder;
+    use Symfony\Component\DependencyInjection\Extension\ExtensionInterface;
+    use Symfony\Component\DependencyInjection\Loader\XmlFileLoader;
 
     class AcmeDemoExtension implements ExtensionInterface
     {
@@ -78,7 +78,7 @@ A very simple extension may just load configuration files into the container::
 
 This does not gain very much compared to loading the file directly into
 the overall container being built. It just allows the files to be split
-up amongst the modules/bundles. Being able to affect the configuration
+up among the modules/bundles. Being able to affect the configuration
 of a module from configuration files outside of the module/bundle is needed
 to make a complex application configurable. This can be done by specifying
 sections of config files loaded directly into the container as being for
@@ -113,8 +113,8 @@ If this file is loaded into the configuration then the values in it are
 only processed when the container is compiled at which point the Extensions
 are loaded::
 
-    use Symfony\Component\DependencyInjection\ContainerBuilder;
     use Symfony\Component\Config\FileLocator;
+    use Symfony\Component\DependencyInjection\ContainerBuilder;
     use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
 
     $containerBuilder = new ContainerBuilder();
@@ -146,12 +146,12 @@ that was loaded into the container. You are only loading a single config
 file in the above example but it will still be within an array. The array
 will look like this::
 
-    array(
-        array(
+    [
+        [
             'foo' => 'fooValue',
             'bar' => 'barValue',
-        ),
-    )
+        ],
+    ]
 
 Whilst you can manually manage merging the different files, it is much better
 to use :doc:`the Config component </components/config>` to
@@ -197,11 +197,11 @@ The XML version of the config would then look like this:
 
 .. code-block:: xml
 
-    <?xml version="1.0" ?>
+    <?xml version="1.0" encoding="UTF-8" ?>
     <container xmlns="http://symfony.com/schema/dic/services"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xmlns:acme_demo="http://www.example.com/symfony/schema/"
-        xsi:schemaLocation="http://www.example.com/symfony/schema/ http://www.example.com/symfony/schema/hello-1.0.xsd">
+        xsi:schemaLocation="http://www.example.com/symfony/schema/ https://www.example.com/symfony/schema/hello-1.0.xsd">
 
         <acme_demo:config>
             <acme_demo:foo>fooValue</acme_demo:foo>
@@ -325,7 +325,7 @@ compilation::
     {
         public function process(ContainerBuilder $container)
         {
-           // ... do something during the compilation
+            // ... do something during the compilation
         }
 
         // ...
@@ -341,7 +341,7 @@ methods described in :doc:`/service_container/definitions`.
 .. note::
 
     Please note that the ``process()`` method in the extension class is
-    called during the optimization step. You can read
+    called during the ``PassConfig::TYPE_BEFORE_OPTIMIZATION`` step. You can read
     :ref:`the next section <components-di-separate-compiler-passes>` if you
     need to edit the container during another step.
 
@@ -379,7 +379,7 @@ class implementing the ``CompilerPassInterface``::
     {
         public function process(ContainerBuilder $container)
         {
-           // ... do something during the compilation
+            // ... do something during the compilation
         }
     }
 
@@ -449,7 +449,7 @@ need to be parsed and the PHP configuration built from them. The compilation
 process makes the container more efficient but it takes time to run. You
 can have the best of both worlds though by using configuration files and
 then dumping and caching the resulting configuration. The ``PhpDumper``
-makes dumping the compiled container easy::
+serves at dumping the compiled container::
 
     use Symfony\Component\DependencyInjection\ContainerBuilder;
     use Symfony\Component\DependencyInjection\Dumper\PhpDumper;
@@ -469,7 +469,7 @@ makes dumping the compiled container easy::
     }
 
 ``ProjectServiceContainer`` is the default name given to the dumped container
-class. However you can change this with the ``class`` option when you
+class. However, you can change this with the ``class`` option when you
 dump it::
 
     // ...
@@ -486,7 +486,7 @@ dump it::
         $dumper = new PhpDumper($containerBuilder);
         file_put_contents(
             $file,
-            $dumper->dump(array('class' => 'MyCachedContainer'))
+            $dumper->dump(['class' => 'MyCachedContainer'])
         );
     }
 
@@ -519,7 +519,7 @@ application::
             $dumper = new PhpDumper($containerBuilder);
             file_put_contents(
                 $file,
-                $dumper->dump(array('class' => 'MyCachedContainer'))
+                $dumper->dump(['class' => 'MyCachedContainer'])
             );
         }
     }
@@ -534,7 +534,7 @@ You do not need to work out which files to cache as the container builder
 keeps track of all the resources used to configure it, not just the
 configuration files but the extension classes and compiler passes as well.
 This means that any changes to any of these files will invalidate the cache
-and trigger the container being rebuilt. You just need to ask the container
+and trigger the container being rebuilt. You need to ask the container
 for these resources and use them as metadata for the cache::
 
     // ...
@@ -552,7 +552,7 @@ for these resources and use them as metadata for the cache::
 
         $dumper = new PhpDumper($containerBuilder);
         $containerConfigCache->write(
-            $dumper->dump(array('class' => 'MyCachedContainer')),
+            $dumper->dump(['class' => 'MyCachedContainer']),
             $containerBuilder->getResources()
         );
     }
@@ -564,8 +564,8 @@ Now the cached dumped container is used regardless of whether debug mode
 is on or not. The difference is that the ``ConfigCache`` is set to debug
 mode with its second constructor argument. When the cache is not in debug
 mode the cached container will always be used if it exists. In debug mode,
-an additional metadata file is written with the timestamps of all the resource
-files. These are then checked to see if the files have changed, if they
+an additional metadata file is written with all the involved resource
+files. These are then checked to see if their timestamps have changed, if they
 have the cache will be considered stale.
 
 .. note::

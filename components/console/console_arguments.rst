@@ -23,23 +23,24 @@ Have a look at the following command that has three options::
 
     class DemoArgsCommand extends Command
     {
+        protected static $defaultName = 'demo:args';
+
         protected function configure()
         {
             $this
-                ->setName('demo:args')
                 ->setDescription('Describe args behaviors')
                 ->setDefinition(
-                    new InputDefinition(array(
+                    new InputDefinition([
                         new InputOption('foo', 'f'),
                         new InputOption('bar', 'b', InputOption::VALUE_REQUIRED),
                         new InputOption('cat', 'c', InputOption::VALUE_OPTIONAL),
-                    ))
+                    ])
                 );
         }
 
         protected function execute(InputInterface $input, OutputInterface $output)
         {
-           // ...
+            // ...
         }
     }
 
@@ -69,10 +70,10 @@ argument::
 
     // ...
 
-    new InputDefinition(array(
+    new InputDefinition([
         // ...
         new InputArgument('arg', InputArgument::OPTIONAL),
-    ));
+    ]);
 
 You might have to use the special ``--`` separator to separate options from
 arguments. Have a look at the fifth example in the following table where it

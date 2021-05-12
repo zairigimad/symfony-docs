@@ -12,7 +12,7 @@ have one limitation: they can only cache whole pages. If your pages contain
 dynamic sections, such as the user name or a shopping cart, you are out of
 luck. Fortunately, Symfony provides a solution for these cases, based on a
 technology called `ESI`_, or Edge Side Includes. Akamai wrote this specification
-almost 10 years ago and it allows specific parts of a page to have a different
+in 2001 and it allows specific parts of a page to have a different
 caching strategy than the main page.
 
 The ESI specification describes tags you can embed in your pages to communicate
@@ -27,7 +27,7 @@ as this is the only useful one outside of Akamai context:
             <!-- ... some content -->
 
             <!-- Embed the content of another page here -->
-            <esi:include src="http://..." />
+            <esi:include src="http://..."/>
 
             <!-- ... more content -->
         </body>
@@ -75,29 +75,33 @@ First, to use ESI, be sure to enable it in your application configuration:
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
             xmlns:framework="http://symfony.com/schema/dic/symfony"
             xsi:schemaLocation="http://symfony.com/schema/dic/services
-                http://symfony.com/schema/dic/services/services-1.0.xsd
+                https://symfony.com/schema/dic/services/services-1.0.xsd
                 http://symfony.com/schema/dic/symfony
-                http://symfony.com/schema/dic/symfony/symfony-1.0.xsd">
+                https://symfony.com/schema/dic/symfony/symfony-1.0.xsd">
 
             <framework:config>
                 <!-- ... -->
-                <framework:esi enabled="true" />
+                <framework:esi enabled="true"/>
             </framework:config>
         </container>
 
     .. code-block:: php
 
         // config/packages/framework.php
-        $container->loadFromExtension('framework', array(
-            // ...
-            'esi' => array('enabled' => true),
-        ));
+        use Symfony\Config\FrameworkConfig;
+
+        return static function (FrameworkConfig $framework) {
+            $framework->esi()
+                ->enabled(true)
+            ;
+        };
 
 Now, suppose you have a page that is relatively static, except for a news
 ticker at the bottom of the content. With ESI, you can cache the news ticker
-independent of the rest of the page::
+independently of the rest of the page::
 
     // src/Controller/DefaultController.php
+    namespace App\Controller;
 
     // ...
     class DefaultController extends AbstractController
@@ -105,17 +109,18 @@ independent of the rest of the page::
         public function about()
         {
             $response = $this->render('static/about.html.twig');
-            // sets the shared max age - which also marks the response as public
-            $response->setSharedMaxAge(600);
+            $response->setPublic();
+            $response->setMaxAge(600);
 
             return $response;
         }
     }
 
-In this example, the full-page cache has a lifetime of ten minutes.
+In this example, the response is marked as public to make the full page
+cacheable for all requests with a lifetime of ten minutes.
 Next, include the news ticker in the template by embedding an action.
-This is done via the ``render`` helper (see :doc:`/templating/embedding_controllers`
-for more details).
+This is done via the ``render()`` helper (for more details, see how to
+:ref:`embed controllers in templates <templates-embed-controllers>`).
 
 As the embedded content comes from another page (or controller for that
 matter), Symfony uses the standard ``render`` helper to configure ESI tags:
@@ -154,12 +159,12 @@ used ``render()``.
 
 .. note::
 
-    Symfony detects if a gateway cache supports ESI via another Akamai
-    specification that is supported out of the box by the Symfony reverse
-    proxy.
+    Symfony considers that a gateway cache supports ESI if its request include
+    the ``Surrogate-Capability`` HTTP header and the value of that header
+    contains the ``ESI/1.0`` string anywhere.
 
-The embedded action can now specify its own caching rules, entirely independent
-of the master page::
+The embedded action can now specify its own caching rules entirely independently
+of the main page::
 
     // src/Controller/NewsController.php
     namespace App\Controller;
@@ -170,14 +175,19 @@ of the master page::
         public function latest($maxPerPage)
         {
             // ...
-            $response->setSharedMaxAge(60);
+            $response->setPublic();
+            $response->setMaxAge(60);
 
             return $response;
         }
     }
 
-With ESI, the full page cache will be valid for 600 seconds, but the news
-component cache will only last for 60 seconds.
+In this example, the embedded action is cached publicly too because the contents
+are the same for all requests. However, in other cases you may need to make this
+response non-public and even non-cacheable, depending on your needs.
+
+Putting all the above code together, with ESI the full page cache will be valid
+for 600 seconds, but the news component cache will only last for 60 seconds.
 
 .. _http_cache-fragments:
 
@@ -205,23 +215,27 @@ that must be enabled in your configuration:
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
             xmlns:framework="http://symfony.com/schema/dic/symfony"
             xsi:schemaLocation="http://symfony.com/schema/dic/services
-                http://symfony.com/schema/dic/services/services-1.0.xsd
+                https://symfony.com/schema/dic/services/services-1.0.xsd
                 http://symfony.com/schema/dic/symfony
-                http://symfony.com/schema/dic/symfony/symfony-1.0.xsd">
+                https://symfony.com/schema/dic/symfony/symfony-1.0.xsd">
 
             <!-- ... -->
             <framework:config>
-                <framework:fragment path="/_fragment" />
+                <framework:fragment path="/_fragment"/>
             </framework:config>
         </container>
 
     .. code-block:: php
 
         // config/packages/framework.php
-        $container->loadFromExtension('framework', array(
+        use Symfony\Config\FrameworkConfig;
+
+        return static function (FrameworkConfig $framework) {
             // ...
-            'fragments' => array('path' => '/_fragment'),
-        ));
+            $framework->fragments()
+                ->path('/_fragment')
+            ;
+        };
 
 One great advantage of the ESI renderer is that you can make your application
 as dynamic as needed and at the same time, hit the application as little as
@@ -233,14 +247,6 @@ possible.
     signed when using the fragment renderer and the ``render_esi`` Twig
     function.
 
-.. note::
-
-    Once you start using ESI, remember to always use the ``s-maxage``
-    directive instead of ``max-age``. As the browser only ever receives the
-    aggregated resource, it is not aware of the sub-components, and so it will
-    obey the ``max-age`` directive and cache the entire page. And you don't
-    want that.
-
 The ``render_esi`` helper supports two other useful options:
 
 ``alt``
@@ -250,6 +256,6 @@ The ``render_esi`` helper supports two other useful options:
 ``ignore_errors``
     If set to true, an ``onerror`` attribute will be added to the ESI with a value
     of ``continue`` indicating that, in the event of a failure, the gateway cache
-    will simply remove the ESI tag silently.
+    will remove the ESI tag silently.
 
 .. _`ESI`: http://www.w3.org/TR/esi-lang

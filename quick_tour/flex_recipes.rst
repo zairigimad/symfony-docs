@@ -36,7 +36,7 @@ small, simple and *fast*. And you're in total control of what you add.
 Flex Recipes and Aliases
 ------------------------
 
-So how can we install and configure Twig? Just run one command:
+So how can we install and configure Twig? By running one single command:
 
 .. code-block:: terminal
 
@@ -61,8 +61,8 @@ What did this recipe do? In addition to automatically enabling the feature in
 ``config/packages/twig.yaml``
     A configuration file that sets up Twig with sensible defaults.
 
-``config/routes/dev/twig.yaml``
-    A route that helps you debug your error pages.
+``config/packages/test/twig.yaml``
+    A configuration file that changes some Twig options when running tests.
 
 ``templates/``
     This is the directory where template files will live. The recipe also added
@@ -75,31 +75,33 @@ Thanks to Flex, after one command, you can start using Twig immediately:
 
 .. code-block:: diff
 
-    // src/Controller/DefaultController.php
-    namespace App\Controller;
+      <?php
+      // src/Controller/DefaultController.php
+      namespace App\Controller;
 
-    use Symfony\Component\Routing\Annotation\Route;
+      use Symfony\Component\Routing\Annotation\Route;
     - use Symfony\Component\HttpFoundation\Response;
     + use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
-    -class DefaultController
-    +class DefaultController extends AbstractController
-     {
-         /**
-          * @Route("/hello/{name}")
-          */
-         public function index($name)
-         {
+    - class DefaultController
+    + class DefaultController extends AbstractController
+      {
+           /**
+            * @Route("/hello/{name}")
+            */
+           public function index($name)
+           {
     -        return new Response("Hello $name!");
     +        return $this->render('default/index.html.twig', [
     +            'name' => $name,
     +        ]);
-         }
+           }
+      }
 
 By extending ``AbstractController``, you now have access to a number of shortcut
 methods and tools, like ``render()``. Create the new template:
 
-.. code-block:: twig
+.. code-block:: html+twig
 
     {# templates/default/index.html.twig #}
     <h1>Hello {{ name }}</h1>
@@ -111,7 +113,7 @@ its syntax and power later.
 But, right now, the page *only* contains the ``h1`` tag. To give it an HTML layout,
 extend ``base.html.twig``:
 
-.. code-block:: twig
+.. code-block:: html+twig
 
     {# templates/default/index.html.twig #}
     {% extends 'base.html.twig' %}
@@ -144,19 +146,20 @@ and performance data!
 Oh, and as you install more libraries, you'll get more tools (like a web debug toolbar
 icon that shows database queries).
 
-Using the profiler is easy because it configured *itself* thanks to the recipe.
-What else can we install this easily?
+You can now directly use the profiler because it configured *itself* thanks to
+the recipe. What else can we install?
 
 Rich API Support
 ----------------
 
-Are you building an API? You can already return JSON easily from any controller::
+Are you building an API? You can already return JSON from any controller::
 
+    <?php
     // src/Controller/DefaultController.php
     namespace App\Controller;
 
-    use Symfony\Component\Routing\Annotation\Route;
     use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+    use Symfony\Component\Routing\Annotation\Route;
 
     class DefaultController extends AbstractController
     {
@@ -174,20 +177,21 @@ Are you building an API? You can already return JSON easily from any controller:
         }
     }
 
-But for a *truly* rich API, try installing `Api Platform`_:
+But for a *truly* rich API, try installing `API Platform`_:
 
 .. code-block:: terminal
 
     $ composer require api
 
-This is an alias to ``api-platform/api-pack``, which has dependencies on several
-other packages, like Symfony's Validator and Security components, as well as the Doctrine
-ORM. In fact, Flex installed *5* recipes!
+This is an alias to ``api-platform/api-pack`` :ref:`Symfony pack <symfony-packs>`,
+which has dependencies on several other packages, like Symfony's Validator and
+Security components, as well as the Doctrine ORM. In fact, Flex installed *5* recipes!
 
 But like usual, we can immediately start using the new library. Want to create a
 rich API for a ``product`` table? Create a ``Product`` entity and give it the
 ``@ApiResource()`` annotation::
 
+    <?php
     // src/Entity/Product.php
     namespace App\Entity;
 
@@ -238,8 +242,10 @@ me? List your routes by running:
      ...
     ------------------------------ -------- -------------------------------------
 
-Easily Remove Recipes
----------------------
+.. _ easily-remove-recipes:
+
+Removing Recipes
+----------------
 
 Not convinced yet? No problem: remove the library:
 
@@ -259,5 +265,5 @@ build features *without* sacrificing code quality or performance. It's all about
 the service container, and it's Symfony's super power. Read on: about :doc:`/quick_tour/the_architecture`.
 
 .. _`https://flex.symfony.com`: https://flex.symfony.com
-.. _`Api Platform`: https://api-platform.com/
+.. _`API Platform`: https://api-platform.com/
 .. _`Twig`: https://twig.symfony.com/

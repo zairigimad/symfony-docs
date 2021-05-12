@@ -33,8 +33,8 @@ Just before executing any command, the ``ConsoleEvents::COMMAND`` event is
 dispatched. Listeners receive a
 :class:`Symfony\\Component\\Console\\Event\\ConsoleCommandEvent` event::
 
-    use Symfony\Component\Console\Event\ConsoleCommandEvent;
     use Symfony\Component\Console\ConsoleEvents;
+    use Symfony\Component\Console\Event\ConsoleCommandEvent;
 
     $dispatcher->addListener(ConsoleEvents::COMMAND, function (ConsoleCommandEvent $event) {
         // gets the input instance
@@ -62,10 +62,10 @@ method, you can disable a command inside a listener. The application
 will then *not* execute the command, but instead will return the code ``113``
 (defined in ``ConsoleCommandEvent::RETURN_CODE_DISABLED``). This code is one
 of the `reserved exit codes`_ for console commands that conform with the
-C/C++ standard.::
+C/C++ standard::
 
-    use Symfony\Component\Console\Event\ConsoleCommandEvent;
     use Symfony\Component\Console\ConsoleEvents;
+    use Symfony\Component\Console\Event\ConsoleCommandEvent;
 
     $dispatcher->addListener(ConsoleEvents::COMMAND, function (ConsoleCommandEvent $event) {
         // gets the command to be executed
@@ -97,8 +97,8 @@ thrown by the application.
 Listeners receive a
 :class:`Symfony\\Component\\Console\\Event\\ConsoleErrorEvent` event::
 
-    use Symfony\Component\Console\Event\ConsoleErrorEvent;
     use Symfony\Component\Console\ConsoleEvents;
+    use Symfony\Component\Console\Event\ConsoleErrorEvent;
 
     $dispatcher->addListener(ConsoleEvents::ERROR, function (ConsoleErrorEvent $event) {
         $output = $event->getOutput();
@@ -107,12 +107,14 @@ Listeners receive a
 
         $output->writeln(sprintf('Oops, exception thrown while running command <info>%s</info>', $command->getName()));
 
-        // gets the current exit code (the exception code or the exit code set by a ConsoleEvents::TERMINATE event)
+        // gets the current exit code (the exception code)
         $exitCode = $event->getExitCode();
 
         // changes the exception to another one
-        $event->setException(new \LogicException('Caught exception', $exitCode, $event->getError()));
+        $event->setError(new \LogicException('Caught exception', $exitCode, $event->getError()));
     });
+
+.. _console-events-terminate:
 
 The ``ConsoleEvents::TERMINATE`` Event
 --------------------------------------
@@ -129,8 +131,8 @@ listener (like sending logs, closing a database connection, sending emails,
 Listeners receive a
 :class:`Symfony\\Component\\Console\\Event\\ConsoleTerminateEvent` event::
 
-    use Symfony\Component\Console\Event\ConsoleTerminateEvent;
     use Symfony\Component\Console\ConsoleEvents;
+    use Symfony\Component\Console\Event\ConsoleTerminateEvent;
 
     $dispatcher->addListener(ConsoleEvents::TERMINATE, function (ConsoleTerminateEvent $event) {
         // gets the output
@@ -152,4 +154,4 @@ Listeners receive a
     It is then dispatched just after the ``ConsoleEvents::ERROR`` event.
     The exit code received in this case is the exception code.
 
-.. _`reserved exit codes`: http://www.tldp.org/LDP/abs/html/exitcodes.html
+.. _`reserved exit codes`: https://www.tldp.org/LDP/abs/html/exitcodes.html

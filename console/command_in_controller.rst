@@ -8,11 +8,11 @@ The :doc:`Console component documentation </components/console>` covers how to
 create a console command. This article covers how to use a console command
 directly from your controller.
 
-You may have the need to execute some function that is only available in a
-console command. Usually, you should refactor the command and move some logic
-into a service that can be reused in the controller. However, when the command
-is part of a third-party library, you wouldn't want to modify or duplicate
-their code. Instead, you can execute the command directly.
+You may have the need to call some function that is only available in a console
+command. Usually, you should refactor the command and move some logic into a
+service that can be reused in the controller. However, when the command is part
+of a third-party library, you don't want to modify or duplicate their code.
+Instead, you can run the command directly from the controller.
 
 .. caution::
 
@@ -21,7 +21,7 @@ their code. Instead, you can execute the command directly.
     overhead.
 
 Imagine you want to send spooled Swift Mailer messages by
-:doc:`using the swiftmailer:spool:send command </email/spool>`.
+:doc:`using the swiftmailer:spool:send command </email>`.
 Run this command from inside your controller via::
 
     // src/Controller/SpoolController.php
@@ -36,18 +36,18 @@ Run this command from inside your controller via::
 
     class SpoolController extends AbstractController
     {
-        public function sendSpool($messages = 10, KernelInterface $kernel)
+        public function sendSpool(int $messages = 10, KernelInterface $kernel): Response
         {
             $application = new Application($kernel);
             $application->setAutoExit(false);
 
-            $input = new ArrayInput(array(
-               'command' => 'swiftmailer:spool:send',
-               // (optional) define the value of command arguments
-               'fooArgument' => 'barValue',
-               // (optional) pass options to the command
-               '--message-limit' => $messages,
-            ));
+            $input = new ArrayInput([
+                'command' => 'swiftmailer:spool:send',
+                // (optional) define the value of command arguments
+                'fooArgument' => 'barValue',
+                // (optional) pass options to the command
+                '--message-limit' => $messages,
+            ]);
 
             // You can use NullOutput() if you don't need the output
             $output = new BufferedOutput();
@@ -87,7 +87,7 @@ Now, use it in your controller::
 
     class SpoolController extends AbstractController
     {
-        public function sendSpool($messages = 10)
+        public function sendSpool(int $messages = 10): Response
         {
             // ...
             $output = new BufferedOutput(

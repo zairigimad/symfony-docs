@@ -8,16 +8,17 @@
 * **Code**
 
   * :doc:`Bugs </contributing/code/bugs>`
-  * :doc:`Patches </contributing/code/patches>`
-  * :doc:`Reviewing Issues and Patches </contributing/community/reviews>`
+  * :doc:`Getting a Stack Trace </contributing/code/stack_trace>`
+  * :doc:`Pull Requests </contributing/code/pull_requests>`
+  * :doc:`Reviewing Issues and Pull Requests </contributing/community/reviews>`
   * :doc:`Maintenance </contributing/code/maintenance>`
   * :doc:`The Core Team </contributing/code/core_team>`
   * :doc:`Security </contributing/code/security>`
   * :doc:`Tests </contributing/code/tests>`
   * :doc:`Backward Compatibility </contributing/code/bc>`
-  * :doc:`Coding Standards</contributing/code/standards>`
-  * :doc:`Code Conventions</contributing/code/conventions>`
-  * :doc:`Git</contributing/code/git>`
+  * :doc:`Coding Standards </contributing/code/standards>`
+  * :doc:`Code Conventions </contributing/code/conventions>`
+  * :doc:`Git </contributing/code/git>`
   * :doc:`License </contributing/code/license>`
 
 * **Documentation**
@@ -32,4 +33,7 @@
   * :doc:`Release Process </contributing/community/releases>`
   * :doc:`Respectful Review comments </contributing/community/review-comments>`
   * :doc:`Community Reviews </contributing/community/reviews>`
-  * :doc:`Other Resources </contributing/community/other>`
+
+* **Diversity**
+
+  * :doc:`Governance </contributing/diversity/governance>`

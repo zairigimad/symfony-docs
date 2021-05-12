@@ -37,7 +37,7 @@ Examples of unacceptable behavior by participants include:
 Our Responsibilities
 --------------------
 
-:doc:`CoC Active Response Ensurers, or CARE</contributing/code_of_conduct/care_team>`,
+:doc:`CoC Active Response Ensurers, or CARE </contributing/code_of_conduct/care_team>`,
 are responsible for clarifying the standards of acceptable
 behavior and are expected to take appropriate and fair corrective action in
 response to any instances of unacceptable behavior.
@@ -77,7 +77,7 @@ Attribution
 -----------
 
 This Code of Conduct is adapted from the `Contributor Covenant`_, version 1.4,
-available at https://www.contributor-covenant.org/version/1/4/code-of-conduct.html
+available at https://www.contributor-covenant.org/version/1/4/code-of-conduct/
 
 Related Documents
 -----------------

@@ -23,8 +23,7 @@ And in this case, those services do *not* need to be public.
 
 So unless you *specifically* need to access a service directly from the container
 via ``$container->get()``, the best-practice is to make your services *private*.
-In fact, the :ref:`default services.yaml configuration <container-public>` configures
-all services to be private by default.
+In fact, All services  are :ref:`private <container-public>` by default.
 
 You can also control the ``public`` option on a service-by-service basis:
 
@@ -37,7 +36,7 @@ You can also control the ``public`` option on a service-by-service basis:
             # ...
 
             App\Service\Foo:
-                public: false
+                public: true
 
     .. code-block:: xml
 
@@ -45,20 +44,26 @@ You can also control the ``public`` option on a service-by-service basis:
         <?xml version="1.0" encoding="UTF-8" ?>
         <container xmlns="http://symfony.com/schema/dic/services"
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-            xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
+            xsi:schemaLocation="http://symfony.com/schema/dic/services https://symfony.com/schema/dic/services/services-1.0.xsd">
 
             <services>
-                <service id="App\Service\Foo" public="false" />
+                <service id="App\Service\Foo" public="true"/>
             </services>
         </container>
 
     .. code-block:: php
 
         // config/services.php
+        namespace Symfony\Component\DependencyInjection\Loader\Configurator;
+
         use App\Service\Foo;
 
-        $container->register(Foo::class)
-            ->setPublic(false);
+        return function(ContainerConfigurator $configurator) {
+            $services = $configurator->services();
+
+            $services->set(Foo::class)
+                ->public();
+        };
 
 .. _services-why-private:
 
@@ -75,11 +80,9 @@ from the container::
 
     $container->get(Foo::class);
 
-Simply said: A service can be marked as private if you do not want to access
-it directly from your code.
-
-However, if a service has been marked as private, you can still alias it
-(see below) to access this service (via the alias).
+Thus, a service can be marked as private if you do not want to access it
+directly from your code. However, if a service has been marked as private,
+you can still alias it (see below) to access this service (via the alias).
 
 .. _services-alias:
 
@@ -111,24 +114,30 @@ services.
         <container xmlns="http://symfony.com/schema/dic/services"
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
             xsi:schemaLocation="http://symfony.com/schema/dic/services
-                http://symfony.com/schema/dic/services/services-1.0.xsd">
+                https://symfony.com/schema/dic/services/services-1.0.xsd">
 
             <services>
-                <service id="App\Mail\PhpMailer" public="false" />
+                <service id="App\Mail\PhpMailer" public="false"/>
 
-                <service id="app.mailer" alias="App\Mail\PhpMailer" />
+                <service id="app.mailer" alias="App\Mail\PhpMailer"/>
             </services>
         </container>
 
     .. code-block:: php
 
         // config/services.php
+        namespace Symfony\Component\DependencyInjection\Loader\Configurator;
+
         use App\Mail\PhpMailer;
 
-        $container->register(PhpMailer::class)
-            ->setPublic(false);
+        return function(ContainerConfigurator $configurator) {
+            $services = $configurator->services();
 
-        $container->setAlias('app.mailer', PhpMailer::class);
+            $services->set(PhpMailer::class)
+                ->private();
+
+            $services->alias('app.mailer', PhpMailer::class);
+        };
 
 This means that when using the container directly, you can access the
 ``PhpMailer`` service by asking for the ``app.mailer`` service like this::
@@ -146,15 +155,84 @@ This means that when using the container directly, you can access the
             # ...
             app.mailer: '@App\Mail\PhpMailer'
 
+Deprecating Service Aliases
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. versionadded:: 5.1
+
+    The ``package`` and ``version`` options were introduced in Symfony 5.1.
+    Prior to 5.1, you had to use ``deprecated: true`` or
+    ``deprecated: 'Custom message'``.
+
+If you decide to deprecate the use of a service alias (because it is outdated
+or you decided not to maintain it anymore), you can deprecate its definition:
+
+.. configuration-block::
+
+    .. code-block:: yaml
+
+        app.mailer:
+            alias: 'App\Mail\PhpMailer'
+
+            # this outputs the following generic deprecation message:
+            # Since acme/package 1.2: The "app.mailer" service alias is deprecated. You should stop using it, as it will be removed in the future
+            deprecated:
+                package: 'acme/package'
+                version: '1.2'
+
+            # you can also define a custom deprecation message (%alias_id% placeholder is available)
+            deprecated:
+                package: 'acme/package'
+                version: '1.2'
+                message: 'The "%alias_id%" alias is deprecated. Do not use it anymore.'
+
+    .. code-block:: xml
+
+        <?xml version="1.0" encoding="UTF-8" ?>
+        <container xmlns="http://symfony.com/schema/dic/services"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-Instance"
+            xsi:schemaLocation="http://symfony.com/schema/dic/services https://symfony.com/schema/dic/services/services-1.0.xsd">
+
+            <services>
+                <service id="app.mailer" alias="App\Mail\PhpMailer">
+                    <!-- this outputs the following generic deprecation message:
+                         Since acme/package 1.2: The "app.mailer" service alias is deprecated. You should stop using it, as it will be removed in the future -->
+                    <deprecated package="acme/package" version="1.2"/>
+
+                    <!-- you can also define a custom deprecation message (%alias_id% placeholder is available) -->
+                    <deprecated package="acme/package" version="1.2">
+                        The "%alias_id%" service alias is deprecated. Don't use it anymore.
+                    </deprecated>
+                </service>
+            </services>
+        </container>
+
+    .. code-block:: php
+
+        $container
+            ->setAlias('app.mailer', 'App\Mail\PhpMailer')
+
+            // this outputs the following generic deprecation message:
+            // Since acme/package 1.2: The "app.mailer" service alias is deprecated. You should stop using it, as it will be removed in the future
+            ->setDeprecated('acme/package', '1.2')
+
+            // you can also define a custom deprecation message (%alias_id% placeholder is available)
+            ->setDeprecated(
+                'acme/package',
+                '1.2',
+                'The "%alias_id%" service alias is deprecated. Don\'t use it anymore.'
+            )
+        ;
+
+Now, every time this service alias is used, a deprecation warning is triggered,
+advising you to stop or to change your uses of that alias.
+
+The message is actually a message template, which replaces occurrences of the
+``%alias_id%`` placeholder by the service alias id. You **must** have at least
+one occurrence of the ``%alias_id%`` placeholder in your template.
+
 Anonymous Services
 ------------------
-
-.. note::
-
-    Anonymous services are only supported by the XML and YAML configuration formats.
-
-.. versionadded:: 3.3
-    The feature to configure anonymous services in YAML was introduced in Symfony 3.3.
 
 In some cases, you may want to prevent a service being used as a dependency of
 other services. This can be achieved by creating an anonymous service. These
@@ -167,7 +245,7 @@ The following example shows how to inject an anonymous service into another serv
 
     .. code-block:: yaml
 
-        # app/config/services.yaml
+        # config/services.yaml
         services:
             App\Foo:
                 arguments:
@@ -176,21 +254,44 @@ The following example shows how to inject an anonymous service into another serv
 
     .. code-block:: xml
 
-        <!-- app/config/services.xml -->
+        <!-- config/services.xml -->
         <?xml version="1.0" encoding="UTF-8" ?>
         <container xmlns="http://symfony.com/schema/dic/services"
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
             xsi:schemaLocation="http://symfony.com/schema/dic/services
-                http://symfony.com/schema/dic/services/services-1.0.xsd">
+                https://symfony.com/schema/dic/services/services-1.0.xsd">
 
             <services>
                 <service id="foo" class="App\Foo">
                     <argument type="service">
-                        <service class="App\AnonymousBar" />
+                        <service class="App\AnonymousBar"/>
                     </argument>
                 </service>
             </services>
         </container>
+
+    .. code-block:: php
+
+        // config/services.php
+        namespace Symfony\Component\DependencyInjection\Loader\Configurator;
+
+        use App\AnonymousBar;
+        use App\Foo;
+
+        return function(ContainerConfigurator $configurator) {
+            $services = $configurator->services();
+
+            $services->set(Foo::class)
+                // In versions earlier to Symfony 5.1 the inline_service() function was called inline()
+                ->args([inline_service(AnonymousBar::class)]);
+        };
+
+.. note::
+
+    Anonymous services do *NOT* inherit the definitions provided from the
+    defaults defined in the configuration. So you'll need to explicitly mark
+    service as autowired or autoconfigured when doing an anonymous service
+    e.g.: ``inline_service(Foo::class)->autowire()->autoconfigure()``.
 
 Using an anonymous service as a factory looks like this:
 
@@ -198,19 +299,19 @@ Using an anonymous service as a factory looks like this:
 
     .. code-block:: yaml
 
-        # app/config/services.yaml
+        # config/services.yaml
         services:
             App\Foo:
                 factory: [ !service { class: App\FooFactory }, 'constructFoo' ]
 
     .. code-block:: xml
 
-        <!-- app/config/services.xml -->
+        <!-- config/services.xml -->
         <?xml version="1.0" encoding="UTF-8" ?>
         <container xmlns="http://symfony.com/schema/dic/services"
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
             xsi:schemaLocation="http://symfony.com/schema/dic/services
-                http://symfony.com/schema/dic/services/services-1.0.xsd">
+                https://symfony.com/schema/dic/services/services-1.0.xsd">
 
             <services>
                 <service id="foo" class="App\Foo">
@@ -220,6 +321,21 @@ Using an anonymous service as a factory looks like this:
                 </service>
             </services>
         </container>
+
+    .. code-block:: php
+
+        // config/services.php
+        namespace Symfony\Component\DependencyInjection\Loader\Configurator;
+
+        use App\AnonymousBar;
+        use App\Foo;
+
+        return function(ContainerConfigurator $configurator) {
+            $services = $configurator->services();
+
+            $services->set(Foo::class)
+                ->factory([inline_service(AnonymousBar::class), 'constructFoo']);
+        };
 
 Deprecating Services
 --------------------
@@ -233,7 +349,7 @@ or you decided not to maintain it anymore), you can deprecate its definition:
 
         # config/services.yaml
         App\Service\OldService:
-            deprecated: The "%service_id%" service is deprecated since 2.8 and will be removed in 3.0.
+            deprecated: The "%service_id%" service is deprecated since vendor-name/package-name 2.8 and will be removed in 3.0.
 
     .. code-block:: xml
 
@@ -241,11 +357,11 @@ or you decided not to maintain it anymore), you can deprecate its definition:
         <?xml version="1.0" encoding="UTF-8" ?>
         <container xmlns="http://symfony.com/schema/dic/services"
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-Instance"
-            xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
+            xsi:schemaLocation="http://symfony.com/schema/dic/services https://symfony.com/schema/dic/services/services-1.0.xsd">
 
             <services>
                 <service id="App\Service\OldService">
-                    <deprecated>The "%service_id%" service is deprecated since 2.8 and will be removed in 3.0.</deprecated>
+                    <deprecated>The "%service_id%" service is deprecated since vendor-name/package-name 2.8 and will be removed in 3.0.</deprecated>
                 </service>
             </services>
         </container>
@@ -253,15 +369,16 @@ or you decided not to maintain it anymore), you can deprecate its definition:
     .. code-block:: php
 
         // config/services.php
+        namespace Symfony\Component\DependencyInjection\Loader\Configurator;
+
         use App\Service\OldService;
 
-        $container
-            ->register(OldService::class)
-            ->setDeprecated(
-                true,
-                'The "%service_id%" service is deprecated since 2.8 and will be removed in 3.0.'
-            )
-        ;
+        return function(ContainerConfigurator $configurator) {
+            $services = $configurator->services();
+
+            $services->set(OldService::class)
+                ->deprecate('The "%service_id%" service is deprecated since vendor-name/package-name 2.8 and will be removed in 3.0.');
+        };
 
 Now, every time this service is used, a deprecation warning is triggered,
 advising you to stop or to change your uses of that service.

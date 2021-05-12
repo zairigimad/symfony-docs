@@ -29,7 +29,7 @@ This method has 3 arguments:
   function;
 * **evaluator** - A function executed when the expression is evaluated.
 
-.. code-block:: php
+Example::
 
     use Symfony\Component\ExpressionLanguage\ExpressionLanguage;
 
@@ -49,7 +49,7 @@ This method has 3 arguments:
 
 In addition to the custom function arguments, the **evaluator** is passed an
 ``arguments`` variable as its first argument, which is equal to the second
-argument of ``compile()`` (e.g. the "values" when evaluating an expression).
+argument of ``evaluate()`` (e.g. the "values" when evaluating an expression).
 
 .. _components-expression-language-provider:
 
@@ -74,7 +74,7 @@ register::
     {
         public function getFunctions()
         {
-            return array(
+            return [
                 new ExpressionFunction('lowercase', function ($str) {
                     return sprintf('(is_string(%1$s) ? strtolower(%1$s) : %1$s)', $str);
                 }, function ($arguments, $str) {
@@ -84,7 +84,7 @@ register::
 
                     return strtolower($str);
                 }),
-            );
+            ];
         }
     }
 
@@ -107,10 +107,10 @@ or by using the second argument of the constructor::
     use Symfony\Component\ExpressionLanguage\ExpressionLanguage;
 
     // using the constructor
-    $expressionLanguage = new ExpressionLanguage(null, array(
+    $expressionLanguage = new ExpressionLanguage(null, [
         new StringExpressionLanguageProvider(),
         // ...
-    ));
+    ]);
 
     // using registerProvider()
     $expressionLanguage->registerProvider(new StringExpressionLanguageProvider());
@@ -125,12 +125,12 @@ or by using the second argument of the constructor::
 
         class ExpressionLanguage extends BaseExpressionLanguage
         {
-            public function __construct(CacheItemPoolInterface $parser = null, array $providers = array())
+            public function __construct(CacheItemPoolInterface $cache = null, array $providers = [])
             {
-                // prepends the default provider to let users override it easily
+                // prepends the default provider to let users override it
                 array_unshift($providers, new StringExpressionLanguageProvider());
 
-                parent::__construct($parser, $providers);
+                parent::__construct($cache, $providers);
             }
         }
 

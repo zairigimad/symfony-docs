@@ -1,6 +1,6 @@
 .. index::
     single: Cache Pool
-    single: APC Cache, APCu Cache
+    single: APCu Cache
     single: Array Cache
     single: Chain Cache
     single: Doctrine Cache
@@ -16,7 +16,7 @@ Cache Pools and Supported Adapters
 
 Cache Pools are the logical repositories of cache items. They perform all the
 common operations on items, such as saving them or looking for them. Cache pools
-are independent from the actual cache implementation. Therefore, applications
+are independent of the actual cache implementation. Therefore, applications
 can keep using the same cache pool even if the underlying cache mechanism
 changes from a file system based cache to a Redis or database based cache.
 
@@ -26,8 +26,9 @@ Creating Cache Pools
 --------------------
 
 Cache Pools are created through the **cache adapters**, which are classes that
-implement :class:`Symfony\\Component\\Cache\\Adapter\\AdapterInterface`. This
-component provides several adapters ready to use in your applications.
+implement both :class:`Symfony\\Contracts\\Cache\\CacheInterface` and
+``Psr\Cache\CacheItemPoolInterface``. This component provides several adapters
+ready to use in your applications.
 
 .. toctree::
     :glob:
@@ -35,8 +36,53 @@ component provides several adapters ready to use in your applications.
 
     adapters/*
 
+
+Using the Cache Contracts
+-------------------------
+
+The :class:`Symfony\\Contracts\\Cache\\CacheInterface` allows fetching, storing
+and deleting cache items using only two methods and a callback::
+
+    use Symfony\Component\Cache\Adapter\FilesystemAdapter;
+    use Symfony\Contracts\Cache\ItemInterface;
+
+    $cache = new FilesystemAdapter();
+
+    // The callable will only be executed on a cache miss.
+    $value = $cache->get('my_cache_key', function (ItemInterface $item) {
+        $item->expiresAfter(3600);
+
+        // ... do some HTTP request or heavy computations
+        $computedValue = 'foobar';
+
+        return $computedValue;
+    });
+
+    echo $value; // 'foobar'
+
+    // ... and to remove the cache key
+    $cache->delete('my_cache_key');
+
+Out of the box, using this interface provides stampede protection via locking
+and early expiration. Early expiration can be controlled via the third "beta"
+argument of the :method:`Symfony\\Contracts\\Cache\\CacheInterface::get` method.
+See the :doc:`/components/cache` article for more information.
+
+Early expiration can be detected inside the callback by calling the
+:method:`Symfony\\Contracts\\Cache\\ItemInterface::isHit` method: if this
+returns ``true``, it means we are currently recomputing a value ahead of its
+expiration date.
+
+For advanced use cases, the callback can accept a second ``bool &$save``
+argument passed by reference. By setting ``$save`` to ``false`` inside the
+callback, you can instruct the cache pool that the returned value *should not*
+be stored in the backend.
+
+Using PSR-6
+-----------
+
 Looking for Cache Items
------------------------
+~~~~~~~~~~~~~~~~~~~~~~~
 
 Cache Pools define three methods to look for cache items. The most common method
 is ``getItem($key)``, which returns the cache item identified by the given key::
@@ -51,10 +97,10 @@ value but an empty object which implements the :class:`Symfony\\Component\\Cache
 class.
 
 If you need to fetch several cache items simultaneously, use instead the
-``getItems(array($key1, $key2, ...))`` method::
+``getItems([$key1, $key2, ...])`` method::
 
     // ...
-    $stocks = $cache->getItems(array('AAPL', 'FB', 'GOOGL', 'MSFT'));
+    $stocks = $cache->getItems(['AAPL', 'FB', 'GOOGL', 'MSFT']);
 
 Again, if any of the keys doesn't represent a valid cache item, you won't get
 a ``null`` value but an empty ``CacheItem`` object.
@@ -66,10 +112,10 @@ returns ``true`` if there is a cache item identified by the given key::
     $hasBadges = $cache->hasItem('user_'.$userId.'_badges');
 
 Saving Cache Items
-------------------
+~~~~~~~~~~~~~~~~~~
 
 The most common method to save cache items is
-``Psr\\Cache\\CacheItemPoolInterface::save``, which stores the
+``Psr\Cache\CacheItemPoolInterface::save``, which stores the
 item in the cache immediately (it returns ``true`` if the item was saved or
 ``false`` if some error occurred)::
 
@@ -80,9 +126,9 @@ item in the cache immediately (it returns ``true`` if the item was saved or
 
 Sometimes you may prefer to not save the objects immediately in order to
 increase the application performance. In those cases, use the
-``Psr\\Cache\\CacheItemPoolInterface::saveDeferred`` method to mark cache
+``Psr\Cache\CacheItemPoolInterface::saveDeferred`` method to mark cache
 items as "ready to be persisted" and then call to
-``Psr\\Cache\\CacheItemPoolInterface::commit`` method when you are ready
+``Psr\Cache\CacheItemPoolInterface::commit`` method when you are ready
 to persist them all::
 
     // ...
@@ -100,25 +146,25 @@ method returns ``true`` when all the pending items are successfully saved or
 ``false`` otherwise.
 
 Removing Cache Items
---------------------
+~~~~~~~~~~~~~~~~~~~~
 
 Cache Pools include methods to delete a cache item, some of them or all of them.
-The most common is ``Psr\\Cache\\CacheItemPoolInterface::deleteItem``,
+The most common is ``Psr\Cache\CacheItemPoolInterface::deleteItem``,
 which deletes the cache item identified by the given key (it returns ``true``
 when the item is successfully deleted or doesn't exist and ``false`` otherwise)::
 
     // ...
     $isDeleted = $cache->deleteItem('user_'.$userId);
 
-Use the ``Psr\\Cache\\CacheItemPoolInterface::deleteItems`` method to
+Use the ``Psr\Cache\CacheItemPoolInterface::deleteItems`` method to
 delete several cache items simultaneously (it returns ``true`` only if all the
 items have been deleted, even when any or some of them don't exist)::
 
     // ...
-    $areDeleted = $cache->deleteItems(array('category1', 'category2'));
+    $areDeleted = $cache->deleteItems(['category1', 'category2']);
 
 Finally, to remove all the cache items stored in the pool, use the
-``Psr\\Cache\\CacheItemPoolInterface::clear`` method (which returns ``true``
+``Psr\Cache\CacheItemPoolInterface::clear`` method (which returns ``true``
 when all items are successfully deleted)::
 
     // ...
@@ -151,9 +197,6 @@ when all items are successfully deleted)::
         # clears the "cache.validation" and "cache.app" pool
         $ php bin/console cache:pool:clear cache.validation cache.app
 
-.. versionadded:: 4.1
-    The ``cache:pool:delete`` command was introduced in Symfony 4.1.
-
 .. _component-cache-cache-pool-prune:
 
 Pruning Cache Items
@@ -162,7 +205,7 @@ Pruning Cache Items
 Some cache pools do not include an automated mechanism for pruning expired cache items.
 For example, the :ref:`FilesystemAdapter <component-cache-filesystem-adapter>` cache
 does not remove expired cache items *until an item is explicitly requested and determined to
-be expired*, for example, via a call to ``Psr\\Cache\\CacheItemPoolInterface::getItem``.
+be expired*, for example, via a call to ``Psr\Cache\CacheItemPoolInterface::getItem``.
 Under certain workloads, this can cause stale cache entries to persist well past their
 expiration, resulting in a sizable consumption of wasted disk or memory space from excess,
 expired cache items.
@@ -194,13 +237,13 @@ silently ignored)::
     use Symfony\Component\Cache\Adapter\PdoAdapter;
     use Symfony\Component\Cache\Adapter\PhpFilesAdapter;
 
-    $cache = new ChainAdapter(array(
+    $cache = new ChainAdapter([
         new ApcuAdapter(),       // does NOT implement PruneableInterface
         new FilesystemAdapter(), // DOES implement PruneableInterface
         new PdoAdapter(),        // DOES implement PruneableInterface
         new PhpFilesAdapter(),   // DOES implement PruneableInterface
         // ...
-    ));
+    ]);
 
     // prune will proxy the call to PdoAdapter, FilesystemAdapter and PhpFilesAdapter,
     // while silently skipping ApcuAdapter

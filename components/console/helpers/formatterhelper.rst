@@ -9,8 +9,8 @@ You can do more advanced things with this helper than you can in
 :doc:`/console/coloring`.
 
 The :class:`Symfony\\Component\\Console\\Helper\\FormatterHelper` is included
-in the default helper set, which you can get by calling
-:method:`Symfony\\Component\\Console\\Command\\Command::getHelperSet`::
+in the default helper set and you can get it by calling
+:method:`Symfony\\Component\\Console\\Command\\Command::getHelper`::
 
     $formatter = $this->getHelper('formatter');
 
@@ -50,7 +50,7 @@ notice that the background is only as long as each individual line. Use the
 :method:`Symfony\\Component\\Console\\Helper\\FormatterHelper::formatBlock`
 to generate a block output::
 
-    $errorMessages = array('Error!', 'Something went wrong');
+    $errorMessages = ['Error!', 'Something went wrong'];
     $formattedBlock = $formatter->formatBlock($errorMessages, 'error');
     $output->writeln($formattedBlock);
 
@@ -78,7 +78,9 @@ you can write::
     $truncatedMessage = $formatter->truncate($message, 7);
     $output->writeln($truncatedMessage);
 
-And the output will be::
+And the output will be:
+
+.. code-block:: text
 
     This is...
 
@@ -93,7 +95,9 @@ from the end of the string::
 
     $truncatedMessage = $formatter->truncate($message, -5);
 
-This will result in::
+This will result in:
+
+.. code-block:: text
 
     This is a very long message, which should be trun...
 
@@ -101,13 +105,14 @@ Custom Suffix
 ~~~~~~~~~~~~~
 
 By default, the ``...`` suffix is used. If you wish to use a different suffix,
-simply pass it as the third argument to the method.
+pass it as the third argument to the method.
 The suffix is always appended, unless truncate length is longer than a message
 and a suffix length.
-If you don't want to use suffix at all, just pass an empty string::
+If you don't want to use suffix at all, pass an empty string::
 
     $truncatedMessage = $formatter->truncate($message, 7, '!!'); // result: This is!!
     $truncatedMessage = $formatter->truncate($message, 7, '');   // result: This is
-    $truncatedMessage = $formatter->truncate('test', 10));
-    /* result: test
-       because length of the "test..." string is shorter than 10 */
+
+    $truncatedMessage = $formatter->truncate('test', 10);
+    // result: test
+    // because length of the "test..." string is shorter than 10

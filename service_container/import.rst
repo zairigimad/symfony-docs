@@ -31,7 +31,7 @@ Importing Configuration with ``imports``
 ----------------------------------------
 
 By default, service configuration lives in ``config/services.yaml``. But if that
-file becomes large, you're free to organize into multiple files. For suppose you
+file becomes large, you're free to organize into multiple files. Suppose you
 decided to move some configuration to a new file:
 
 .. configuration-block::
@@ -52,7 +52,7 @@ decided to move some configuration to a new file:
         <container xmlns="http://symfony.com/schema/dic/services"
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
             xsi:schemaLocation="http://symfony.com/schema/dic/services
-                http://symfony.com/schema/dic/services/services-1.0.xsd">
+                https://symfony.com/schema/dic/services/services-1.0.xsd">
 
             <parameters>
                 <!-- ... some parameters -->
@@ -70,7 +70,8 @@ decided to move some configuration to a new file:
         // ... some parameters
         // ... some services
 
-To import this file, use the ``imports`` key from a file that *is* loaded:
+To import this file, use the ``imports`` key from any other file and pass either
+a relative or absolute path to the imported file:
 
 .. configuration-block::
 
@@ -79,6 +80,18 @@ To import this file, use the ``imports`` key from a file that *is* loaded:
         # config/services.yaml
         imports:
             - { resource: services/mailer.yaml }
+            # If you want to import a whole directory:
+            - { resource: services/ }
+        services:
+            _defaults:
+                autowire: true
+                autoconfigure: true
+
+            App\:
+                resource: '../src/*'
+                exclude: '../src/{DependencyInjection,Entity,Migrations,Tests,Kernel.php}'
+
+            # ...
 
     .. code-block:: xml
 
@@ -87,20 +100,55 @@ To import this file, use the ``imports`` key from a file that *is* loaded:
         <container xmlns="http://symfony.com/schema/dic/services"
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
             xsi:schemaLocation="http://symfony.com/schema/dic/services
-                http://symfony.com/schema/dic/services/services-1.0.xsd">
+                https://symfony.com/schema/dic/services/services-1.0.xsd">
 
             <imports>
                 <import resource="services/mailer.xml"/>
+                <!-- If you want to import a whole directory: -->
+                <import resource="services/"/>
             </imports>
+
+            <services>
+                <defaults autowire="true" autoconfigure="true"/>
+
+                <prototype namespace="App\" resource="../src/*"
+                    exclude="../src/{DependencyInjection,Entity,Migrations,Tests,Kernel.php}"/>
+
+                <!-- ... -->
+            </services>
         </container>
 
     .. code-block:: php
 
         // config/services.php
-        $loader->import('services/mailer.php');
+        namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
-The ``resource`` location, for files, is either a relative path from the
-current file or an absolute path.
+        return function(ContainerConfigurator $configurator) {
+            $configurator->import('services/mailer.php');
+            // If you want to import a whole directory:
+            $configurator->import('services/');
+
+            $services = $configurator->services()
+                ->defaults()
+                    ->autowire()
+                    ->autoconfigure()
+            ;
+
+            $services->load('App\\', '../src/*')
+                ->exclude('../src/{DependencyInjection,Entity,Migrations,Tests,Kernel.php}');
+        };
+
+When loading a configuration file, Symfony loads first the imported files and
+then it processes the parameters and services defined in the file. If you use the
+:ref:`default services.yaml configuration <service-container-services-load-example>`
+as in the above example, the ``App\`` definition creates services for classes
+found in ``../src/*``. If your imported file defines services for those classes
+too, they will be overridden.
+
+A possible solution for this is to add the classes and/or directories of the
+imported files in the ``exclude`` option of the ``App\`` definition. Another
+solution is to not use imports and add the service definitions in the same file,
+but after the ``App\`` definition to override it.
 
 .. include:: /components/dependency_injection/_imports-parameters-note.rst.inc
 

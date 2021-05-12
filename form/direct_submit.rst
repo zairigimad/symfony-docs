@@ -4,54 +4,20 @@
 How to Use the submit() Function to Handle Form Submissions
 ===========================================================
 
-With the ``handleRequest()`` method, it is really easy to handle form
-submissions::
+The recommended way of :ref:`processing Symfony forms <processing-forms>` is to
+use the :method:`Symfony\\Component\\Form\\FormInterface::handleRequest` method
+to detect when the form has been submitted. However, you can also use the
+:method:`Symfony\\Component\\Form\\FormInterface::submit` method to have better
+control over when exactly your form is submitted and what data is passed to it::
 
     use Symfony\Component\HttpFoundation\Request;
+    use Symfony\Component\HttpFoundation\Response;
     // ...
 
-    public function new(Request $request)
+    public function new(Request $request): Response
     {
-        $form = $this->createFormBuilder()
-            // ...
-            ->getForm();
-
-        $form->handleRequest($request);
-
-        if ($form->isSubmitted() && $form->isValid()) {
-            // perform some action...
-
-            return $this->redirectToRoute('task_success');
-        }
-
-        return $this->render('product/new.html.twig', array(
-            'form' => $form->createView(),
-        ));
-    }
-
-.. tip::
-
-    To see more about this method, read :ref:`form-handling-form-submissions`.
-
-.. _form-call-submit-directly:
-
-Calling Form::submit() manually
--------------------------------
-
-In some cases, you want better control over when exactly your form is submitted
-and what data is passed to it. Instead of using the
-:method:`Symfony\\Component\\Form\\FormInterface::handleRequest`
-method, pass the submitted data directly to
-:method:`Symfony\\Component\\Form\\FormInterface::submit`::
-
-    use Symfony\Component\HttpFoundation\Request;
-    // ...
-
-    public function new(Request $request)
-    {
-        $form = $this->createFormBuilder()
-            // ...
-            ->getForm();
+        $task = new Task();
+        $form = $this->createForm(TaskType::class, $task);
 
         if ($request->isMethod('POST')) {
             $form->submit($request->request->get($form->getName()));
@@ -63,9 +29,27 @@ method, pass the submitted data directly to
             }
         }
 
-        return $this->render('product/new.html.twig', array(
+        return $this->render('task/new.html.twig', [
             'form' => $form->createView(),
-        ));
+        ]);
+    }
+
+The list of fields submitted with the ``submit()`` method must be the same as
+the fields defined by the form class. Otherwise, you'll see a form validation error::
+
+    public function new(Request $request): Response
+    {
+        // ...
+
+        if ($request->isMethod('POST')) {
+            // '$json' represents payload data sent by React/Angular/Vue
+            // the merge of parameters is needed to submit all form fields
+            $form->submit(array_merge($json, $request->request->all()));
+
+            // ...
+        }
+
+        // ...
     }
 
 .. tip::
@@ -87,6 +71,9 @@ method, pass the submitted data directly to
 .. caution::
 
     When the second parameter ``$clearMissing`` is ``false``, like with the
-    "PATCH" method, the validation extension will only handle the submitted
-    fields. If the underlying data needs to be validated, this should be done
-    manually, i.e. using the validator.
+    "PATCH" method, the validation will only apply to the submitted fields. If
+    you need to validate all the underlying data, add the required fields
+    manually so that they are validated::
+
+        // 'email' and 'username' are added manually to force their validation
+        $form->submit(array_merge(['email' => null, 'username' => null], $request->request->all()), false);

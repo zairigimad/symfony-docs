@@ -10,16 +10,19 @@ password, but needs to enter their old password for security.
     This should **not** be used to validate a login form, since this is
     done automatically by the security system.
 
-+----------------+--------------------------------------------------------------------------------------------+
-| Applies to     | :ref:`property or method <validation-property-target>`                                     |
-+----------------+--------------------------------------------------------------------------------------------+
-| Options        | - `message`_                                                                               |
-|                | - `payload`_                                                                               |
-+----------------+--------------------------------------------------------------------------------------------+
-| Class          | :class:`Symfony\\Component\\Security\\Core\\Validator\\Constraints\\UserPassword`          |
-+----------------+--------------------------------------------------------------------------------------------+
-| Validator      | :class:`Symfony\\Component\\Security\\Core\\Validator\\Constraints\\UserPasswordValidator` |
-+----------------+--------------------------------------------------------------------------------------------+
+.. note::
+
+    In order to use this constraint, you should have installed the
+    symfony/security-core component with Composer.
+
+==========  ===================================================================
+Applies to  :ref:`property or method <validation-property-target>`
+Options     - `groups`_
+            - `message`_
+            - `payload`_
+Class       :class:`Symfony\\Component\\Security\\Core\\Validator\\Constraints\\UserPassword`
+Validator   :class:`Symfony\\Component\\Security\\Core\\Validator\\Constraints\\UserPasswordValidator`
+==========  ===================================================================
 
 Basic Usage
 -----------
@@ -45,7 +48,22 @@ the user's current password:
              *     message = "Wrong value for your current password"
              * )
              */
-             protected $oldPassword;
+            protected $oldPassword;
+        }
+
+    .. code-block:: php-attributes
+
+        // src/Form/Model/ChangePassword.php
+        namespace App\Form\Model;
+
+        use Symfony\Component\Security\Core\Validator\Constraints as SecurityAssert;
+
+        class ChangePassword
+        {
+            #[SecurityAssert\UserPassword(
+                message: 'Wrong value for your current password',
+            )]
+            protected $oldPassword;
         }
 
     .. code-block:: yaml
@@ -63,7 +81,7 @@ the user's current password:
         <?xml version="1.0" encoding="UTF-8" ?>
         <constraint-mapping xmlns="http://symfony.com/schema/dic/constraint-mapping"
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-            xsi:schemaLocation="http://symfony.com/schema/dic/constraint-mapping http://symfony.com/schema/dic/constraint-mapping/constraint-mapping-1.0.xsd">
+            xsi:schemaLocation="http://symfony.com/schema/dic/constraint-mapping https://symfony.com/schema/dic/constraint-mapping/constraint-mapping-1.0.xsd">
 
             <class name="App\Form\Model\ChangePassword">
                 <property name="oldPassword">
@@ -81,8 +99,8 @@ the user's current password:
         // src/Form/Model/ChangePassword.php
         namespace App\Form\Model;
 
-        use Symfony\Component\Validator\Mapping\ClassMetadata;
         use Symfony\Component\Security\Core\Validator\Constraints as SecurityAssert;
+        use Symfony\Component\Validator\Mapping\ClassMetadata;
 
         class ChangePassword
         {
@@ -90,9 +108,9 @@ the user's current password:
             {
                 $metadata->addPropertyConstraint(
                     'oldPassword',
-                    new SecurityAssert\UserPassword(array(
+                    new SecurityAssert\UserPassword([
                         'message' => 'Wrong value for your current password',
-                    ))
+                    ])
                 );
             }
         }
@@ -100,12 +118,16 @@ the user's current password:
 Options
 -------
 
-message
-~~~~~~~
+.. include:: /reference/constraints/_groups-option.rst.inc
+
+``message``
+~~~~~~~~~~~
 
 **type**: ``message`` **default**: ``This value should be the user current password.``
 
 This is the message that's displayed when the underlying string does *not*
 match the current user's password.
+
+This message has no parameters.
 
 .. include:: /reference/constraints/_payload-option.rst.inc

@@ -5,8 +5,8 @@ How to Set Up Before and After Filters
 ======================================
 
 It is quite common in web application development to need some logic to be
-executed just before or just after your controller actions acting as filters
-or hooks.
+performed right before or directly after your controller actions acting as
+filters or hooks.
 
 Some web frameworks define methods like ``preExecute()`` and ``postExecute()``,
 but there is no such thing in Symfony. The good news is that there is a much
@@ -52,7 +52,7 @@ First, define some token configuration as parameters:
         <container xmlns="http://symfony.com/schema/dic/services"
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
             xsi:schemaLocation="http://symfony.com/schema/dic/services
-                http://symfony.com/schema/dic/services/services-1.0.xsd">
+                https://symfony.com/schema/dic/services/services-1.0.xsd">
 
             <parameters>
                 <parameter key="tokens" type="collection">
@@ -65,10 +65,10 @@ First, define some token configuration as parameters:
     .. code-block:: php
 
         // config/services.php
-        $container->setParameter('tokens', array(
+        $container->setParameter('tokens', [
             'client1' => 'pass1',
             'client2' => 'pass2',
-        ));
+        ]);
 
 Tag Controllers to Be Checked
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -87,7 +87,7 @@ implement it::
         // ...
     }
 
-A controller that implements this interface simply looks like this::
+A controller that implements this interface looks like this::
 
     namespace App\Controller;
 
@@ -106,17 +106,17 @@ A controller that implements this interface simply looks like this::
 Creating an Event Subscriber
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Next, you'll need to create an event listener, which will hold the logic
+Next, you'll need to create an event subscriber, which will hold the logic
 that you want to be executed before your controllers. If you're not familiar with
-event listeners, you can learn more about them at :doc:`/event_dispatcher`::
+event subscribers, you can learn more about them at :doc:`/event_dispatcher`::
 
     // src/EventSubscriber/TokenSubscriber.php
     namespace App\EventSubscriber;
 
     use App\Controller\TokenAuthenticatedController;
-    use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
-    use Symfony\Component\HttpKernel\Event\FilterControllerEvent;
     use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+    use Symfony\Component\HttpKernel\Event\ControllerEvent;
+    use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
     use Symfony\Component\HttpKernel\KernelEvents;
 
     class TokenSubscriber implements EventSubscriberInterface
@@ -128,20 +128,17 @@ event listeners, you can learn more about them at :doc:`/event_dispatcher`::
             $this->tokens = $tokens;
         }
 
-        public function onKernelController(FilterControllerEvent $event)
+        public function onKernelController(ControllerEvent $event)
         {
             $controller = $event->getController();
 
-            /*
-             * $controller passed can be either a class or a Closure.
-             * This is not usual in Symfony but it may happen.
-             * If it is a class, it comes in array format
-             */
-            if (!is_array($controller)) {
-                return;
+            // when a controller class defines multiple action methods, the controller
+            // is returned as [$controllerInstance, 'methodName']
+            if (is_array($controller)) {
+                $controller = $controller[0];
             }
 
-            if ($controller[0] instanceof TokenAuthenticatedController) {
+            if ($controller instanceof TokenAuthenticatedController) {
                 $token = $event->getRequest()->query->get('token');
                 if (!in_array($token, $this->tokens)) {
                     throw new AccessDeniedHttpException('This action needs a valid token!');
@@ -151,9 +148,9 @@ event listeners, you can learn more about them at :doc:`/event_dispatcher`::
 
         public static function getSubscribedEvents()
         {
-            return array(
+            return [
                 KernelEvents::CONTROLLER => 'onKernelController',
-            );
+            ];
         }
     }
 
@@ -176,23 +173,23 @@ After Filters with the ``kernel.response`` Event
 
 In addition to having a "hook" that's executed *before* your controller, you
 can also add a hook that's executed *after* your controller. For this example,
-imagine that you want to add a sha1 hash (with a salt using that token) to
+imagine that you want to add a ``sha1`` hash (with a salt using that token) to
 all responses that have passed this token authentication.
 
 Another core Symfony event - called ``kernel.response`` (aka ``KernelEvents::RESPONSE``) -
 is notified on every request, but after the controller returns a Response object.
-Creating an "after" listener is as easy as creating a listener class and registering
+To create an "after" listener, create a listener class and register
 it as a service on this event.
 
 For example, take the ``TokenSubscriber`` from the previous example and first
 record the authentication token inside the request attributes. This will
 serve as a basic flag that this request underwent token authentication::
 
-    public function onKernelController(FilterControllerEvent $event)
+    public function onKernelController(ControllerEvent $event)
     {
         // ...
 
-        if ($controller[0] instanceof TokenAuthenticatedController) {
+        if ($controller instanceof TokenAuthenticatedController) {
             $token = $event->getRequest()->query->get('token');
             if (!in_array($token, $this->tokens)) {
                 throw new AccessDeniedHttpException('This action needs a valid token!');
@@ -208,9 +205,9 @@ This will look for the ``auth_token`` flag on the request object and set a custo
 header on the response if it's found::
 
     // add the new use statement at the top of your file
-    use Symfony\Component\HttpKernel\Event\FilterResponseEvent;
+    use Symfony\Component\HttpKernel\Event\ResponseEvent;
 
-    public function onKernelResponse(FilterResponseEvent $event)
+    public function onKernelResponse(ResponseEvent $event)
     {
         // check to see if onKernelController marked this as a token "auth'ed" request
         if (!$token = $event->getRequest()->attributes->get('auth_token')) {
@@ -226,10 +223,10 @@ header on the response if it's found::
 
     public static function getSubscribedEvents()
     {
-        return array(
+        return [
             KernelEvents::CONTROLLER => 'onKernelController',
             KernelEvents::RESPONSE => 'onKernelResponse',
-        );
+        ];
     }
 
 That's it! The ``TokenSubscriber`` is now notified before every controller is

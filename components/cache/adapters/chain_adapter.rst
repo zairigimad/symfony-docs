@@ -15,16 +15,15 @@ given adapters. This exposes a simple and efficient method for creating a layere
 The ChainAdapter must be provided an array of adapters and optionally a maximum cache
 lifetime as its constructor arguments::
 
-    use Symfony\Component\Cache\Adapter\ApcuAdapter;
+    use Symfony\Component\Cache\Adapter\ChainAdapter;
 
-    $cache = new ChainAdapter(array(
-
+    $cache = new ChainAdapter(
         // The ordered list of adapters used to fetch cached items
         array $adapters,
 
         // The max lifetime of items propagated from lower adapters to upper ones
         $maxLifetime = 0
-    ));
+    );
 
 .. note::
 
@@ -40,12 +39,12 @@ slowest storage engines, :class:`Symfony\\Component\\Cache\\Adapter\\ApcuAdapter
     use Symfony\Component\Cache\Adapter\ChainAdapter;
     use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 
-    $cache = new ChainAdapter(array(
+    $cache = new ChainAdapter([
         new ApcuAdapter(),
         new FilesystemAdapter(),
-    ));
+    ]);
 
-When calling this adapter's :method:`Symfony\\Component\\Cache\\ChainAdapter::prune` method,
+When calling this adapter's :method:`Symfony\\Component\\Cache\\Adapter\\ChainAdapter::prune` method,
 the call is delegated to all its compatible cache adapters. It is safe to mix both adapters
 that *do* and do *not* implement :class:`Symfony\\Component\\Cache\\PruneableInterface`, as
 incompatible adapters are silently ignored::
@@ -54,16 +53,10 @@ incompatible adapters are silently ignored::
     use Symfony\Component\Cache\Adapter\ChainAdapter;
     use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 
-    $cache = new ChainAdapter(array(
+    $cache = new ChainAdapter([
         new ApcuAdapter(),        // does NOT implement PruneableInterface
         new FilesystemAdapter(),  // DOES implement PruneableInterface
-    ));
+    ]);
 
-    // prune will proxy the call to FilesystemAdapter while silently skipping ApcuAdapter
+    // prune will proxy the call to FilesystemAdapter while silently skip ApcuAdapter
     $cache->prune();
-
-.. note::
-
-    Since Symfony 3.4, this adapter implements :class:`Symfony\\Component\\Cache\\PruneableInterface`,
-    allowing for manual :ref:`pruning of expired cache entries <component-cache-cache-pool-prune>` by
-    calling its ``prune()`` method.

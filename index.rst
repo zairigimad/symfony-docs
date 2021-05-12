@@ -31,7 +31,9 @@ Topics
 .. toctree::
     :maxdepth: 1
 
+    best_practices
     bundles
+    cache
     console
     doctrine
     deployment
@@ -40,10 +42,17 @@ Topics
     forms
     frontend
     http_cache
+    http_client
+    lock
     logging
+    mailer
+    mercure
     messenger
+    migration
+    notifier
     performance
     profiler
+    rate_limiter
     routing
     security
     session
@@ -53,17 +62,8 @@ Topics
     testing
     translation
     validation
+    web_link
     workflow
-
-Best Practices
---------------
-
-.. toctree::
-    :hidden:
-
-    best_practices/index
-
-Read the :doc:`Official Best Practices </best_practices/index>`.
 
 Components
 ----------

@@ -1,21 +1,18 @@
 DateTime
 ========
 
-Validates that a value is a valid "datetime", meaning either a ``DateTime``
-object or a string (or an object that can be cast into a string) that follows
-a specific format.
+Validates that a value is a valid "datetime", meaning a string (or an object
+that can be cast into a string) that follows a specific format.
 
-+----------------+------------------------------------------------------------------------+
-| Applies to     | :ref:`property or method <validation-property-target>`                 |
-+----------------+------------------------------------------------------------------------+
-| Options        | - `format`_                                                            |
-|                | - `message`_                                                           |
-|                | - `payload`_                                                           |
-+----------------+------------------------------------------------------------------------+
-| Class          | :class:`Symfony\\Component\\Validator\\Constraints\\DateTime`          |
-+----------------+------------------------------------------------------------------------+
-| Validator      | :class:`Symfony\\Component\\Validator\\Constraints\\DateTimeValidator` |
-+----------------+------------------------------------------------------------------------+
+==========  ===================================================================
+Applies to  :ref:`property or method <validation-property-target>`
+Options     - `format`_
+            - `groups`_
+            - `message`_
+            - `payload`_
+Class       :class:`Symfony\\Component\\Validator\\Constraints\\DateTime`
+Validator   :class:`Symfony\\Component\\Validator\\Constraints\\DateTimeValidator`
+==========  ===================================================================
 
 Basic Usage
 -----------
@@ -32,9 +29,26 @@ Basic Usage
         class Author
         {
             /**
-             * @Assert\DateTime()
+             * @Assert\DateTime
+             * @var string A "Y-m-d H:i:s" formatted value
              */
-             protected $createdAt;
+            protected $createdAt;
+        }
+
+    .. code-block:: php-attributes
+
+        // src/Entity/Author.php
+        namespace App\Entity;
+
+        use Symfony\Component\Validator\Constraints as Assert;
+
+        class Author
+        {
+            /**
+             * @var string A "Y-m-d H:i:s" formatted value
+             */
+            #[Assert\DateTime]
+            protected $createdAt;
         }
 
     .. code-block:: yaml
@@ -51,11 +65,11 @@ Basic Usage
         <?xml version="1.0" encoding="UTF-8" ?>
         <constraint-mapping xmlns="http://symfony.com/schema/dic/constraint-mapping"
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-            xsi:schemaLocation="http://symfony.com/schema/dic/constraint-mapping http://symfony.com/schema/dic/constraint-mapping/constraint-mapping-1.0.xsd">
+            xsi:schemaLocation="http://symfony.com/schema/dic/constraint-mapping https://symfony.com/schema/dic/constraint-mapping/constraint-mapping-1.0.xsd">
 
             <class name="App\Entity\Author">
                 <property name="createdAt">
-                    <constraint name="DateTime" />
+                    <constraint name="DateTime"/>
                 </property>
             </class>
         </constraint-mapping>
@@ -65,33 +79,55 @@ Basic Usage
         // src/Entity/Author.php
         namespace App\Entity;
 
-        use Symfony\Component\Validator\Mapping\ClassMetadata;
         use Symfony\Component\Validator\Constraints as Assert;
+        use Symfony\Component\Validator\Mapping\ClassMetadata;
 
         class Author
         {
+           /**
+            * @var string A "Y-m-d H:i:s" formatted value
+            */
+            protected $createdAt;
+
             public static function loadValidatorMetadata(ClassMetadata $metadata)
             {
                 $metadata->addPropertyConstraint('createdAt', new Assert\DateTime());
             }
         }
 
+.. include:: /reference/constraints/_empty-values-are-valid.rst.inc
+
 Options
 -------
 
-format
-~~~~~~
+``format``
+~~~~~~~~~~
 
 **type**: ``string`` **default**: ``Y-m-d H:i:s``
 
 This option allows to validate a custom date format. See
 :phpmethod:`DateTime::createFromFormat` for formatting options.
 
-message
-~~~~~~~
+.. include:: /reference/constraints/_groups-option.rst.inc
+
+``message``
+~~~~~~~~~~~
 
 **type**: ``string`` **default**: ``This value is not a valid datetime.``
 
 This message is shown if the underlying data is not a valid datetime.
+
+You can use the following parameters in this message:
+
+===============  ==============================================================
+Parameter        Description
+===============  ==============================================================
+``{{ value }}``  The current (invalid) value
+``{{ label }}``  Corresponding form field label
+===============  ==============================================================
+
+.. versionadded:: 5.2
+
+    The ``{{ label }}`` parameter was introduced in Symfony 5.2.
 
 .. include:: /reference/constraints/_payload-option.rst.inc

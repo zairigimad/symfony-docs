@@ -19,7 +19,7 @@ by an instance of :class:`Symfony\\Component\\Security\\Core\\Authorization\\Acc
 An authorization decision will always be based on a few things:
 
 * The current token
-    For instance, the token's :method:`Symfony\\Component\\Security\\Core\\Authentication\\Token\\TokenInterface::getRoles`
+    For instance, the token's :method:`Symfony\\Component\\Security\\Core\\Authentication\\Token\\TokenInterface::getRoleNames`
     method may be used to retrieve the roles of the current user (e.g.
     ``ROLE_SUPER_ADMIN``), or a decision may be based on the class of the token.
 * A set of attributes
@@ -47,16 +47,25 @@ recognizes several strategies:
     grant access if there are more voters granting access than there are denying;
 
 ``unanimous``
-    only grant access if none of the voters has denied access;
+    only grant access if none of the voters has denied access. If all voters
+    abstained from voting, the decision is based on the ``allow_if_all_abstain``
+    config option (which defaults to ``false``).
 
-.. code-block:: php
+``priority``
+    grants or denies access by the first voter that does not abstain;
+
+    .. versionadded:: 5.1
+
+        The ``priority`` version strategy was introduced in Symfony 5.1.
+
+Usage of the available options in detail::
 
     use Symfony\Component\Security\Core\Authorization\AccessDecisionManager;
 
     // instances of Symfony\Component\Security\Core\Authorization\Voter\VoterInterface
-    $voters = array(...);
+    $voters = [...];
 
-    // one of "affirmative", "consensus", "unanimous"
+    // one of "affirmative", "consensus", "unanimous", "priority"
     $strategy = ...;
 
     // whether or not to grant access when all voters abstain
@@ -98,18 +107,26 @@ AuthenticatedVoter
 ~~~~~~~~~~~~~~~~~~
 
 The :class:`Symfony\\Component\\Security\\Core\\Authorization\\Voter\\AuthenticatedVoter`
-voter supports the attributes ``IS_AUTHENTICATED_FULLY``, ``IS_AUTHENTICATED_REMEMBERED``,
-and ``IS_AUTHENTICATED_ANONYMOUSLY`` and grants access based on the current
-level of authentication, i.e. is the user fully authenticated, or only based
-on a "remember-me" cookie, or even authenticated anonymously?
+voter supports the attributes ``IS_AUTHENTICATED_FULLY``,
+``IS_AUTHENTICATED_REMEMBERED``, ``IS_AUTHENTICATED_ANONYMOUSLY``,
+to grant access based on the current level of authentication, i.e. is the
+user fully authenticated, or only based on a "remember-me" cookie, or even
+authenticated anonymously?
 
-.. code-block:: php
+It also supports the attributes ``IS_ANONYMOUS``, ``IS_REMEMBERED``,
+``IS_IMPERSONATOR`` to grant access based on a specific state of
+authentication.
+
+.. versionadded:: 5.1
+
+    The ``IS_ANONYMOUS``, ``IS_REMEMBERED`` and ``IS_IMPERSONATOR``
+    attributes were introduced in Symfony 5.1.
+
+::
 
     use Symfony\Component\Security\Core\Authentication\AuthenticationTrustResolver;
-    use Symfony\Component\Security\Core\Authentication\Token\AnonymousToken;
-    use Symfony\Component\Security\Core\Authentication\Token\RememberMeToken;
 
-    $trustResolver = new AuthenticationTrustResolver(AnonymousToken::class, RememberMeToken::class);
+    $trustResolver = new AuthenticationTrustResolver();
 
     $authenticatedVoter = new AuthenticatedVoter($trustResolver);
 
@@ -119,22 +136,22 @@ on a "remember-me" cookie, or even authenticated anonymously?
     // any object
     $object = ...;
 
-    $vote = $authenticatedVoter->vote($token, $object, array('IS_AUTHENTICATED_FULLY'));
+    $vote = $authenticatedVoter->vote($token, $object, ['IS_AUTHENTICATED_FULLY']);
 
 RoleVoter
 ~~~~~~~~~
 
 The :class:`Symfony\\Component\\Security\\Core\\Authorization\\Voter\\RoleVoter`
 supports attributes starting with ``ROLE_`` and grants access to the user
-when the required ``ROLE_*`` attributes can all be found in the array of
-roles returned by the token's :method:`Symfony\\Component\\Security\\Core\\Authentication\\Token\\TokenInterface::getRoles`
+when at least one required ``ROLE_*`` attribute can be found in the array of
+roles returned by the token's :method:`Symfony\\Component\\Security\\Core\\Authentication\\Token\\TokenInterface::getRoleNames`
 method::
 
     use Symfony\Component\Security\Core\Authorization\Voter\RoleVoter;
 
     $roleVoter = new RoleVoter('ROLE_');
 
-    $roleVoter->vote($token, $object, array('ROLE_ADMIN'));
+    $roleVoter->vote($token, $object, ['ROLE_ADMIN']);
 
 RoleHierarchyVoter
 ~~~~~~~~~~~~~~~~~~
@@ -142,7 +159,7 @@ RoleHierarchyVoter
 The :class:`Symfony\\Component\\Security\\Core\\Authorization\\Voter\\RoleHierarchyVoter`
 extends :class:`Symfony\\Component\\Security\\Core\\Authorization\\Voter\\RoleVoter`
 and provides some additional functionality: it knows how to handle a
-hierarchy of roles. For instance, a ``ROLE_SUPER_ADMIN`` role may have subroles
+hierarchy of roles. For instance, a ``ROLE_SUPER_ADMIN`` role may have sub-roles
 ``ROLE_ADMIN`` and ``ROLE_USER``, so that when a certain object requires the
 user to have the ``ROLE_ADMIN`` role, it grants access to users who in fact
 have the ``ROLE_ADMIN`` role, but also to users having the ``ROLE_SUPER_ADMIN``
@@ -151,40 +168,61 @@ role::
     use Symfony\Component\Security\Core\Authorization\Voter\RoleHierarchyVoter;
     use Symfony\Component\Security\Core\Role\RoleHierarchy;
 
-    $hierarchy = array(
-        'ROLE_SUPER_ADMIN' => array('ROLE_ADMIN', 'ROLE_USER'),
-    );
+    $hierarchy = [
+        'ROLE_SUPER_ADMIN' => ['ROLE_ADMIN', 'ROLE_USER'],
+    ];
 
     $roleHierarchy = new RoleHierarchy($hierarchy);
 
     $roleHierarchyVoter = new RoleHierarchyVoter($roleHierarchy);
 
+ExpressionVoter
+~~~~~~~~~~~~~~~
+
+The :class:`Symfony\\Component\\Security\\Core\\Authorization\\Voter\\ExpressionVoter`
+grants access based on the evaluation of expressions created with the
+:doc:`ExpressionLanguage component </components/expression_language>`. These
+expressions have access to a number of
+:ref:`special security variables <security-expression-variables>`::
+
+    use Symfony\Component\ExpressionLanguage\Expression;
+    use Symfony\Component\Security\Core\Authorization\Voter\ExpressionVoter;
+
+    // Symfony\Component\Security\Core\Authorization\ExpressionLanguage;
+    $expressionLanguage = ...;
+
+    // instance of Symfony\Component\Security\Core\Authentication\AuthenticationTrustResolverInterface
+    $trustResolver = ...;
+
+    // Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface
+    $authorizationChecker = ...;
+
+    $expressionVoter = new ExpressionVoter($expressionLanguage, $trustResolver, $authorizationChecker);
+
+    // instance of Symfony\Component\Security\Core\Authentication\Token\TokenInterface
+    $token = ...;
+
+    // any object
+    $object = ...;
+
+    $expression = new Expression(
+        '"ROLE_ADMIN" in role_names or (not is_anonymous() and user.isSuperAdmin())'
+    );
+
+    $vote = $expressionVoter->vote($token, $object, [$expression]);
+
 .. note::
 
-    When you make your own voter, you may of course use its constructor
-    to inject any dependencies it needs to come to a decision.
+    When you make your own voter, you can use its constructor to inject any
+    dependencies it needs to come to a decision.
 
 Roles
 -----
 
-Roles are objects that give expression to a certain right the user has. The only
-requirement is that they must define a ``getRole()`` method that returns a
-string representation of the role itself. To do so, you can optionally extend
-from the default :class:`Symfony\\Component\\Security\\Core\\Role\\Role` class,
-which returns its first constructor argument in this method::
-
-    use Symfony\Component\Security\Core\Role\Role;
-
-    $role = new Role('ROLE_ADMIN');
-
-    // shows 'ROLE_ADMIN'
-    var_dump($role->getRole());
-
-.. note::
-
-    Most authentication tokens extend from :class:`Symfony\\Component\\Security\\Core\\Authentication\\Token\\AbstractToken`,
-    which means that the roles given to its constructor will be
-    automatically converted from strings to these simple ``Role`` objects.
+Roles are strings that give expression to a certain right the user has (e.g.
+*"edit a blog post"*, *"create an invoice"*). You can freely choose those
+strings. The only requirement is that they must start with the ``ROLE_`` prefix
+(e.g. ``ROLE_POST_EDIT``, ``ROLE_INVOICE_CREATE``).
 
 Using the Decision Manager
 --------------------------
@@ -203,16 +241,18 @@ It uses an access map (which should be an instance of :class:`Symfony\\Component
 which contains request matchers and a corresponding set of attributes that
 are required for the current user to get access to the application::
 
-    use Symfony\Component\Security\Http\AccessMap;
     use Symfony\Component\HttpFoundation\RequestMatcher;
+    use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorage;
+    use Symfony\Component\Security\Http\AccessMap;
     use Symfony\Component\Security\Http\Firewall\AccessListener;
 
     $accessMap = new AccessMap();
+    $tokenStorage = new TokenStorage();
     $requestMatcher = new RequestMatcher('^/admin');
-    $accessMap->add($requestMatcher, array('ROLE_ADMIN'));
+    $accessMap->add($requestMatcher, ['ROLE_ADMIN']);
 
     $accessListener = new AccessListener(
-        $securityContext,
+        $tokenStorage,
         $accessDecisionManager,
         $accessMap,
         $authenticationManager
@@ -239,4 +279,3 @@ decision manager::
     if (!$authorizationChecker->isGranted('ROLE_ADMIN')) {
         throw new AccessDeniedException();
     }
-

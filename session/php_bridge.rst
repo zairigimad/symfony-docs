@@ -18,7 +18,7 @@ for the ``handler_id``:
         # config/packages/framework.yaml
         framework:
             session:
-                storage_id: session.storage.php_bridge
+                storage_factory_id: session.storage.factory.php_bridge
                 handler_id: ~
 
     .. code-block:: xml
@@ -29,10 +29,10 @@ for the ``handler_id``:
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
             xmlns:framework="http://symfony.com/schema/dic/symfony"
             xsi:schemaLocation="http://symfony.com/schema/dic/services
-                http://symfony.com/schema/dic/services/services-1.0.xsd">
+                https://symfony.com/schema/dic/services/services-1.0.xsd">
 
             <framework:config>
-                <framework:session storage-id="session.storage.php_bridge"
+                <framework:session storage-factory-id="session.storage.factory.php_bridge"
                     handler-id="null"
                 />
             </framework:config>
@@ -41,14 +41,16 @@ for the ``handler_id``:
     .. code-block:: php
 
         // config/packages/framework.php
-        $container->loadFromExtension('framework', array(
-            'session' => array(
-                'storage_id' => 'session.storage.php_bridge',
-                'handler_id' => null,
-            ),
-        ));
+        use Symfony\Config\FrameworkConfig;
 
-Otherwise, if the problem is simply that you cannot avoid the application
+        return static function (FrameworkConfig $framework) {
+            $framework->session()
+                ->storageFactoryId('session.storage.factory.php_bridge')
+                ->handlerId(null)
+            ;
+        };
+
+Otherwise, if the problem is that you cannot avoid the application
 starting the session with ``session_start()``, you can still make use of
 a Symfony based session save handler by specifying the save handler as in
 the example below:
@@ -60,7 +62,7 @@ the example below:
         # config/packages/framework.yaml
         framework:
             session:
-                storage_id: session.storage.php_bridge
+                storage_factory_id: session.storage.factory.php_bridge
                 handler_id: session.handler.native_file
 
     .. code-block:: xml
@@ -71,7 +73,7 @@ the example below:
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
             xmlns:framework="http://symfony.com/schema/dic/symfony"
             xsi:schemaLocation="http://symfony.com/schema/dic/services
-                http://symfony.com/schema/dic/services/services-1.0.xsd">
+                https://symfony.com/schema/dic/services/services-1.0.xsd">
 
             <framework:config>
                 <framework:session storage-id="session.storage.php_bridge"
@@ -83,12 +85,14 @@ the example below:
     .. code-block:: php
 
         // config/packages/framework.php
-        $container->loadFromExtension('framework', array(
-            'session' => array(
-                'storage_id' => 'session.storage.php_bridge',
-                'handler_id' => 'session.storage.native_file',
-            ),
-        ));
+        use Symfony\Config\FrameworkConfig;
+
+        return static function (FrameworkConfig $framework) {
+            $framework->session()
+                ->storageFactoryId('session.storage.factory.php_bridge')
+                ->handlerId('session.storage.native_file')
+            ;
+        };
 
 .. note::
 

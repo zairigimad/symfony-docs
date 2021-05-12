@@ -7,7 +7,7 @@ How to Configure Monolog to Display Console Messages
 It is possible to use the console to print messages for certain
 :doc:`verbosity levels </console/verbosity>` using the
 :class:`Symfony\\Component\\Console\\Output\\OutputInterface` instance that
-is passed when a command gets executed.
+is passed when a command is run.
 
 When a lot of logging has to happen, it's cumbersome to print information
 depending on the verbosity settings (``-v``, ``-vv``, ``-vvv``) because the
@@ -28,11 +28,15 @@ calls need to be wrapped in conditions. For example::
     }
 
 Instead of using these semantic methods to test for each of the verbosity
-levels, the `MonologBridge`_ provides a `ConsoleHandler`_ that listens to
-console events and writes log messages to the console output depending on the
-current log level and the console verbosity.
+levels, the `MonologBridge`_ provides a
+:class:`Symfony\\Bridge\\Monolog\\Handler\\ConsoleHandler` that listens to
+console events and writes log messages to the console output depending on
+the current log level and the console verbosity.
 
 The example above could then be rewritten as::
+
+    // src/Command/YourCommand.php
+    namespace App\Command;
 
     use Psr\Log\LoggerInterface;
     use Symfony\Component\Console\Command\Command;
@@ -60,8 +64,18 @@ The example above could then be rewritten as::
 Depending on the verbosity level that the command is run in and the user's
 configuration (see below), these messages may or may not be displayed to
 the console. If they are displayed, they are timestamped and colored appropriately.
-Additionally, error logs are written to the error output (php://stderr).
+Additionally, error logs are written to the error output (``php://stderr``).
 There is no need to conditionally handle the verbosity settings anymore.
+
+===============  =======================================  ============
+LoggerInterface  Verbosity                                Command line
+===============  =======================================  ============
+->error()        OutputInterface::VERBOSITY_QUIET         stderr
+->warning()      OutputInterface::VERBOSITY_NORMAL        stdout
+->notice()       OutputInterface::VERBOSITY_VERBOSE       -v
+->info()         OutputInterface::VERBOSITY_VERY_VERBOSE  -vv
+->debug()        OutputInterface::VERBOSITY_DEBUG         -vvv
+===============  =======================================  ============
 
 The Monolog console handler is enabled by default:
 
@@ -90,7 +104,7 @@ The Monolog console handler is enabled by default:
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
             xmlns:monolog="http://symfony.com/schema/dic/monolog"
             xsi:schemaLocation="http://symfony.com/schema/dic/services
-                http://symfony.com/schema/dic/services/services-1.0.xsd">
+                https://symfony.com/schema/dic/services/services-1.0.xsd">
 
             <monolog:config>
                 <!-- ... -->
@@ -108,19 +122,18 @@ The Monolog console handler is enabled by default:
     .. code-block:: php
 
         // config/packages/dev/monolog.php
-        $container->loadFromExtension('monolog', array(
-            'handlers' => array(
-                'console' => array(
-                   'type' => 'console',
-                   'process_psr_3_messages' => false,
-                   'channels' => array('!event', '!doctrine', '!console'),
-                ),
-            ),
-        ));
+        use Symfony\Config\MonologConfig;
+
+        return static function (MonologConfig $monolog) {
+            $monolog->handler('console')
+                ->type('console')
+                ->processPsr3Messages(false)
+                ->channels()->elements(['!event', '!doctrine', '!console'])
+            ;
+        };
 
 Now, log messages will be shown on the console based on the log levels and verbosity.
 By default (normal verbosity level), warnings and higher will be shown. But in
 :doc:`full verbosity mode </console/verbosity>`, all messages will be shown.
 
-.. _ConsoleHandler: https://github.com/symfony/MonologBridge/blob/master/Handler/ConsoleHandler.php
-.. _MonologBridge: https://github.com/symfony/MonologBridge
+.. _MonologBridge: https://github.com/symfony/monolog-bridge

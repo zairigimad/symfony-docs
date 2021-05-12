@@ -9,48 +9,57 @@ values must match (or a validation error is thrown). The most common use
 is when you need the user to repeat their password or email to verify
 accuracy.
 
-+-------------+------------------------------------------------------------------------+
-| Rendered as | input ``text`` field by default, but see `type`_ option                |
-+-------------+------------------------------------------------------------------------+
-| Options     | - `first_name`_                                                        |
-|             | - `first_options`_                                                     |
-|             | - `options`_                                                           |
-|             | - `second_name`_                                                       |
-|             | - `second_options`_                                                    |
-|             | - `type`_                                                              |
-+-------------+------------------------------------------------------------------------+
-| Overridden  | - `error_bubbling`_                                                    |
-| options     |                                                                        |
-+-------------+------------------------------------------------------------------------+
-| Inherited   | - `data`_                                                              |
-| options     | - `error_mapping`_                                                     |
-|             | - `help`_                                                              |
-|             | - `invalid_message`_                                                   |
-|             | - `invalid_message_parameters`_                                        |
-|             | - `mapped`_                                                            |
-+-------------+------------------------------------------------------------------------+
-| Parent type | :doc:`FormType </reference/forms/types/form>`                          |
-+-------------+------------------------------------------------------------------------+
-| Class       | :class:`Symfony\\Component\\Form\\Extension\\Core\\Type\\RepeatedType` |
-+-------------+------------------------------------------------------------------------+
++---------------------------+------------------------------------------------------------------------+
+| Rendered as               | input ``text`` field by default, but see `type`_ option                |
++---------------------------+------------------------------------------------------------------------+
+| Options                   | - `first_name`_                                                        |
+|                           | - `first_options`_                                                     |
+|                           | - `options`_                                                           |
+|                           | - `second_name`_                                                       |
+|                           | - `second_options`_                                                    |
+|                           | - `type`_                                                              |
++---------------------------+------------------------------------------------------------------------+
+| Overridden options        | - `error_bubbling`_                                                    |
+|                           | - `invalid_message`_                                                   |
++---------------------------+------------------------------------------------------------------------+
+| Inherited options         | - `attr`_                                                              |
+|                           | - `data`_                                                              |
+|                           | - `error_mapping`_                                                     |
+|                           | - `help`_                                                              |
+|                           | - `help_attr`_                                                         |
+|                           | - `help_html`_                                                         |
+|                           | - `invalid_message_parameters`_                                        |
+|                           | - `mapped`_                                                            |
+|                           | - `row_attr`_                                                          |
++---------------------------+------------------------------------------------------------------------+
+| Default invalid message   | The values do not match.                                               |
++---------------------------+------------------------------------------------------------------------+
+| Legacy invalid message    | The value {{ value }} is not valid.                                    |
++---------------------------+------------------------------------------------------------------------+
+| Parent type               | :doc:`FormType </reference/forms/types/form>`                          |
++---------------------------+------------------------------------------------------------------------+
+| Class                     | :class:`Symfony\\Component\\Form\\Extension\\Core\\Type\\RepeatedType` |
++---------------------------+------------------------------------------------------------------------+
+
+.. include:: /reference/forms/types/options/_debug_form.rst.inc
 
 Example Usage
 -------------
 
 .. code-block:: php
 
-    use Symfony\Component\Form\Extension\Core\Type\RepeatedType;
     use Symfony\Component\Form\Extension\Core\Type\PasswordType;
+    use Symfony\Component\Form\Extension\Core\Type\RepeatedType;
     // ...
 
-    $builder->add('password', RepeatedType::class, array(
+    $builder->add('password', RepeatedType::class, [
         'type' => PasswordType::class,
         'invalid_message' => 'The password fields must match.',
-        'options' => array('attr' => array('class' => 'password-field')),
+        'options' => ['attr' => ['class' => 'password-field']],
         'required' => true,
-        'first_options'  => array('label' => 'Password'),
-        'second_options' => array('label' => 'Repeat Password'),
-    ));
+        'first_options'  => ['label' => 'Password'],
+        'second_options' => ['label' => 'Repeat Password'],
+    ]);
 
 Upon a successful form submit, the value entered into both of the "password"
 fields becomes the data of the ``password`` key. In other words, even though
@@ -99,11 +108,16 @@ shown to the user.
 The ``invalid_message`` is used to customize the error that will
 be displayed when the two fields do not match each other.
 
+.. note::
+
+    The ``mapped`` option is always ``true`` for both fields in order for the type
+    to work properly.
+
 Field Options
 -------------
 
-first_name
-~~~~~~~~~~
+``first_name``
+~~~~~~~~~~~~~~
 
 **type**: ``string`` **default**: ``first``
 
@@ -113,10 +127,10 @@ will be available under the key assigned to the ``RepeatedType`` field itself
 (e.g.  ``password``). However, if you don't specify a label, this field
 name is used to "guess" the label for you.
 
-first_options
-~~~~~~~~~~~~~
+``first_options``
+~~~~~~~~~~~~~~~~~
 
-**type**: ``array`` **default**: ``array()``
+**type**: ``array`` **default**: ``[]``
 
 Additional options (will be merged into `options`_ below) that should be
 passed *only* to the first field. This is especially useful for customizing
@@ -125,15 +139,15 @@ the label::
     use Symfony\Component\Form\Extension\Core\Type\RepeatedType;
     // ...
 
-    $builder->add('password', RepeatedType::class, array(
-        'first_options'  => array('label' => 'Password'),
-        'second_options' => array('label' => 'Repeat Password'),
-    ));
+    $builder->add('password', RepeatedType::class, [
+        'first_options'  => ['label' => 'Password'],
+        'second_options' => ['label' => 'Repeat Password'],
+    ]);
 
-options
-~~~~~~~
+``options``
+~~~~~~~~~~~
 
-**type**: ``array`` **default**: ``array()``
+**type**: ``array`` **default**: ``[]``
 
 This options array will be passed to each of the two underlying fields.
 In other words, these are the options that customize the individual field
@@ -141,24 +155,24 @@ types. For example, if the ``type`` option is set to ``password``, this
 array might contain the options ``always_empty`` or ``required`` - both
 options that are supported by the ``PasswordType`` field.
 
-second_name
-~~~~~~~~~~~
+``second_name``
+~~~~~~~~~~~~~~~
 
 **type**: ``string`` **default**: ``second``
 
 The same as ``first_name``, but for the second field.
 
-second_options
-~~~~~~~~~~~~~~
+``second_options``
+~~~~~~~~~~~~~~~~~~
 
-**type**: ``array`` **default**: ``array()``
+**type**: ``array`` **default**: ``[]``
 
 Additional options (will be merged into `options`_ above) that should be
 passed *only* to the second field. This is especially useful for customizing
 the label (see `first_options`_).
 
-type
-~~~~
+``type``
+~~~~~~~~
 
 **type**: ``string`` **default**: ``Symfony\Component\Form\Extension\Core\Type\TextType``
 
@@ -168,15 +182,19 @@ The two underlying fields will be of this field type. For example, passing
 Overridden Options
 ------------------
 
-error_bubbling
-~~~~~~~~~~~~~~
+``error_bubbling``
+~~~~~~~~~~~~~~~~~~
 
 **default**: ``false``
+
+.. include:: /reference/forms/types/options/invalid_message.rst.inc
 
 Inherited Options
 -----------------
 
 These options inherit from the :doc:`FormType </reference/forms/types/form>`:
+
+.. include:: /reference/forms/types/options/attr.rst.inc
 
 .. include:: /reference/forms/types/options/data.rst.inc
 
@@ -184,8 +202,12 @@ These options inherit from the :doc:`FormType </reference/forms/types/form>`:
 
 .. include:: /reference/forms/types/options/help.rst.inc
 
-.. include:: /reference/forms/types/options/invalid_message.rst.inc
+.. include:: /reference/forms/types/options/help_attr.rst.inc
+
+.. include:: /reference/forms/types/options/help_html.rst.inc
 
 .. include:: /reference/forms/types/options/invalid_message_parameters.rst.inc
 
 .. include:: /reference/forms/types/options/mapped.rst.inc
+
+.. include:: /reference/forms/types/options/row_attr.rst.inc

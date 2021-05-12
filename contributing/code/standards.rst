@@ -5,8 +5,8 @@ Symfony code is contributed by thousands of developers around the world. To make
 every piece of code look and feel familiar, Symfony defines some coding standards
 that all contributions must follow.
 
-These Symfony coding standards are based on the `PSR-1`_, `PSR-2`_ and `PSR-4`_
-standards, so you may already know most of them.
+These Symfony coding standards are based on the `PSR-1`_, `PSR-2`_, `PSR-4`_
+and `PSR-12`_ standards, so you may already know most of them.
 
 Making your Code Follow the Coding Standards
 --------------------------------------------
@@ -27,11 +27,7 @@ Symfony Coding Standards in Detail
 ----------------------------------
 
 If you want to learn about the Symfony coding standards in detail, here's a
-short example containing most features described below:
-
-.. code-block:: html+php
-
-    <?php
+short example containing most features described below::
 
     /*
      * This file is part of the Symfony package.
@@ -43,6 +39,8 @@ short example containing most features described below:
      */
 
     namespace Acme;
+
+    use Other\Qux;
 
     /**
      * Coding standards demonstration.
@@ -56,12 +54,15 @@ short example containing most features described below:
          */
         private $fooBar;
 
+        private $qux;
+
         /**
          * @param string $dummy Some argument description
          */
-        public function __construct($dummy)
+        public function __construct($dummy, Qux $qux)
         {
             $this->fooBar = $this->transformText($dummy);
+            $this->qux = $qux;
         }
 
         /**
@@ -71,7 +72,7 @@ short example containing most features described below:
          */
         public function someDeprecatedMethod()
         {
-            @trigger_error(sprintf('The %s() method is deprecated since version 2.8 and will be removed in 3.0. Use Acme\Baz::someMethod() instead.', __METHOD__), E_USER_DEPRECATED);
+            trigger_deprecation('symfony/package-name', '5.1', 'The %s() method is deprecated, use Acme\Baz::someMethod() instead.', __METHOD__);
 
             return Baz::someMethod();
         }
@@ -86,16 +87,16 @@ short example containing most features described below:
          *
          * @throws \RuntimeException When an invalid option is provided
          */
-        private function transformText($dummy, array $options = array())
+        private function transformText($dummy, array $options = [])
         {
-            $defaultOptions = array(
+            $defaultOptions = [
                 'some_default' => 'values',
                 'another_default' => 'more values',
-            );
+            ];
 
-            foreach ($options as $option) {
-                if (!in_array($option, $defaultOptions)) {
-                    throw new \RuntimeException(sprintf('Unrecognized option "%s"', $option));
+            foreach ($options as $name => $value) {
+                if (!array_key_exists($name, $defaultOptions)) {
+                    throw new \RuntimeException(sprintf('Unrecognized option "%s"', $name));
                 }
             }
 
@@ -105,33 +106,34 @@ short example containing most features described below:
             );
 
             if (true === $dummy) {
-                return null;
+                return 'something';
             }
 
-            if ('string' === $dummy) {
+            if (is_string($dummy)) {
                 if ('values' === $mergedOptions['some_default']) {
                     return substr($dummy, 0, 5);
                 }
 
                 return ucwords($dummy);
             }
+
+            return null;
         }
 
         /**
-         * Performs some basic check for a given value.
+         * Performs some basic operations for a given value.
          *
-         * @param mixed $value     Some value to check against
+         * @param mixed $value     Some value to operate against
          * @param bool  $theSwitch Some switch to control the method's flow
-         *
-         * @return bool|void The resultant check if $theSwitch isn't false, void otherwise
          */
-        private function reverseBoolean($value = null, $theSwitch = false)
+        private function performOperations($value = null, $theSwitch = false)
         {
             if (!$theSwitch) {
                 return;
             }
 
-            return !$value;
+            $this->qux->doFoo($value);
+            $this->qux->doBar($value);
         }
     }
 
@@ -185,30 +187,31 @@ Structure
 
 * Exception and error message strings must be concatenated using :phpfunction:`sprintf`;
 
-* Calls to :phpfunction:`trigger_error` with type ``E_USER_DEPRECATED`` must be
-  switched to opt-in via ``@`` operator.
-  Read more at :ref:`contributing-code-conventions-deprecations`;
-
 * Do not use ``else``, ``elseif``, ``break`` after ``if`` and ``case`` conditions
   which return or throw something;
 
 * Do not use spaces around ``[`` offset accessor and before ``]`` offset accessor;
 
-* Add a ``use`` statement for every class that is not part of the global namespace.
+* Add a ``use`` statement for every class that is not part of the global namespace;
+
+* When PHPDoc tags like ``@param`` or ``@return`` include ``null`` and other
+  types, always place ``null`` at the end of the list of types.
 
 Naming Conventions
 ~~~~~~~~~~~~~~~~~~
 
-* Use camelCase, not underscores, for variable, function and method
-  names, arguments;
+* Use `camelCase`_ for PHP variables, function and method names, arguments
+  (e.g. ``$acceptableContentTypes``, ``hasSession()``);
 
-* Use underscores for configuration options and parameters;
+* Use `snake_case`_ for configuration parameters and Twig template variables
+  (e.g. ``framework.csrf_protection``, ``http_status_code``);
 
-* Use namespaces for all classes;
+* Use namespaces for all PHP classes and `UpperCamelCase`_ for their names (e.g.
+  ``ConsoleLogger``);
 
 * Prefix all abstract classes with ``Abstract`` except PHPUnit ``*TestCase``.
   Please note some early Symfony classes do not follow this convention and
-  have not been renamed for backward compatibility reasons. However all new
+  have not been renamed for backward compatibility reasons. However, all new
   abstract classes must follow this naming convention;
 
 * Suffix interfaces with ``Interface``;
@@ -217,7 +220,9 @@ Naming Conventions
 
 * Suffix exceptions with ``Exception``;
 
-* Use alphanumeric characters and underscores for file names;
+* Use UpperCamelCase for naming PHP files (e.g. ``EnvVarProcessor.php``) and
+  snake case for naming Twig templates and web assets (``section_layout.html.twig``,
+  ``index.scss``);
 
 * For type-hinting in PHPDocs and casting, use ``bool`` (instead of ``boolean``
   or ``Boolean``), ``int`` (instead of ``integer``), ``float`` (instead of
@@ -235,7 +240,7 @@ Service Naming Conventions
   its class (e.g. ``App\EventSubscriber\UserSubscriber``);
 
 * If there are multiple services for the same class, use the FQCN for the main
-  service and use lowercased and underscored names for the rest of services.
+  service and use lowercase and underscored names for the rest of services.
   Optionally divide them in groups separated with dots (e.g.
   ``something.service_name``, ``fos_user.something.service_name``);
 
@@ -265,7 +270,7 @@ Documentation
 * When adding a new class or when making significant changes to an existing class,
   an ``@author`` tag with personal contact information may be added, or expanded.
   Please note it is possible to have the personal contact information updated or
-  removed per request to the doc:`core team </contributing/code/core_team>`.
+  removed per request to the :doc:`core team </contributing/code/core_team>`.
 
 License
 ~~~~~~~
@@ -273,10 +278,14 @@ License
 * Symfony is released under the MIT license, and the license block has to be
   present at the top of every PHP file, before the namespace.
 
-.. _`PHP CS Fixer tool`: http://cs.sensiolabs.org/
+.. _`PHP CS Fixer tool`: https://cs.symfony.com/
 .. _`PSR-0`: https://www.php-fig.org/psr/psr-0/
 .. _`PSR-1`: https://www.php-fig.org/psr/psr-1/
 .. _`PSR-2`: https://www.php-fig.org/psr/psr-2/
 .. _`PSR-4`: https://www.php-fig.org/psr/psr-4/
-.. _`identical comparison`: https://php.net/manual/en/language.operators.comparison.php
+.. _`PSR-12`: https://www.php-fig.org/psr/psr-12/
+.. _`identical comparison`: https://www.php.net/manual/en/language.operators.comparison.php
 .. _`Yoda conditions`: https://en.wikipedia.org/wiki/Yoda_conditions
+.. _`camelCase`: https://en.wikipedia.org/wiki/Camel_case
+.. _`UpperCamelCase`: https://en.wikipedia.org/wiki/Camel_case
+.. _`snake_case`: https://en.wikipedia.org/wiki/Snake_case

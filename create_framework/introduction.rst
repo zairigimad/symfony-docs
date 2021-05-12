@@ -38,10 +38,10 @@ you can use as is or as a start for your very own. It will start with a simple
 framework and more features will be added with time. Eventually, you will have
 a fully-featured full-stack web framework.
 
-And of course, each step will be the occasion to learn more about some of the
-Symfony Components.
+And each step will be the occasion to learn more about some of the Symfony
+Components.
 
-Many modern web frameworks advertize themselves as being MVC frameworks. This
+Many modern web frameworks advertise themselves as being MVC frameworks. This
 tutorial won't talk about the MVC pattern, as the Symfony Components are able to
 create any type of frameworks, not just the ones that follow the MVC
 architecture. Anyway, if you have a look at the MVC semantics, this book is
@@ -62,9 +62,9 @@ Before You Start
 
 Reading about how to create a framework is not enough. You will have to follow
 along and actually type all the examples included in this tutorial. For that,
-you need a recent version of PHP (5.5.9 or later is good enough), a web server
-(like Apache, NGinx or PHP's built-in web server), a good knowledge of PHP and
-an understanding of Object Oriented programming.
+you need a recent version of PHP (7.4 or later is good enough), a web server
+(like Apache, nginx or PHP's built-in web server), a good knowledge of PHP and
+an understanding of Object Oriented Programming.
 
 Ready to go? Read on!
 
@@ -87,7 +87,7 @@ Dependency Management
 
 To install the Symfony Components that you need for your framework, you are going
 to use `Composer`_, a project dependency manager for PHP. If you don't have it
-yet, :doc:`download and install Composer </setup/composer>` now.
+yet, `download and install Composer`_ now.
 
 Our Project
 -----------
@@ -101,17 +101,17 @@ start with the simplest web application we can think of in PHP::
 
     printf('Hello %s', $name);
 
-You can use the PHP built-in server to test this great application in a browser
-(``http://localhost:4321/index.php?name=Fabien``):
+You can use the :doc:`Symfony Local Web Server </setup/symfony_server>` to test
+this great application in a browser
+(``http://localhost:8000/index.php?name=Fabien``):
 
 .. code-block:: terminal
 
-    $ php -S 127.0.0.1:4321
-
-Otherwise, you can always use your own server (Apache, Nginx, etc.).
+    $ symfony server:start
 
 In the :doc:`next chapter </create_framework/http_foundation>`, we are going to
 introduce the HttpFoundation Component and see what it brings us.
 
 .. _`Symfony`: https://symfony.com/
-.. _`Composer`: http://packagist.org/about-composer
+.. _`Composer`: https://getcomposer.org/
+.. _`download and install Composer`: https://getcomposer.org/download/

@@ -7,19 +7,25 @@ How to Use Data Transformers
 Data transformers are used to translate the data for a field into a format that can
 be displayed in a form (and back on submit). They're already used internally for
 many field types. For example, the :doc:`DateType </reference/forms/types/date>` field
-can be rendered as a ``yyyy-MM-dd``-formatted input textbox. Internally, a data transformer
+can be rendered as a ``yyyy-MM-dd``-formatted input text box. Internally, a data transformer
 converts the starting ``DateTime`` value of the field into the ``yyyy-MM-dd`` string
 to render the form, and then back into a ``DateTime`` object on submit.
 
 .. caution::
 
-    When a form field has the ``inherit_data`` option set, Data Transformers
-    won't be applied to that field.
+    When a form field has the ``inherit_data`` option set to ``true``, data transformers
+    are not applied to that field.
+
+.. seealso::
+
+    If, instead of transforming the representation of a value, you need to map
+    values to a form field and back, you should use a data mapper. Check out
+    :doc:`/form/data_mappers`.
 
 .. _simple-example-sanitizing-html-on-user-input:
 
-Simple Example: Transforming String Tags from User Input to an Array
---------------------------------------------------------------------
+Example #1: Transforming Strings Form Data Tags from User Input to an Array
+---------------------------------------------------------------------------
 
 Suppose you have a Task form with a tags ``text`` type::
 
@@ -27,30 +33,30 @@ Suppose you have a Task form with a tags ``text`` type::
     namespace App\Form\Type;
 
     use App\Entity\Task;
+    use Symfony\Component\Form\Extension\Core\Type\TextType;
     use Symfony\Component\Form\FormBuilderInterface;
     use Symfony\Component\OptionsResolver\OptionsResolver;
-    use Symfony\Component\Form\Extension\Core\Type\TextType;
 
     // ...
     class TaskType extends AbstractType
     {
-        public function buildForm(FormBuilderInterface $builder, array $options)
+        public function buildForm(FormBuilderInterface $builder, array $options): void
         {
             $builder->add('tags', TextType::class);
         }
 
-        public function configureOptions(OptionsResolver $resolver)
+        public function configureOptions(OptionsResolver $resolver): void
         {
-            $resolver->setDefaults(array(
+            $resolver->setDefaults([
                 'data_class' => Task::class,
-            ));
+            ]);
         }
 
         // ...
     }
 
 Internally the ``tags`` are stored as an array, but displayed to the user as a
-simple comma separated string to make them easier to edit.
+plain comma separated string to make them easier to edit.
 
 This is a *perfect* time to attach a custom data transformer to the ``tags``
 field. The easiest way to do this is with the :class:`Symfony\\Component\\Form\\CallbackTransformer`
@@ -60,13 +66,13 @@ class::
     namespace App\Form\Type;
 
     use Symfony\Component\Form\CallbackTransformer;
-    use Symfony\Component\Form\FormBuilderInterface;
     use Symfony\Component\Form\Extension\Core\Type\TextType;
+    use Symfony\Component\Form\FormBuilderInterface;
     // ...
 
     class TaskType extends AbstractType
     {
-        public function buildForm(FormBuilderInterface $builder, array $options)
+        public function buildForm(FormBuilderInterface $builder, array $options): void
         {
             $builder->add('tags', TextType::class);
 
@@ -109,13 +115,13 @@ slightly::
             ->addModelTransformer(...)
     );
 
-Harder Example: Transforming an Issue Number into an Issue Entity
------------------------------------------------------------------
+Example #2: Transforming an Issue Number into an Issue Entity
+-------------------------------------------------------------
 
 Say you have a many-to-one relation from the Task entity to an Issue entity (i.e. each
-Task has an optional foreign key to its related Issue). Adding a listbox with all
+Task has an optional foreign key to its related Issue). Adding a list box with all
 possible issues could eventually get *really* long and take a long time to load.
-Instead, you decide you want to add a textbox, where the user can simply enter the
+Instead, you decide you want to add a text box, where the user can enter the
 issue number.
 
 Start by setting up the text field like normal::
@@ -130,7 +136,7 @@ Start by setting up the text field like normal::
     // ...
     class TaskType extends AbstractType
     {
-        public function buildForm(FormBuilderInterface $builder, array $options)
+        public function buildForm(FormBuilderInterface $builder, array $options): void
         {
             $builder
                 ->add('description', TextareaType::class)
@@ -138,11 +144,11 @@ Start by setting up the text field like normal::
             ;
         }
 
-        public function configureOptions(OptionsResolver $resolver)
+        public function configureOptions(OptionsResolver $resolver): void
         {
-            $resolver->setDefaults(array(
+            $resolver->setDefaults([
                 'data_class' => Task::class,
-            ));
+            ]);
         }
 
         // ...
@@ -182,9 +188,8 @@ to and from the issue number and the ``Issue`` object::
          * Transforms an object (issue) to a string (number).
          *
          * @param  Issue|null $issue
-         * @return string
          */
-        public function transform($issue)
+        public function transform($issue): string
         {
             if (null === $issue) {
                 return '';
@@ -197,14 +202,13 @@ to and from the issue number and the ``Issue`` object::
          * Transforms a string (number) to an object (issue).
          *
          * @param  string $issueNumber
-         * @return Issue|null
          * @throws TransformationFailedException if object (issue) is not found.
          */
-        public function reverseTransform($issueNumber)
+        public function reverseTransform($issueNumber): ?Issue
         {
             // no issue number? It's optional, so that's ok
             if (!$issueNumber) {
-                return;
+                return null;
             }
 
             $issue = $this->entityManager
@@ -227,7 +231,7 @@ to and from the issue number and the ``Issue`` object::
         }
     }
 
-Just like in the first example, a transformer has two directions. The ``transform()``
+Like the first example, the transformer has two directions. The ``transform()``
 method is responsible for converting the data used in your code to a format that
 can be rendered in your form (e.g. an ``Issue`` object to its ``id``, a string).
 The ``reverseTransform()`` method does the reverse: it converts the submitted value
@@ -246,8 +250,8 @@ that message with the ``invalid_message`` option (see below).
 Using the Transformer
 ~~~~~~~~~~~~~~~~~~~~~
 
-Next, you need to use the ``IssueToNumberTransformer`` object inside if ``TaskType``
-and add it to the ``issue`` field. No problem! Just add a ``__construct()`` method
+Next, you need to use the ``IssueToNumberTransformer`` object inside of ``TaskType``
+and add it to the ``issue`` field. No problem! Add a ``__construct()`` method
 and type-hint the new class::
 
     // src/Form/Type/TaskType.php
@@ -267,14 +271,14 @@ and type-hint the new class::
             $this->transformer = $transformer;
         }
 
-        public function buildForm(FormBuilderInterface $builder, array $options)
+        public function buildForm(FormBuilderInterface $builder, array $options): void
         {
             $builder
                 ->add('description', TextareaType::class)
-                ->add('issue', TextType::class, array(
+                ->add('issue', TextType::class, [
                     // validation message if the data transformer fails
                     'invalid_message' => 'That is not a valid issue number',
-                ));
+                ]);
 
             // ...
 
@@ -285,24 +289,58 @@ and type-hint the new class::
         // ...
     }
 
-That's it! As long as you're using :ref:`autowire <services-autowire>` and
-:ref:`autoconfigure <services-autoconfigure>`, Symfony will automatically
-know to pass your ``TaskType`` an instance of the ``IssueToNumberTransformer``.
+Whenever the transformer throws an exception, the ``invalid_message`` is shown
+to the user. Instead of showing the same message every time, you can set the
+end-user error message in the data transformer using the
+``setInvalidMessage()`` method. It also allows you to include user values::
 
-.. tip::
+    // src/Form/DataTransformer/IssueToNumberTransformer.php
+    namespace App\Form\DataTransformer;
 
-    For more information about defining form types as services, read
-    :doc:`register your form type as a service </form/form_dependencies>`.
+    use Symfony\Component\Form\DataTransformerInterface;
+    use Symfony\Component\Form\Exception\TransformationFailedException;
 
-Now, you can easily use your ``TaskType``::
+    class IssueToNumberTransformer implements DataTransformerInterface
+    {
+        // ...
 
-    // e.g. in a controller somewhere
+        public function reverseTransform($issueNumber): ?Issue
+        {
+            // ...
+
+            if (null === $issue) {
+                $privateErrorMessage = sprintf('An issue with number "%s" does not exist!', $issueNumber);
+                $publicErrorMessage = 'The given "{{ value }}" value is not a valid issue number.';
+
+                $failure = new TransformationFailedException($privateErrorMessage);
+                $failure->setInvalidMessage($publicErrorMessage, [
+                    '{{ value }}' => $issueNumber,
+                ]);
+
+                throw $failure;
+            }
+
+            return $issue;
+        }
+    }
+
+That's it! If you're using the
+:ref:`default services.yaml configuration <service-container-services-load-example>`,
+Symfony will automatically know to pass your ``TaskType`` an instance of the
+``IssueToNumberTransformer`` thanks to :ref:`autowire <services-autowire>` and
+:ref:`autoconfigure <services-autoconfigure>`.
+Otherwise, :ref:`register the form class as a service <service-container-creating-service>`
+and :doc:`tag it </service_container/tags>` with the ``form.type`` tag.
+
+Now, you can use your ``TaskType``::
+
+    // e.g. somewhere in a controller
     $form = $this->createForm(TaskType::class, $task);
 
     // ...
 
 Cool, you're done! Your user will be able to enter an issue number into the
-text field and it will be transformed back into an Issue object. This means
+text field, which will be transformed back into an Issue object. This means
 that, after a successful submission, the Form component will pass a real
 ``Issue`` object to ``Task::setIssue()`` instead of the issue number.
 
@@ -336,8 +374,8 @@ First, create the custom field type class::
     namespace App\Form;
 
     use App\Form\DataTransformer\IssueToNumberTransformer;
-    use Doctrine\Common\Persistence\ObjectManager;
     use Symfony\Component\Form\AbstractType;
+    use Symfony\Component\Form\Extension\Core\Type\TextType;
     use Symfony\Component\Form\FormBuilderInterface;
     use Symfony\Component\OptionsResolver\OptionsResolver;
 
@@ -350,19 +388,19 @@ First, create the custom field type class::
             $this->transformer = $transformer;
         }
 
-        public function buildForm(FormBuilderInterface $builder, array $options)
+        public function buildForm(FormBuilderInterface $builder, array $options): void
         {
             $builder->addModelTransformer($this->transformer);
         }
 
-        public function configureOptions(OptionsResolver $resolver)
+        public function configureOptions(OptionsResolver $resolver): void
         {
-            $resolver->setDefaults(array(
+            $resolver->setDefaults([
                 'invalid_message' => 'The selected issue does not exist',
-            ));
+            ]);
         }
 
-        public function getParent()
+        public function getParent(): string
         {
             return TextType::class;
         }
@@ -383,7 +421,7 @@ As long as you're using :ref:`autowire <services-autowire>` and
 
     class TaskType extends AbstractType
     {
-        public function buildForm(FormBuilderInterface $builder, array $options)
+        public function buildForm(FormBuilderInterface $builder, array $options): void
         {
             $builder
                 ->add('description', TextareaType::class)

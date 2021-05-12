@@ -14,11 +14,15 @@ Validation Constraints Reference
    constraints/Type
 
    constraints/Email
+   constraints/ExpressionLanguageSyntax
    constraints/Length
    constraints/Url
    constraints/Regex
+   constraints/Hostname
    constraints/Ip
    constraints/Uuid
+   constraints/Ulid
+   constraints/Json
 
    constraints/EqualTo
    constraints/NotEqualTo
@@ -30,10 +34,17 @@ Validation Constraints Reference
    constraints/GreaterThanOrEqual
    constraints/Range
    constraints/DivisibleBy
+   constraints/Unique
+
+   constraints/Positive
+   constraints/PositiveOrZero
+   constraints/Negative
+   constraints/NegativeOrZero
 
    constraints/Date
    constraints/DateTime
    constraints/Time
+   constraints/Timezone
 
    constraints/Choice
    constraints/Collection
@@ -53,12 +64,18 @@ Validation Constraints Reference
    constraints/Bic
    constraints/Isbn
    constraints/Issn
+   constraints/Isin
 
+   constraints/AtLeastOneOf
+   constraints/Sequentially
+   constraints/Compound
    constraints/Callback
    constraints/Expression
    constraints/All
    constraints/UserPassword
+   constraints/NotCompromisedPassword
    constraints/Valid
+   constraints/Traverse
 
 The Validator is designed to validate objects against *constraints*.
 In real life, a constraint could be: "The cake must not be burned". In

@@ -8,7 +8,7 @@ such as HTML and PDF.
 reStructuredText
 ----------------
 
-reStructuredText is a plaintext markup syntax similar to Markdown, but much
+reStructuredText is a plain text markup syntax similar to Markdown, but much
 stricter with its syntax. If you are new to reStructuredText, take some time to
 familiarize with this format by reading the existing `Symfony documentation`_
 source code.
@@ -29,7 +29,7 @@ Sphinx
 
 Sphinx_ is a build system that provides tools to create documentation from
 reStructuredText documents. As such, it adds new directives and interpreted text
-roles to the standard reST markup. Read more about the `Sphinx Markup Constructs`_.
+roles to the standard reStructuredText markup. Read more about the `Sphinx Markup Constructs`_.
 
 Syntax Highlighting
 ~~~~~~~~~~~~~~~~~~~
@@ -74,7 +74,7 @@ directive to show the configuration in all supported configuration formats
 
             // Configuration in PHP
 
-The previous reST snippet renders as follow:
+The previous reStructuredText snippet renders as follow:
 
 .. configuration-block::
 
@@ -104,6 +104,7 @@ Markup Format        Use It to Display
 ``html+php``         PHP code blended with HTML
 ``ini``              INI
 ``php-annotations``  PHP Annotations
+``php-attributes``   PHP Attributes
 ===================  ======================================
 
 Adding Links
@@ -131,7 +132,7 @@ If you want to modify that title, use this alternative syntax:
 
 .. code-block:: rst
 
-    :doc:`Spooling Email </email/spool>`
+    :doc:`Doctrine Associations </doctrine/associations>`
 
 .. note::
 
@@ -148,11 +149,9 @@ If you want to modify that title, use this alternative syntax:
         :doc:`environments`
 
 **Links to the API** follow a different syntax, where you must specify the type
-of the linked resource (``namespace``, ``class`` or ``method``):
+of the linked resource (``class`` or ``method``):
 
 .. code-block:: rst
-
-    :namespace:`Symfony\\Component\\BrowserKit`
 
     :class:`Symfony\\Component\\Routing\\Matcher\\ApacheUrlMatcher`
 
@@ -168,40 +167,51 @@ of the linked resource (``namespace``, ``class`` or ``method``):
 
     :phpfunction:`iterator_to_array`
 
-New Features or Behavior Changes
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+New Features, Behavior Changes or Deprecations
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If you're documenting a brand new feature or a change that's been made in
-Symfony, you should precede your description of the change with a
-``.. versionadded:: 2.X`` directive and a short description:
+If you are documenting a brand new feature, a change or a deprecation that's
+been made in Symfony, you should precede your description of the change with
+the corresponding directive and a short description:
 
-.. code-block:: rst
-
-    .. versionadded:: 2.7
-        The ``askHiddenResponse()`` method was introduced in Symfony 2.7.
-
-    You can also ask a question and hide the response. This is particularly [...]
-
-If you're documenting a behavior change, it may be helpful to *briefly* describe
-how the behavior has changed:
+For a new feature or a behavior change use the ``.. versionadded:: 5.x``
+directive:
 
 .. code-block:: rst
 
-    .. versionadded:: 2.7
-        The ``include()`` function is a new Twig feature that's available in
-        Symfony 2.7. Prior, the ``{% include %}`` tag was used.
+    .. versionadded:: 5.2
 
-Whenever a new minor version of Symfony is released (e.g. 2.4, 2.5, etc),
+        ... ... ... was introduced in Symfony 5.2.
+
+If you are documenting a behavior change, it may be helpful to *briefly*
+describe how the behavior has changed:
+
+.. code-block:: rst
+
+    .. versionadded:: 5.2
+
+       ... ... ... was introduced in Symfony 5.2. Prior to this,
+       ... ... ... ... ... ... ... ... .
+
+For a deprecation use the ``.. deprecated:: 5.x`` directive:
+
+.. code-block:: rst
+
+    .. deprecated:: 5.2
+
+        ... ... ... was deprecated in Symfony 5.2.
+
+Whenever a new major version of Symfony is released (e.g. 6.0, 7.0, etc),
 a new branch of the documentation is created from the ``master`` branch.
-At this point, all the ``versionadded`` tags for Symfony versions that have
-reached end-of-maintenance will be removed. For example, if Symfony 2.5 were
-released today, and 2.2 had recently reached its end-of-maintenance, the 2.2
-``versionadded`` tags would be removed from the new ``2.5`` branch.
+At this point, all the ``versionadded`` and ``deprecated`` tags for Symfony
+versions that have a lower major version will be removed. For example, if
+Symfony 6.0 were released today, 5.0 to 5.4 ``versionadded`` and ``deprecated``
+tags would be removed from the new ``6.0`` branch.
 
-.. _reStructuredText: http://docutils.sourceforge.net/rst.html
-.. _Sphinx: http://sphinx-doc.org/
+.. _reStructuredText: https://docutils.sourceforge.io/rst.html
+.. _Sphinx: https://www.sphinx-doc.org/
 .. _`Symfony documentation`: https://github.com/symfony/symfony-docs
-.. _`reStructuredText Primer`: http://sphinx-doc.org/rest.html
-.. _`reStructuredText Reference`: http://docutils.sourceforge.net/docs/user/rst/quickref.html
-.. _`Sphinx Markup Constructs`: http://sphinx-doc.org/markup/
-.. _`supported languages`: http://pygments.org/languages/
+.. _`reStructuredText Primer`: https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html
+.. _`reStructuredText Reference`: https://docutils.sourceforge.io/docs/user/rst/quickref.html
+.. _`Sphinx Markup Constructs`: https://www.sphinx-doc.org/en/1.7/markup/index.html
+.. _`supported languages`: https://pygments.org/languages/

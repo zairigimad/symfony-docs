@@ -9,11 +9,11 @@ these cases you can set the ``validation_groups`` option to ``false``::
 
     use Symfony\Component\OptionsResolver\OptionsResolver;
 
-    public function configureOptions(OptionsResolver $resolver)
+    public function configureOptions(OptionsResolver $resolver): void
     {
-        $resolver->setDefaults(array(
+        $resolver->setDefaults([
             'validation_groups' => false,
-        ));
+        ]);
     }
 
 Note that when you do that, the form will still run basic integrity checks,

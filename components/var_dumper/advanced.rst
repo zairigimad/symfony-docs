@@ -15,10 +15,10 @@ By adding a handler, you can customize the `Cloners`_, `Dumpers`_ and `Casters`_
 as explained below. A simple implementation of a handler function might look
 like this::
 
-    use Symfony\Component\VarDumper\VarDumper;
     use Symfony\Component\VarDumper\Cloner\VarCloner;
     use Symfony\Component\VarDumper\Dumper\CliDumper;
     use Symfony\Component\VarDumper\Dumper\HtmlDumper;
+    use Symfony\Component\VarDumper\VarDumper;
 
     VarDumper::setHandler(function ($var) {
         $cloner = new VarCloner();
@@ -81,7 +81,7 @@ Before dumping it, you can further limit the resulting
     Removes internal objects' handles for sparser output (useful for tests).
 
 :method:`Symfony\\Component\\VarDumper\\Cloner\\Data::seek`
-    Selects only subparts of already cloned arrays, objects or resources.
+    Selects only sub-parts of already cloned arrays, objects or resources.
 
 Unlike the previous limits on cloners that remove data on purpose, these can
 be changed back and forth before dumping since they do not affect the
@@ -104,7 +104,7 @@ This component comes with an :class:`Symfony\\Component\\VarDumper\\Dumper\\Html
 for HTML output and a :class:`Symfony\\Component\\VarDumper\\Dumper\\CliDumper`
 for optionally colored command line output.
 
-For example, if you want to dump some ``$variable``, just do::
+For example, if you want to dump some ``$variable``, do::
 
     use Symfony\Component\VarDumper\Cloner\VarCloner;
     use Symfony\Component\VarDumper\Dumper\CliDumper;
@@ -179,9 +179,16 @@ method. They also typically implement the
 them from re-implementing the logic required to walk through a
 :class:`Symfony\\Component\\VarDumper\\Cloner\\Data` object's internal structure.
 
+The :class:`Symfony\\Component\\VarDumper\\Dumper\\HtmlDumper` uses a dark
+theme by default. Use the :method:`Symfony\\Component\\VarDumper\\Dumper\\HtmlDumper::setTheme`
+method to use a light theme::
+
+    // ...
+    $htmlDumper->setTheme('light');
+
 The :class:`Symfony\\Component\\VarDumper\\Dumper\\HtmlDumper` limits string
 length and nesting depth of the output to make it more readable. These options
-can be overriden by the third optional parameter of the
+can be overridden by the third optional parameter of the
 :method:`dump(Data $data) <Symfony\\Component\\VarDumper\\Dumper\\DataDumperInterface::dump>`
 method::
 
@@ -190,11 +197,11 @@ method::
     $output = fopen('php://memory', 'r+b');
 
     $dumper = new HtmlDumper();
-    $dumper->dump($var, $output, array(
+    $dumper->dump($var, $output, [
         // 1 and 160 are the default values for these options
         'maxDepth' => 1,
         'maxStringLength' => 160
-    ));
+    ]);
 
 The output format of a dumper can be fine tuned by the two flags
 ``DUMP_STRING_LENGTH`` and ``DUMP_LIGHT_ARRAY`` which are passed as a bitmap
@@ -208,23 +215,24 @@ bit field of ``Caster::EXCLUDE_*`` constants and influences the expected
 output produced by the different casters.
 
 If ``DUMP_STRING_LENGTH`` is set, then the length of a string is displayed
-next to its content:
+next to its content::
 
-.. code-block:: php
-
+    use Symfony\Component\VarDumper\Cloner\VarCloner;
     use Symfony\Component\VarDumper\Dumper\AbstractDumper;
     use Symfony\Component\VarDumper\Dumper\CliDumper;
 
-    $var = array('test');
+    $varCloner = new VarCloner();
+    $var = ['test'];
+    
     $dumper = new CliDumper();
-    echo $dumper->dump($var, true);
+    echo $dumper->dump($varCloner->cloneVar($var), true);
 
     // array:1 [
     //   0 => "test"
     // ]
 
     $dumper = new CliDumper(null, null, AbstractDumper::DUMP_STRING_LENGTH);
-    echo $dumper->dump($var, true);
+    echo $dumper->dump($varCloner->cloneVar($var), true);
 
     // (added string length before the string)
     // array:1 [
@@ -232,40 +240,42 @@ next to its content:
     // ]
 
 If ``DUMP_LIGHT_ARRAY`` is set, then arrays are dumped in a shortened format
-similar to PHP's short array notation:
+similar to PHP's short array notation::
 
-.. code-block:: php
-
+    use Symfony\Component\VarDumper\Cloner\VarCloner;
     use Symfony\Component\VarDumper\Dumper\AbstractDumper;
     use Symfony\Component\VarDumper\Dumper\CliDumper;
 
-    $var = array('test');
+    $varCloner = new VarCloner();
+    $var = ['test'];
+    
     $dumper = new CliDumper();
-    echo $dumper->dump($var, true);
+    echo $dumper->dump($varCloner->cloneVar($var), true);
 
     // array:1 [
     //   0 => "test"
     // ]
 
     $dumper = new CliDumper(null, null, AbstractDumper::DUMP_LIGHT_ARRAY);
-    echo $dumper->dump($var, true);
+    echo $dumper->dump($varCloner->cloneVar($var), true);
 
     // (no more array:1 prefix)
     // [
     //   0 => "test"
     // ]
 
-If you would like to use both options, then you can just    combine them by
-using a the logical OR operator ``|``:
+If you would like to use both options, then you can combine them by
+using the logical OR operator ``|``::
 
-.. code-block:: php
-
+    use Symfony\Component\VarDumper\Cloner\VarCloner;
     use Symfony\Component\VarDumper\Dumper\AbstractDumper;
     use Symfony\Component\VarDumper\Dumper\CliDumper;
 
-    $var = array('test');
+    $varCloner = new VarCloner();
+    $var = ['test'];
+    
     $dumper = new CliDumper(null, null, AbstractDumper::DUMP_STRING_LENGTH | AbstractDumper::DUMP_LIGHT_ARRAY);
-    echo $dumper->dump($var, true);
+    echo $dumper->dump($varCloner->cloneVar($var), true);
 
     // [
     //   0 => (4) "test"
@@ -286,7 +296,7 @@ or its ``addCasters()`` method::
 
     use Symfony\Component\VarDumper\Cloner\VarCloner;
 
-    $myCasters = array(...);
+    $myCasters = [...];
     $cloner = new VarCloner($myCasters);
 
     // or
@@ -296,10 +306,10 @@ or its ``addCasters()`` method::
 The provided ``$myCasters`` argument is an array that maps a class,
 an interface or a resource type to a callable::
 
-    $myCasters = array(
+    $myCasters = [
         'FooClass' => $myFooClassCallableCaster,
         ':bar resource' => $myBarResourceCallableCaster,
-    );
+    ];
 
 As you can notice, resource types are prefixed by a ``:`` to prevent
 colliding with a class name.
@@ -315,7 +325,7 @@ Casters are responsible for returning the properties of the object or resource
 being cloned in an array. They are callables that accept five arguments:
 
 * the object or resource being casted;
-* an array modelled for objects after PHP's native ``(array)`` cast operator;
+* an array modeled for objects after PHP's native ``(array)`` cast operator;
 * a :class:`Symfony\\Component\\VarDumper\\Cloner\\Stub` object
   representing the main properties of the object (class, type, etc.);
 * true/false when the caster is called nested in a structure or not;
@@ -372,6 +382,7 @@ can use:
   objects/strings/*etc.* by ellipses;
 * :class:`Symfony\\Component\\VarDumper\\Caster\\CutArrayStub` to keep only some
   useful keys of an array;
+* :class:`Symfony\\Component\\VarDumper\\Caster\\ImgStub` to wrap an image;
 * :class:`Symfony\\Component\\VarDumper\\Caster\\EnumStub` to wrap a set of virtual
   values (*i.e.* values that do not exist as properties in the original PHP data
   structure, but are worth listing alongside with real ones);

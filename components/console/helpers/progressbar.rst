@@ -50,10 +50,11 @@ you can also set the current progress by calling the
 
     If your platform doesn't support ANSI codes, updates to the progress
     bar are added as new lines. To prevent the output from being flooded,
-    adjust the
-    :method:`Symfony\\Component\\Console\\Helper\\ProgressBar::setRedrawFrequency`
-    accordingly. By default, when using a ``max``, the redraw frequency
-    is set to *10%* of your ``max``.
+    use the :method:`Symfony\\Component\\Console\\Helper\\ProgressBar::minSecondsBetweenRedraws`
+    method to limit the number of redraws and the
+    :method:`Symfony\\Component\\Console\\Helper\\ProgressBar::setRedrawFrequency` method
+    to redraw every N iterations. By default, redraw frequency is
+    **100ms** or **10%** of your ``max``.
 
 If you don't know the exact number of steps in advance, set it to a reasonable
 value and then call the ``setMaxSteps()`` method to update it as needed::
@@ -64,10 +65,7 @@ value and then call the ``setMaxSteps()`` method to update it as needed::
     // a complex task has just been created: increase the progressbar to 200 units
     $progressBar->setMaxSteps(200);
 
-.. versionadded:: 4.1
-    The ``setMaxSteps()`` method was introduced in Symfony 4.1.
-
-Another solution is to just omit the steps argument when creating the
+Another solution is to omit the steps argument when creating the
 :class:`Symfony\\Component\\Console\\Helper\\ProgressBar` instance::
 
     $progressBar = new ProgressBar($output);
@@ -98,6 +96,35 @@ that the progress bar display is refreshed with a 100% completion.
     :method:`Symfony\\Component\\Console\\Helper\\ProgressBar::display`
     to show the progress bar again.
 
+If the progress information is stored in an iterable variable (such as an array
+or a PHP generator) you can use the
+:method:`Symfony\\Component\\Console\\Helper\\ProgressBar::iterate` method,
+which starts, advances and finishes the progress bar automatically::
+
+    use Symfony\Component\Console\Helper\ProgressBar;
+
+    $progressBar = new ProgressBar($output);
+
+    // $iterable can be array
+    $iterable = [1, 2];
+    foreach ($progressBar->iterate($iterable) as $value) {
+        // ... do some work
+    }
+
+    // or a generator
+    function iterable() { yield 1; yield 2; ... };
+    foreach ($progressBar->iterate(iterable()) as $value) {
+        // ... do some work
+    }
+
+The previous code will output:
+
+.. code-block:: text
+
+     0/2 [>---------------------------]   0%
+     1/2 [==============>-------------]  50%
+     2/2 [============================] 100%
+
 Customizing the Progress Bar
 ----------------------------
 
@@ -120,9 +147,9 @@ level of verbosity of the ``OutputInterface`` instance:
      3/3 [============================] 100%  1 sec
 
     # OutputInterface::VERBOSITY_VERY_VERBOSE (-vv)
-     0/3 [>---------------------------]   0%  1 sec
-     1/3 [=========>------------------]  33%  1 sec
-     3/3 [============================] 100%  1 sec
+     0/3 [>---------------------------]   0%  1 sec/1 sec
+     1/3 [=========>------------------]  33%  1 sec/1 sec
+     3/3 [============================] 100%  1 sec/1 sec
 
     # OutputInterface::VERBOSITY_DEBUG (-vvv)
      0/3 [>---------------------------]   0%  1 sec/1 sec  1.0 MB
@@ -248,7 +275,7 @@ the example above.
 Bar Settings
 ~~~~~~~~~~~~
 
-Amongst the placeholders, ``bar`` is a bit special as all the characters used
+Among the placeholders, ``bar`` is a bit special as all the characters used
 to display it can be customized::
 
     // the finished part of the bar
@@ -265,17 +292,19 @@ to display it can be customized::
 
 .. caution::
 
-    For performance reasons, be careful if you set the total number of steps
-    to a high number. For example, if you're iterating over a large number of
-    items, consider setting the redraw frequency to a higher value by calling
-    :method:`Symfony\\Component\\Console\\Helper\\ProgressBar::setRedrawFrequency`,
-    so it updates on only some iterations::
+    For performance reasons, Symfony redraws screen every 100ms. If this is too
+    fast or to slow for your application, use the methods
+    :method:`Symfony\\Component\\Console\\Helper\\ProgressBar::minSecondsBetweenRedraws` and
+    :method:`Symfony\\Component\\Console\\Helper\\ProgressBar::maxSecondsBetweenRedraws`::
 
         $progressBar = new ProgressBar($output, 50000);
         $progressBar->start();
 
-        // update every 100 iterations
+        // this redraws the screen every 100 iterations, but sets additional limits:
+        // don't redraw slower than 200ms (0.2) or faster than 100ms (0.1)
         $progressBar->setRedrawFrequency(100);
+        $progressBar->maxSecondsBetweenRedraws(0.2);
+        $progressBar->minSecondsBetweenRedraws(0.1);
 
         $i = 0;
         while ($i++ < 50000) {
@@ -319,8 +348,8 @@ placeholder before displaying the progress bar::
     $progressBar->start();
     // 0/100 -- Start
 
-    $progressBar->advance();
     $progressBar->setMessage('Task is in progress...');
+    $progressBar->advance();    
     // 1/100 -- Task is in progress...
 
 Messages can be combined with custom placeholders too. In this example, the
@@ -335,7 +364,7 @@ The ``setMessage()`` method accepts a second optional argument to set the value
 of the custom placeholders::
 
     // ...
-    // $files = array('client-001/invoices.xml', '...');
+    // $files = ['client-001/invoices.xml', '...'];
     foreach ($files as $filename) {
         $progressBar->setMessage('Importing invoices...');
         $progressBar->setMessage($filename, 'filename');
@@ -347,10 +376,6 @@ of the custom placeholders::
 
 Displaying Multiple Progress Bars
 ---------------------------------
-
-.. versionadded:: 4.1
-    The feature to display multiple progress bars using output sections was
-    introduced in Symfony 4.1.
 
 When using :ref:`Console output sections <console-output-sections>` it's
 possible to display multiple progress bars at the same time and change their

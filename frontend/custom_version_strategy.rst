@@ -71,22 +71,22 @@ version string::
          * @param string      $manifestPath
          * @param string|null $format
          */
-        public function __construct($manifestPath, $format = null)
+        public function __construct(string $manifestPath, string $format = null)
         {
             $this->manifestPath = $manifestPath;
             $this->format = $format ?: '%s?%s';
         }
 
-        public function getVersion($path)
+        public function getVersion(string $path)
         {
             if (!is_array($this->hashes)) {
                 $this->hashes = $this->loadManifest();
             }
 
-            return isset($this->hashes[$path]) ? $this->hashes[$path] : '';
+            return $this->hashes[$path] ?? '';
         }
 
-        public function applyVersion($path)
+        public function applyVersion(string $path)
         {
             $version = $this->getVersion($path);
 
@@ -94,13 +94,7 @@ version string::
                 return $path;
             }
 
-            $versionized = sprintf($this->format, ltrim($path, '/'), $version);
-
-            if ($path && '/' === $path[0]) {
-                return '/'.$versionized;
-            }
-
-            return $versionized;
+            return sprintf($this->format, $path, $version);
         }
 
         private function loadManifest()
@@ -124,7 +118,6 @@ After creating the strategy PHP class, register it as a Symfony service.
                 arguments:
                     - "%kernel.project_dir%/busters.json"
                     - "%%s?version=%%s"
-                public: false
 
     .. code-block:: xml
 
@@ -133,10 +126,10 @@ After creating the strategy PHP class, register it as a Symfony service.
         <container xmlns="http://symfony.com/schema/dic/services"
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
             xsi:schemaLocation="http://symfony.com/schema/dic/services
-                http://symfony.com/schema/dic/services/services-1.0.xsd"
+                https://symfony.com/schema/dic/services/services-1.0.xsd"
         >
             <services>
-                <service id="App\Asset\VersionStrategy\GulpBusterVersionStrategy" public="false">
+                <service id="App\Asset\VersionStrategy\GulpBusterVersionStrategy">
                     <argument>%kernel.project_dir%/busters.json</argument>
                     <argument>%%s?version=%%s</argument>
                 </service>
@@ -146,16 +139,23 @@ After creating the strategy PHP class, register it as a Symfony service.
     .. code-block:: php
 
         // config/services.php
-        use Symfony\Component\DependencyInjection\Definition;
-        use App\Asset\VersionStrategy\GulpBusterVersionStrategy;
+        namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
-        $container->autowire(GulpBusterVersionStrategy::class)
-            ->setArguments(
-                array(
-                    '%kernel.project_dir%/busters.json',
-                    '%%s?version=%%s',
-                )
-        )->setPublic(false);
+        use App\Asset\VersionStrategy\GulpBusterVersionStrategy;
+        use Symfony\Component\DependencyInjection\Definition;
+
+        return function(ContainerConfigurator $configurator) {
+            $services = $configurator->services();
+
+            $services->set(GulpBusterVersionStrategy::class)
+                ->args(
+                    [
+                        '%kernel.project_dir%/busters.json',
+                        '%%s?version=%%s',
+                    ]
+                );
+        };
+
 
 Finally, enable the new asset versioning for all the application assets or just
 for some :ref:`asset package <reference-framework-assets-packages>` thanks to
@@ -178,11 +178,11 @@ the :ref:`version_strategy <reference-assets-version-strategy>` option:
         <container xmlns="http://symfony.com/schema/dic/services"
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
             xmlns:framework="http://symfony.com/schema/dic/symfony"
-            xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd
-                http://symfony.com/schema/dic/symfony http://symfony.com/schema/dic/symfony/symfony-1.0.xsd">
+            xsi:schemaLocation="http://symfony.com/schema/dic/services https://symfony.com/schema/dic/services/services-1.0.xsd
+                http://symfony.com/schema/dic/symfony https://symfony.com/schema/dic/symfony/symfony-1.0.xsd">
 
             <framework:config>
-                <framework:assets version-strategy="App\Asset\VersionStrategy\GulpBusterVersionStrategy" />
+                <framework:assets version-strategy="App\Asset\VersionStrategy\GulpBusterVersionStrategy"/>
             </framework:config>
         </container>
 
@@ -190,12 +190,13 @@ the :ref:`version_strategy <reference-assets-version-strategy>` option:
 
         // config/packages/framework.php
         use App\Asset\VersionStrategy\GulpBusterVersionStrategy;
+        use Symfony\Config\FrameworkConfig;
 
-        $container->loadFromExtension('framework', array(
+        return static function (FrameworkConfig $framework) {
             // ...
-            'assets' => array(
-                'version_strategy' => GulpBusterVersionStrategy::class,
-            ),
-        ));
+            $framework->assets()
+                ->versionStrategy(GulpBusterVersionStrategy::class)
+            ;
+        };
 
 .. _`gulp-buster`: https://www.npmjs.com/package/gulp-buster

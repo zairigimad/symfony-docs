@@ -8,13 +8,13 @@ Validation is a very common task in web applications. Data entered in forms
 needs to be validated. Data also needs to be validated before it is written
 into a database or passed to a web service.
 
-Symfony provides a `Validator`_ component that makes this task easy and
-transparent. This component is based on the `JSR303 Bean Validation specification`_.
+Symfony provides a `Validator`_ component to handle this for you. This
+component is based on the `JSR303 Bean Validation specification`_.
 
 Installation
 ------------
 
-In applications using :doc:`Symfony Flex </setup/flex>`, run this command to
+In applications using :ref:`Symfony Flex <symfony-flex>`, run this command to
 install the validator before using it:
 
 .. code-block:: terminal
@@ -36,18 +36,18 @@ your application::
 
     class Author
     {
-        public $name;
+        private $name;
     }
 
-So far, this is just an ordinary class that serves some purpose inside your
-application. The goal of validation is to tell you if the data
-of an object is valid. For this to work, you'll configure a list of rules
-(called :ref:`constraints <validation-constraints>`) that the object must
-follow in order to be valid. These rules are usually defined using PHP code or
-annotations but they can also be defined as a ``validation.yaml`` or
-``validation.xml`` file inside the ``config/validator/`` directory:
+So far, this is an ordinary class that serves some purpose inside your
+application. The goal of validation is to tell you if the data of an object is
+valid. For this to work, you'll configure a list of rules (called
+:ref:`constraints <validation-constraints>`) that the object must follow in
+order to be valid. These rules are usually defined using PHP code or
+annotations but they can also be defined as ``.yaml`` or ``.xml`` files inside
+the ``config/validator/`` directory:
 
-For example, to guarantee that the ``$name`` property is not empty, add the
+For example, to indicate that the ``$name`` property must not be empty, add the
 following:
 
 .. configuration-block::
@@ -55,6 +55,7 @@ following:
     .. code-block:: php-annotations
 
         // src/Entity/Author.php
+        namespace App\Entity;
 
         // ...
         use Symfony\Component\Validator\Constraints as Assert;
@@ -62,9 +63,23 @@ following:
         class Author
         {
             /**
-             * @Assert\NotBlank()
+             * @Assert\NotBlank
              */
-            public $name;
+            private $name;
+        }
+
+    .. code-block:: php-attributes
+
+        // src/Entity/Author.php
+        namespace App\Entity;
+
+        // ...
+        use Symfony\Component\Validator\Constraints as Assert;
+
+        class Author
+        {
+            #[Assert\NotBlank]
+            private $name;
         }
 
     .. code-block:: yaml
@@ -82,11 +97,11 @@ following:
         <constraint-mapping xmlns="http://symfony.com/schema/dic/constraint-mapping"
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
             xsi:schemaLocation="http://symfony.com/schema/dic/constraint-mapping
-                http://symfony.com/schema/dic/constraint-mapping/constraint-mapping-1.0.xsd">
+                https://symfony.com/schema/dic/constraint-mapping/constraint-mapping-1.0.xsd">
 
             <class name="App\Entity\Author">
                 <property name="name">
-                    <constraint name="NotBlank" />
+                    <constraint name="NotBlank"/>
                 </property>
             </class>
         </constraint-mapping>
@@ -94,14 +109,14 @@ following:
     .. code-block:: php
 
         // src/Entity/Author.php
-
+        namespace App\Entity;
         // ...
-        use Symfony\Component\Validator\Mapping\ClassMetadata;
         use Symfony\Component\Validator\Constraints\NotBlank;
+        use Symfony\Component\Validator\Mapping\ClassMetadata;
 
         class Author
         {
-            public $name;
+            private $name;
 
             public static function loadValidatorMetadata(ClassMetadata $metadata)
             {
@@ -109,29 +124,35 @@ following:
             }
         }
 
+Adding this configuration by itself does not yet guarantee that the value will
+not be blank; you can still set it to a blank value if you want.
+To actually guarantee that the value adheres to the constraint, the object must
+be passed to the validator service to be checked.
+
 .. tip::
 
-    Protected and private properties can also be validated, as well as "getter"
-    methods (see :ref:`validator-constraint-targets`).
+    Symfony's validator uses PHP reflection, as well as *"getter"* methods, to
+    get the value of any property, so they can be public, private or protected
+    (see :ref:`validator-constraint-targets`).
 
 .. index::
    single: Validation; Using the validator
 
-Using the ``validator`` Service
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Using the Validator Service
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Next, to actually validate an ``Author`` object, use the ``validate()`` method
-on the ``validator`` service (class :class:`Symfony\\Component\\Validator\\Validator`).
-The job of the ``validator`` is easy: to read the constraints (i.e. rules)
+on the ``validator`` service (which implements :class:`Symfony\\Component\\Validator\\Validator\\ValidatorInterface`).
+The job of the ``validator`` is to read the constraints (i.e. rules)
 of a class and verify if the data on the object satisfies those
 constraints. If validation fails, a non-empty list of errors
-(class :class:`Symfony\\Component\\Validator\\ConstraintViolationList`) is
+(:class:`Symfony\\Component\\Validator\\ConstraintViolationList` class) is
 returned. Take this simple example from inside a controller::
 
     // ...
+    use App\Entity\Author;
     use Symfony\Component\HttpFoundation\Response;
     use Symfony\Component\Validator\Validator\ValidatorInterface;
-    use App\Entity\Author;
 
     // ...
     public function author(ValidatorInterface $validator)
@@ -161,7 +182,7 @@ message:
 
 .. code-block:: text
 
-    App\Entity\Author.name:
+    Object(App\Entity\Author).name:
         This value should not be blank
 
 If you insert a value into the ``name`` property, the happy success message
@@ -172,14 +193,14 @@ will appear.
     Most of the time, you won't interact directly with the ``validator``
     service or need to worry about printing out the errors. Most of the time,
     you'll use validation indirectly when handling submitted form data. For
-    more information, see the :ref:`forms-form-validation`.
+    more information, see :ref:`how to validate Symfony forms <validating-forms>`.
 
 You could also pass the collection of errors into a template::
 
     if (count($errors) > 0) {
-        return $this->render('author/validation.html.twig', array(
+        return $this->render('author/validation.html.twig', [
             'errors' => $errors,
-        ));
+        ]);
     }
 
 Inside the template, you can output the list of errors exactly as needed:
@@ -224,22 +245,24 @@ file:
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
             xmlns:framework="http://symfony.com/schema/dic/symfony"
             xsi:schemaLocation="http://symfony.com/schema/dic/services
-                http://symfony.com/schema/dic/services/services-1.0.xsd
-                http://symfony.com/schema/dic/symfony http://symfony.com/schema/dic/symfony/symfony-1.0.xsd">
+                https://symfony.com/schema/dic/services/services-1.0.xsd
+                http://symfony.com/schema/dic/symfony https://symfony.com/schema/dic/symfony/symfony-1.0.xsd">
 
             <framework:config>
-                <framework:validation enabled="true" />
+                <framework:validation enabled="true"/>
             </framework:config>
         </container>
 
     .. code-block:: php
 
         // config/packages/framework.php
-        $container->loadFromExtension('framework', array(
-            'validation' => array(
-                'enabled' => true,
-            ),
-        ));
+        use Symfony\Config\FrameworkConfig;
+
+        return static function (FrameworkConfig $framework) {
+            $framework->validation()
+                ->enabled(true)
+            ;
+        };
 
 Besides, if you plan to use annotations to configure validation, replace the
 previous configuration by the following:
@@ -260,22 +283,30 @@ previous configuration by the following:
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
             xmlns:framework="http://symfony.com/schema/dic/symfony"
             xsi:schemaLocation="http://symfony.com/schema/dic/services
-                http://symfony.com/schema/dic/services/services-1.0.xsd
-                http://symfony.com/schema/dic/symfony http://symfony.com/schema/dic/symfony/symfony-1.0.xsd">
+                https://symfony.com/schema/dic/services/services-1.0.xsd
+                http://symfony.com/schema/dic/symfony https://symfony.com/schema/dic/symfony/symfony-1.0.xsd">
 
             <framework:config>
-                <framework:validation enable-annotations="true" />
+                <framework:validation enable-annotations="true"/>
             </framework:config>
         </container>
 
     .. code-block:: php
 
         // config/packages/framework.php
-        $container->loadFromExtension('framework', array(
-            'validation' => array(
-                'enable_annotations' => true,
-            ),
-        ));
+        use Symfony\Config\FrameworkConfig;
+
+        return static function (FrameworkConfig $framework) {
+            $framework->validation()
+                ->enableAnnotations(true)
+            ;
+        };
+
+.. tip::
+
+    When using PHP, YAML, and XML files instead of annotations, Symfony looks
+    for by default in the ``config/validator/`` directory, but you can configure
+    other directories with the :ref:`validation.mapping.paths <reference-validation-mapping>` option.
 
 .. index::
    single: Validation; Constraints
@@ -290,7 +321,7 @@ rules). In order to validate an object, simply map one or more constraints
 to its class and then pass it to the ``validator`` service.
 
 Behind the scenes, a constraint is simply a PHP object that makes an assertive
-statement. In real life, a constraint could be: 'The cake must not be burned'.
+statement. In real life, a constraint could be: ``'The cake must not be burned'``.
 In Symfony, constraints are similar: they are assertions that a condition
 is true. Given a value, a constraint will tell you if that value
 adheres to the rules of the constraint.
@@ -325,6 +356,7 @@ literature genre mostly associated with the author, which can be set to either
     .. code-block:: php-annotations
 
         // src/Entity/Author.php
+        namespace App\Entity;
 
         // ...
         use Symfony\Component\Validator\Constraints as Assert;
@@ -333,11 +365,30 @@ literature genre mostly associated with the author, which can be set to either
         {
             /**
              * @Assert\Choice(
-             *     choices = { "fiction", "non-fiction" },
+             *     choices = {"fiction", "non-fiction"},
              *     message = "Choose a valid genre."
              * )
              */
-            public $genre;
+            private $genre;
+
+            // ...
+        }
+
+    .. code-block:: php-attributes
+
+        // src/Entity/Author.php
+        namespace App\Entity;
+
+        // ...
+        use Symfony\Component\Validator\Constraints as Assert;
+
+        class Author
+        {
+            #[Assert\Choice(
+                choices: ['fiction', 'non-fiction'],
+                message: 'Choose a valid genre.',
+            )]
+            private $genre;
 
             // ...
         }
@@ -358,7 +409,7 @@ literature genre mostly associated with the author, which can be set to either
         <constraint-mapping xmlns="http://symfony.com/schema/dic/constraint-mapping"
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
             xsi:schemaLocation="http://symfony.com/schema/dic/constraint-mapping
-                http://symfony.com/schema/dic/constraint-mapping/constraint-mapping-1.0.xsd">
+                https://symfony.com/schema/dic/constraint-mapping/constraint-mapping-1.0.xsd">
 
             <class name="App\Entity\Author">
                 <property name="genre">
@@ -378,14 +429,15 @@ literature genre mostly associated with the author, which can be set to either
     .. code-block:: php
 
         // src/Entity/Author.php
+        namespace App\Entity;
 
         // ...
-        use Symfony\Component\Validator\Mapping\ClassMetadata;
         use Symfony\Component\Validator\Constraints as Assert;
+        use Symfony\Component\Validator\Mapping\ClassMetadata;
 
         class Author
         {
-            public $genre;
+            private $genre;
 
             // ...
 
@@ -393,10 +445,10 @@ literature genre mostly associated with the author, which can be set to either
             {
                 // ...
 
-                $metadata->addPropertyConstraint('genre', new Assert\Choice(array(
-                    'choices' => array('fiction', 'non-fiction'),
+                $metadata->addPropertyConstraint('genre', new Assert\Choice([
+                    'choices' => ['fiction', 'non-fiction'],
                     'message' => 'Choose a valid genre.',
-                )));
+                ]));
             }
         }
 
@@ -412,6 +464,7 @@ options can be specified in this way.
     .. code-block:: php-annotations
 
         // src/Entity/Author.php
+        namespace App\Entity;
 
         // ...
         use Symfony\Component\Validator\Constraints as Assert;
@@ -421,7 +474,23 @@ options can be specified in this way.
             /**
              * @Assert\Choice({"fiction", "non-fiction"})
              */
-            protected $genre;
+            private $genre;
+
+            // ...
+        }
+
+    .. code-block:: php-attributes
+
+        // src/Entity/Author.php
+        namespace App\Entity;
+
+        // ...
+        use Symfony\Component\Validator\Constraints as Assert;
+
+        class Author
+        {
+            #[Assert\Choice(['fiction', 'non-fiction'])]
+            private $genre;
 
             // ...
         }
@@ -442,7 +511,7 @@ options can be specified in this way.
         <constraint-mapping xmlns="http://symfony.com/schema/dic/constraint-mapping"
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
             xsi:schemaLocation="http://symfony.com/schema/dic/constraint-mapping
-                http://symfony.com/schema/dic/constraint-mapping/constraint-mapping-1.0.xsd">
+                https://symfony.com/schema/dic/constraint-mapping/constraint-mapping-1.0.xsd">
 
             <class name="App\Entity\Author">
                 <property name="genre">
@@ -459,14 +528,15 @@ options can be specified in this way.
     .. code-block:: php
 
         // src/Entity/Author.php
+        namespace App\Entity;
 
         // ...
-        use Symfony\Component\Validator\Mapping\ClassMetadata;
         use Symfony\Component\Validator\Constraints as Assert;
+        use Symfony\Component\Validator\Mapping\ClassMetadata;
 
         class Author
         {
-            protected $genre;
+            private $genre;
 
             public static function loadValidatorMetadata(ClassMetadata $metadata)
             {
@@ -474,7 +544,7 @@ options can be specified in this way.
 
                 $metadata->addPropertyConstraint(
                     'genre',
-                    new Assert\Choice(array('fiction', 'non-fiction'))
+                    new Assert\Choice(['fiction', 'non-fiction'])
                 );
             }
         }
@@ -482,9 +552,9 @@ options can be specified in this way.
 This is purely meant to make the configuration of the most common option of
 a constraint shorter and quicker.
 
-If you're ever unsure of how to specify an option, either check :namespace:`Symfony\\Component\\Validator\\Constraints`
-for the constraint or play it safe by always passing in an array of options
-(the first method shown above).
+If you're ever unsure of how to specify an option, either check the namespace
+``Symfony\Component\Validator\Constraints`` for the constraint or play it safe
+by always passing in an array of options (the first method shown above).
 
 Constraints in Form Classes
 ---------------------------
@@ -495,10 +565,10 @@ of the form fields::
     public function buildForm(FormBuilderInterface $builder, array $options)
     {
         $builder
-            ->add('myField', TextType::class, array(
+            ->add('myField', TextType::class, [
                 'required' => true,
-                'constraints' => array(new Length(array('min' => 3)))
-            ))
+                'constraints' => [new Length(['min' => 3])],
+            ])
         ;
     }
 
@@ -541,9 +611,23 @@ class to have at least 3 characters.
         class Author
         {
             /**
-             * @Assert\NotBlank()
+             * @Assert\NotBlank
              * @Assert\Length(min=3)
              */
+            private $firstName;
+        }
+
+    .. code-block:: php-attributes
+
+        // src/Entity/Author.php
+
+        // ...
+        use Symfony\Component\Validator\Constraints as Assert;
+
+        class Author
+        {
+            #[Assert\NotBlank]
+            #[Assert\Length(min: 3)]
             private $firstName;
         }
 
@@ -564,11 +648,11 @@ class to have at least 3 characters.
         <constraint-mapping xmlns="http://symfony.com/schema/dic/constraint-mapping"
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
             xsi:schemaLocation="http://symfony.com/schema/dic/constraint-mapping
-                http://symfony.com/schema/dic/constraint-mapping/constraint-mapping-1.0.xsd">
+                https://symfony.com/schema/dic/constraint-mapping/constraint-mapping-1.0.xsd">
 
             <class name="App\Entity\Author">
                 <property name="firstName">
-                    <constraint name="NotBlank" />
+                    <constraint name="NotBlank"/>
                     <constraint name="Length">
                         <option name="min">3</option>
                     </constraint>
@@ -579,10 +663,11 @@ class to have at least 3 characters.
     .. code-block:: php
 
         // src/Entity/Author.php
+        namespace App\Entity;
 
         // ...
-        use Symfony\Component\Validator\Mapping\ClassMetadata;
         use Symfony\Component\Validator\Constraints as Assert;
+        use Symfony\Component\Validator\Mapping\ClassMetadata;
 
         class Author
         {
@@ -593,10 +678,16 @@ class to have at least 3 characters.
                 $metadata->addPropertyConstraint('firstName', new Assert\NotBlank());
                 $metadata->addPropertyConstraint(
                     'firstName',
-                    new Assert\Length(array("min" => 3))
+                    new Assert\Length(['min' => 3])
                 );
             }
         }
+
+.. caution::
+
+    The validator will use a value ``null`` if a typed property is uninitialized.
+    This can cause unexpected behavior if the property holds a value when initialized.
+    In order to avoid this, make sure all properties are initialized before validating them.
 
 .. index::
    single: Validation; Getter constraints
@@ -620,6 +711,7 @@ this method must return ``true``:
     .. code-block:: php-annotations
 
         // src/Entity/Author.php
+        namespace App\Entity;
 
         // ...
         use Symfony\Component\Validator\Constraints as Assert;
@@ -629,6 +721,23 @@ this method must return ``true``:
             /**
              * @Assert\IsTrue(message="The password cannot match your first name")
              */
+            public function isPasswordSafe()
+            {
+                // ... return true or false
+            }
+        }
+
+    .. code-block:: php-attributes
+
+        // src/Entity/Author.php
+        namespace App\Entity;
+
+        // ...
+        use Symfony\Component\Validator\Constraints as Assert;
+
+        class Author
+        {
+            #[Assert\IsTrue(message: 'The password cannot match your first name')]
             public function isPasswordSafe()
             {
                 // ... return true or false
@@ -650,7 +759,7 @@ this method must return ``true``:
         <constraint-mapping xmlns="http://symfony.com/schema/dic/constraint-mapping"
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
             xsi:schemaLocation="http://symfony.com/schema/dic/constraint-mapping
-                http://symfony.com/schema/dic/constraint-mapping/constraint-mapping-1.0.xsd">
+                https://symfony.com/schema/dic/constraint-mapping/constraint-mapping-1.0.xsd">
 
             <class name="App\Entity\Author">
                 <getter property="passwordSafe">
@@ -664,18 +773,19 @@ this method must return ``true``:
     .. code-block:: php
 
         // src/Entity/Author.php
+        namespace App\Entity;
 
         // ...
-        use Symfony\Component\Validator\Mapping\ClassMetadata;
         use Symfony\Component\Validator\Constraints as Assert;
+        use Symfony\Component\Validator\Mapping\ClassMetadata;
 
         class Author
         {
             public static function loadValidatorMetadata(ClassMetadata $metadata)
             {
-                $metadata->addGetterConstraint('passwordSafe', new Assert\IsTrue(array(
+                $metadata->addGetterConstraint('passwordSafe', new Assert\IsTrue([
                     'message' => 'The password cannot match your first name',
-                )));
+                ]));
             }
         }
 
@@ -704,6 +814,46 @@ constraint that's applied to the class itself. When that class is validated,
 methods specified by that constraint are simply executed so that each can
 provide more custom validation.
 
+Debugging the Constraints
+-------------------------
+
+.. versionadded:: 5.2
+
+    The ``debug:validator`` command was introduced in Symfony 5.2.
+
+Use the ``debug:validator`` command to list the validation constraints of a
+given class:
+
+.. code-block:: terminal
+
+    $ php bin/console debug:validator 'App\Entity\SomeClass'
+
+        App\Entity\SomeClass
+        -----------------------------------------------------
+
+        +---------------+--------------------------------------------------+---------+------------------------------------------------------------+
+        | Property      | Name                                             | Groups  | Options                                                    |
+        +---------------+--------------------------------------------------+---------+------------------------------------------------------------+
+        | firstArgument | Symfony\Component\Validator\Constraints\NotBlank | Default | [                                                          |
+        |               |                                                  |         |   "message" => "This value should not be blank.",          |
+        |               |                                                  |         |   "allowNull" => false,                                    |
+        |               |                                                  |         |   "normalizer" => null,                                    |
+        |               |                                                  |         |   "payload" => null                                        |
+        |               |                                                  |         | ]                                                          |
+        | firstArgument | Symfony\Component\Validator\Constraints\Email    | Default | [                                                          |
+        |               |                                                  |         |   "message" => "This value is not a valid email address.", |
+        |               |                                                  |         |   "mode" => null,                                          |
+        |               |                                                  |         |   "normalizer" => null,                                    |
+        |               |                                                  |         |   "payload" => null                                        |
+        |               |                                                  |         | ]                                                          |
+        +---------------+--------------------------------------------------+---------+------------------------------------------------------------+
+
+You can also validate all the classes stored in a given directory:
+
+.. code-block:: terminal
+
+    $ php bin/console debug:validator src/Entity
+
 Final Thoughts
 --------------
 
@@ -724,4 +874,4 @@ Learn more
     /validation/*
 
 .. _Validator: https://github.com/symfony/validator
-.. _JSR303 Bean Validation specification: http://jcp.org/en/jsr/detail?id=303
+.. _JSR303 Bean Validation specification: https://jcp.org/en/jsr/detail?id=303

@@ -4,10 +4,10 @@
 Profiler Configuration Reference (WebProfilerBundle)
 ====================================================
 
-The WebProfilerBundle provides detailed technical information about each request
-execution and displays it in both the web debug toolbar and the
-:doc:`profiler </profiler>`. All these options are configured under the
-``web_profiler`` key in your application configuration.
+The WebProfilerBundle is a **development tool** that provides detailed technical
+information about each request execution and displays it in both the web debug
+toolbar and the :doc:`profiler </profiler>`. All these options are configured
+under the ``web_profiler`` key in your application configuration.
 
 .. code-block:: terminal
 
@@ -21,7 +21,7 @@ execution and displays it in both the web debug toolbar and the
 
     When using XML, you must use the ``http://symfony.com/schema/dic/webprofiler``
     namespace and the related XSD schema is available at:
-    ``http://symfony.com/schema/dic/webprofiler/webprofiler-1.0.xsd``
+    ``https://symfony.com/schema/dic/webprofiler/webprofiler-1.0.xsd``
 
 .. caution::
 
@@ -30,20 +30,23 @@ execution and displays it in both the web debug toolbar and the
 Configuration
 -------------
 
-.. class:: list-config-options
+.. rst-class:: list-config-options
 
 * `excluded_ajax_paths`_
 * `intercept_redirects`_
 * `toolbar`_
 
-toolbar
-~~~~~~~
+excluded_ajax_paths
+~~~~~~~~~~~~~~~~~~~
 
-**type**: ``boolean`` **default**: ``false``
+**type**: ``string`` **default**: ``'^/((index|app(_[\w]+)?)\.php/)?_wdt'``
 
-It enables and disables the toolbar entirely. Usually you set this to ``true``
-in the ``dev`` and ``test`` environments and to ``false`` in the ``prod``
-environment.
+When the toolbar logs AJAX requests, it matches their URLs against this regular
+expression. If the URL matches, the request is not displayed in the toolbar. This
+is useful when the application makes lots of AJAX requests, or if they are heavy
+and you want to exclude some of them.
+
+.. _intercept_redirects:
 
 intercept_redirects
 ~~~~~~~~~~~~~~~~~~~
@@ -59,12 +62,11 @@ redirection and shows you the URL which is going to redirect to, its toolbar,
 and its profiler. Once you've inspected the toolbar/profiler data, you can click
 on the given link to perform the redirect.
 
-excluded_ajax_paths
-~~~~~~~~~~~~~~~~~~~
+toolbar
+~~~~~~~
 
-**type**: ``string`` **default**: ``'^/((index|app(_[\w]+)?)\.php/)?_wdt'``
+**type**: ``boolean`` **default**: ``false``
 
-When the toolbar logs Ajax requests, it matches their URLs against this regular
-expression. If the URL matches, the request is not displayed in the toolbar. This
-is useful when the application makes lots of Ajax requests or they are heavy and
-you want to exclude some of them.
+It enables and disables the toolbar entirely. Usually you set this to ``true``
+in the ``dev`` and ``test`` environments and to ``false`` in the ``prod``
+environment.

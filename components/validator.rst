@@ -15,8 +15,6 @@ Installation
 
     $ composer require symfony/validator
 
-Alternatively, you can clone the `<https://github.com/symfony/validator>`_ repository.
-
 .. include:: /components/require_autoload.rst.inc
 
 Usage
@@ -36,15 +34,15 @@ The Validator component behavior is based on two concepts:
 The following example shows how to validate that a string is at least 10
 characters long::
 
-    use Symfony\Component\Validator\Validation;
     use Symfony\Component\Validator\Constraints\Length;
     use Symfony\Component\Validator\Constraints\NotBlank;
+    use Symfony\Component\Validator\Validation;
 
     $validator = Validation::createValidator();
-    $violations = $validator->validate('Bernhard', array(
-        new Length(array('min' => 10)),
+    $violations = $validator->validate('Bernhard', [
+        new Length(['min' => 10]),
         new NotBlank(),
-    ));
+    ]);
 
     if (0 !== count($violations)) {
         // there are errors, now you can show them
@@ -64,14 +62,11 @@ If you have lots of validation errors, you can filter them by error code::
         // handle this specific error (display some message, send an email, etc.)
     }
 
-.. versionadded:: 3.3
-    The ``findByCodes()`` method was introduced in Symfony 3.3.
-
 Retrieving a Validator Instance
 -------------------------------
 
-The :class:`Symfony\\Component\\Validator\\Validator` class is the main access
-point of the Validator component. To create a new instance of this class, it's
+The Validator object (that implements :class:`Symfony\\Component\\Validator\\Validator\\ValidatorInterface`) is the main access
+point of the Validator component. To create a new instance of it, it's
 recommended to use the :class:`Symfony\\Component\\Validator\\Validation` class::
 
     use Symfony\Component\Validator\Validation;
@@ -80,7 +75,7 @@ recommended to use the :class:`Symfony\\Component\\Validator\\Validation` class:
 
 This ``$validator`` object can validate simple variables such as strings, numbers
 and arrays, but it can't validate objects. To do so, configure the
-``Validator`` class as explained in the next sections.
+``Validator`` as explained in the next sections.
 
 Learn More
 ----------
@@ -93,5 +88,4 @@ Learn More
     /validation
     /validation/*
 
-.. _`JSR-303 Bean Validation specification`: http://jcp.org/en/jsr/detail?id=303
-.. _Packagist: https://packagist.org/packages/symfony/validator
+.. _`JSR-303 Bean Validation specification`: https://jcp.org/en/jsr/detail?id=303

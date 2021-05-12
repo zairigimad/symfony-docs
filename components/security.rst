@@ -14,16 +14,8 @@ The Security Component
 Installation
 ------------
 
-.. code-block:: terminal
-
-    $ composer require symfony/security
-
-Alternatively, you can clone the `<https://github.com/symfony/security>`_ repository.
-
-.. include:: /components/require_autoload.rst.inc
-
-The Security component is divided into four smaller sub-components which can be
-used separately:
+The Security component is divided into several smaller sub-components which can
+be used separately:
 
 ``symfony/security-core``
     It provides all the common security features, from authentication to
@@ -35,6 +27,21 @@ used separately:
 
 ``symfony/security-csrf``
     It provides protection against `CSRF attacks`_.
+
+``symfony/security-guard``
+    It brings many layers of authentication together, allowing the creation
+    of complex authentication systems.
+
+You can install each of them separately in your project:
+
+.. code-block:: terminal
+
+    $ composer require symfony/security-core
+    $ composer require symfony/security-http
+    $ composer require symfony/security-csrf
+    $ composer require symfony/security-guard
+
+.. include:: /components/require_autoload.rst.inc
 
 .. seealso::
 
@@ -55,5 +62,4 @@ Learn More
     /reference/configuration/security
     /reference/constraints/UserPassword
 
-.. _Packagist: https://packagist.org/packages/symfony/security
 .. _`CSRF attacks`: https://en.wikipedia.org/wiki/Cross-site_request_forgery

@@ -26,16 +26,22 @@ in your service definition:
 
         <!-- config/services.xml -->
         <services>
-            <service id="App\SomeNonSharedService" shared="false" />
+            <service id="App\SomeNonSharedService" shared="false"/>
         </services>
 
     .. code-block:: php
 
         // config/services.php
+        namespace Symfony\Component\DependencyInjection\Loader\Configurator;
+
         use App\SomeNonSharedService;
 
-        $container->register(SomeNonSharedService::class)
-            ->setShared(false);
+        return function(ContainerConfigurator $configurator) {
+            $services = $configurator->services();
+
+            $services->set(SomeNonSharedService::class)
+                ->share(false);
+        };
 
 Now, whenever you request the ``App\SomeNonSharedService`` from the container,
 you will be passed a new instance.

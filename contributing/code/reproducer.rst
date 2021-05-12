@@ -2,11 +2,11 @@ Creating a Bug Reproducer
 =========================
 
 The main Symfony code repository receives thousands of issues reports per year.
-Some of those issues are so obvious or easy to understand, that Symfony Core
-developers can fix them without any other information. However, other issues are
-much harder to understand because developers can't easily reproduce them in their
-computers. That's when we'll ask you to create a "bug reproducer", which is the
-minimum amount of code needed to make the bug appear when executed.
+Some of those issues are easy to understand and the Symfony Core developers can
+fix them without any other information. However, other issues are much harder to
+understand because developers can't reproduce them in their computers. That's
+when we'll ask you to create a "bug reproducer", which is the minimum amount of
+code needed to make the bug appear when executed.
 
 Reproducing Simple Bugs
 -----------------------
@@ -63,10 +63,11 @@ to a route definition. Then, after creating your project:
 #. Don't edit any of the default Symfony configuration options.
 #. Don't copy your original application code and don't use the same structure
    of controllers, actions, etc. as in your original application.
-#. Create a simple controller and add your routing definition that shows the bug.
+#. Create a small controller and add your routing definition that shows the bug.
 #. Don't create or modify any other file.
-#. Execute ``composer require symfony/web-server-bundle`` and use the ``server:run``
-   command to browse to the new route and see if the bug appears or not.
+#. Install the :doc:`local web server </setup/symfony_server>` provided by Symfony
+   and use the ``symfony server:start`` command to browse to the new route and
+   see if the bug appears or not.
 #. If you can see the bug, you're done and you can already share the code with us.
 #. If you can't see the bug, you must keep making small changes. For example, if
    your original route was defined using XML, forget about the previous route

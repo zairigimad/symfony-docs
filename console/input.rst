@@ -14,13 +14,14 @@ or required. For example, to add an optional ``last_name`` argument to the comma
 and make the ``name`` argument required::
 
     // ...
+    use Symfony\Component\Console\Command\Command;
     use Symfony\Component\Console\Input\InputArgument;
 
     class GreetCommand extends Command
     {
         // ...
 
-        protected function configure()
+        protected function configure(): void
         {
             $this
                 // ...
@@ -33,11 +34,15 @@ and make the ``name`` argument required::
 You now have access to a ``last_name`` argument in your command::
 
     // ...
+    use Symfony\Component\Console\Command\Command;
+    use Symfony\Component\Console\Input\InputInterface;
+    use Symfony\Component\Console\Output\OutputInterface;
+
     class GreetCommand extends Command
     {
         // ...
 
-        protected function execute(InputInterface $input, OutputInterface $output)
+        protected function execute(InputInterface $input, OutputInterface $output): int
         {
             $text = 'Hi '.$input->getArgument('name');
 
@@ -47,6 +52,8 @@ You now have access to a ``last_name`` argument in your command::
             }
 
             $output->writeln($text.'!');
+
+            return Command::SUCCESS;
         }
     }
 
@@ -69,9 +76,10 @@ to greet all your friends). Only the last argument can be a list::
             'names',
             InputArgument::IS_ARRAY,
             'Who do you want to greet (separate multiple names with a space)?'
-        );
+        )
+    ;
 
-To use this, just specify as many names as you want:
+To use this, specify as many names as you want:
 
 .. code-block:: terminal
 
@@ -98,7 +106,7 @@ There are three argument variants you can use:
     The argument can contain any number of values. For that reason, it must be
     used at the end of the argument list.
 
-You can combine ``IS_ARRAY`` with ``REQUIRED`` and ``OPTIONAL`` like this::
+You can combine ``IS_ARRAY`` with ``REQUIRED`` or ``OPTIONAL`` like this::
 
     $this
         // ...
@@ -106,7 +114,8 @@ You can combine ``IS_ARRAY`` with ``REQUIRED`` and ``OPTIONAL`` like this::
             'names',
             InputArgument::IS_ARRAY | InputArgument::REQUIRED,
             'Who do you want to greet (separate multiple names with a space)?'
-        );
+        )
+    ;
 
 Using Command Options
 ---------------------
@@ -114,7 +123,7 @@ Using Command Options
 Unlike arguments, options are not ordered (meaning you can specify them in any
 order) and are specified with two dashes (e.g. ``--yell``). Options are
 *always* optional, and can be setup to accept a value (e.g. ``--dir=src``) or
-simply as a boolean flag without a value (e.g.  ``--yell``).
+as a boolean flag without a value (e.g.  ``--yell``).
 
 For example, add a new option to the command that can be used to specify
 how many times in a row the message should be printed::
@@ -130,7 +139,8 @@ how many times in a row the message should be printed::
             InputOption::VALUE_REQUIRED,
             'How many times should the message be printed?',
             1
-        );
+        )
+    ;
 
 Next, use this in the command to print the message multiple times::
 
@@ -148,11 +158,11 @@ flag:
     Hi Fabien!
 
     $ php bin/console app:greet Fabien --iterations=5
-    Hi Fabien
-    Hi Fabien
-    Hi Fabien
-    Hi Fabien
-    Hi Fabien
+    Hi Fabien!
+    Hi Fabien!
+    Hi Fabien!
+    Hi Fabien!
+    Hi Fabien!
 
     # the order of options isn't important
     $ php bin/console app:greet Fabien --iterations=5 --yell
@@ -161,8 +171,8 @@ flag:
 
 .. tip::
 
-     You can also declare a one-letter shortcut that you can call with a single
-     dash, like ``-i``::
+    You can also declare a one-letter shortcut that you can call with a single
+    dash, like ``-i``::
 
         $this
             // ...
@@ -172,23 +182,24 @@ flag:
                 InputOption::VALUE_REQUIRED,
                 'How many times should the message be printed?',
                 1
-            );
+            )
+        ;
 
 Note that to comply with the `docopt standard`_, long options can specify their
-values after a white space or an ``=`` sign (e.g. ``--iterations 5`` or
-``--iterations=5``), but short options can only use white spaces or no
+values after a whitespace or an ``=`` sign (e.g. ``--iterations 5`` or
+``--iterations=5``), but short options can only use whitespaces or no
 separation at all (e.g. ``-i 5`` or ``-i5``).
 
 .. caution::
 
-    While it is possible to separate an option from its value with a white space,
+    While it is possible to separate an option from its value with a whitespace,
     using this form leads to an ambiguity should the option appear before the
-    command name. For example, ``php app/console --iterations 5 app:greet Fabien``
+    command name. For example, ``php bin/console --iterations 5 app:greet Fabien``
     is ambiguous; Symfony would interpret ``5`` as the command name. To avoid
     this situation, always place options after the command name, or avoid using
     a space to separate the option name from its value.
 
-There are four option variants you can use:
+There are five option variants you can use:
 
 ``InputOption::VALUE_IS_ARRAY``
     This option accepts multiple values (e.g. ``--dir=/foo --dir=/bar``);
@@ -205,6 +216,14 @@ There are four option variants you can use:
     This option may or may not have a value (e.g. ``--yell`` or
     ``--yell=loud``).
 
+``InputOption::VALUE_NEGATABLE``
+    Accept either the flag (e.g. ``--yell``) or its negation (e.g.
+    ``--no-yell``).
+
+.. versionadded:: 5.3
+
+    The ``InputOption::VALUE_NEGATABLE`` constant was introduced in Symfony 5.3.
+
 You can combine ``VALUE_IS_ARRAY`` with ``VALUE_REQUIRED`` or
 ``VALUE_OPTIONAL`` like this::
 
@@ -215,8 +234,9 @@ You can combine ``VALUE_IS_ARRAY`` with ``VALUE_REQUIRED`` or
             null,
             InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY,
             'Which colors do you like?',
-            array('blue', 'red')
-        );
+            ['blue', 'red']
+        )
+    ;
 
 Options with optional arguments
 -------------------------------
@@ -234,10 +254,11 @@ optionally accepts a value, but it's a bit tricky. Consider this example::
             null,
             InputOption::VALUE_OPTIONAL,
             'Should I yell while greeting?'
-        );
+        )
+    ;
 
-This option can be used in 3 ways: ``--yell``, ``yell=louder``, and not passing
-the option at all. However, it's hard to distinguish between passing the option
+This option can be used in 3 ways: ``greet --yell``, ``greet --yell=louder``,
+and ``greet``. However, it's hard to distinguish between passing the option
 without a value (``greet --yell``) and not passing the option (``greet``).
 
 To solve this issue, you have to set the option's default value to ``false``::
@@ -253,18 +274,37 @@ To solve this issue, you have to set the option's default value to ``false``::
             InputOption::VALUE_OPTIONAL,
             'Should I yell while greeting?',
             false // this is the new default value, instead of null
-        );
+        )
+    ;
 
-Now check the value of the option and keep in mind that ``false !== null``::
+Now it's possible to differentiate between not passing the option and not
+passing any value for it::
+
+    $optionValue = $input->getOption('yell');
+    if (false === $optionValue) {
+        // in this case, the option was not passed when running the command
+        $yell = false;
+        $yellLouder = false;
+    } elseif (null === $optionValue) {
+        // in this case, the option was passed when running the command
+        // but no value was given to it
+        $yell = true;
+        $yellLouder = false;
+    } else {
+        // in this case, the option was passed when running the command and
+        // some specific value was given to it
+        $yell = true;
+        if ('louder' === $optionValue) {
+            $yellLouder = true;
+        } else {
+            $yellLouder = false;
+        }
+    }
+
+The above code can be simplified as follows because ``false !== null``::
 
     $optionValue = $input->getOption('yell');
     $yell = ($optionValue !== false);
     $yellLouder = ($optionValue === 'louder');
-
-.. caution::
-
-    Due to a PHP limitation, passing an empty string is indistinguishable from
-    not passing any value at all. In ``command --prefix`` and ``command --prefix=''``
-    cases, the value of the ``prefix`` option will be ``null``.
 
 .. _`docopt standard`: http://docopt.org/

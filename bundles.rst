@@ -18,7 +18,7 @@ SecurityBundle, DebugBundle, etc.) They are also used to add new features in
 your application via `third-party bundles`_.
 
 Bundles used in your applications must be enabled per
-:doc:`environment </configuration/environments>` in the ``config/bundles.php``
+:ref:`environment <configuration-environments>` in the ``config/bundles.php``
 file::
 
     // config/bundles.php
@@ -31,23 +31,23 @@ file::
         Symfony\Bundle\SwiftmailerBundle\SwiftmailerBundle::class => ['all' => true],
         Doctrine\Bundle\DoctrineBundle\DoctrineBundle::class => ['all' => true],
         Sensio\Bundle\FrameworkExtraBundle\SensioFrameworkExtraBundle::class => ['all' => true],
-        // this bundle is enabled only in 'dev'  and 'test', so you can't use it in 'prod'
+        // this bundle is enabled only in 'dev' and 'test', so you can't use it in 'prod'
         Symfony\Bundle\WebProfilerBundle\WebProfilerBundle::class => ['dev' => true, 'test' => true],
     ];
 
 .. tip::
 
-    In a default Symfony application that uses :doc:`Symfony Flex </setup/flex>`,
+    In a default Symfony application that uses :ref:`Symfony Flex <symfony-flex>`,
     bundles are enabled/disabled automatically for you when installing/removing
     them, so you don't need to look at or edit this ``bundles.php`` file.
 
 Creating a Bundle
 -----------------
 
-This section creates and enables a new bundle to show how simple it is to do it.
-The new bundle is called AcmeTestBundle, where the ``Acme`` portion is just a
-dummy name that should be replaced by some "vendor" name that represents you or
-your organization (e.g. ABCTestBundle for some company named ``ABC``).
+This section creates and enables a new bundle to show there are only a few steps required.
+The new bundle is called AcmeTestBundle, where the ``Acme`` portion is an example
+name that should be replaced by some "vendor" name that represents you or your
+organization (e.g. ABCTestBundle for some company named ``ABC``).
 
 Start by creating a ``src/Acme/TestBundle/`` directory and adding a new file
 called ``AcmeTestBundle.php``::
@@ -83,10 +83,9 @@ And while it doesn't do anything yet, AcmeTestBundle is now ready to be used.
 Bundle Directory Structure
 --------------------------
 
-The directory structure of a bundle is simple and flexible. By default, the
-bundle system follows a set of conventions that help to keep code consistent
-between all Symfony bundles. Take a look at AcmeDemoBundle, as it contains some
-of the most common elements of a bundle:
+The directory structure of a bundle is meant to help to keep code consistent
+between all Symfony bundles. It follows a set of conventions, but is flexible
+to be adjusted if needed:
 
 ``Controller/``
     Contains the controllers of the bundle (e.g. ``RandomController.php``).

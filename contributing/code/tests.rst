@@ -4,11 +4,11 @@ Running Symfony Tests
 =====================
 
 The Symfony project uses a third-party service which automatically runs tests
-for any submitted :doc:`patch <patches>`. If the new code breaks any test,
+for any submitted :doc:`patch <pull_requests>`. If the new code breaks any test,
 the pull request will show an error message with a link to the full error details.
 
 In any case, it's a good practice to run tests locally before submitting a
-:doc:`patch <patches>` for inclusion, to check that you have not broken anything.
+:doc:`patch <pull_requests>` for inclusion, to check that you have not broken anything.
 
 .. _phpunit:
 .. _dependencies_optional:
@@ -18,7 +18,7 @@ Before Running the Tests
 
 To run the Symfony test suite, install the external dependencies used during the
 tests, such as Doctrine, Twig and Monolog. To do so,
-:doc:`install Composer </setup/composer>` and execute the following:
+`install Composer`_ and execute the following:
 
 .. code-block:: terminal
 
@@ -54,7 +54,8 @@ what's going on and if the tests are broken because of the new code.
     On Windows, install the `Cmder`_, `ConEmu`_, `ANSICON`_ or `Mintty`_ free applications
     to see colored test results.
 
-.. _Cmder: http://cmder.net/
+.. _`install Composer`: https://getcomposer.org/download/
+.. _Cmder: https://cmder.net/
 .. _ConEmu: https://conemu.github.io/
 .. _ANSICON: https://github.com/adoxa/ansicon/releases
 .. _Mintty: https://mintty.github.io/

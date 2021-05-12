@@ -13,13 +13,12 @@ an *authenticated* token if the supplied credentials were found to be valid.
 The listener should then store the authenticated token using
 :class:`the token storage <Symfony\\Component\\Security\\Core\\Authentication\\Token\\Storage\\TokenStorageInterface>`::
 
-    use Symfony\Component\Security\Http\Firewall\ListenerInterface;
-    use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
+    use Symfony\Component\HttpKernel\Event\RequestEvent;
     use Symfony\Component\Security\Core\Authentication\AuthenticationManagerInterface;
-    use Symfony\Component\HttpKernel\Event\GetResponseEvent;
+    use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
     use Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken;
 
-    class SomeAuthenticationListener implements ListenerInterface
+    class SomeAuthenticationListener
     {
         /**
          * @var TokenStorageInterface
@@ -38,7 +37,7 @@ The listener should then store the authenticated token using
 
         // ...
 
-        public function handle(GetResponseEvent $event)
+        public function __invoke(RequestEvent $event)
         {
             $request = $event->getRequest();
 
@@ -74,7 +73,7 @@ The default authentication manager is an instance of
     use Symfony\Component\Security\Core\Exception\AuthenticationException;
 
     // instances of Symfony\Component\Security\Core\Authentication\Provider\AuthenticationProviderInterface
-    $providers = array(...);
+    $providers = [...];
 
     $authenticationManager = new AuthenticationProviderManager($providers);
 
@@ -90,8 +89,8 @@ authentication providers, each supporting a different type of token.
 
 .. note::
 
-    You may of course write your own authentication manager, it only has
-    to implement :class:`Symfony\\Component\\Security\\Core\\Authentication\\AuthenticationManagerInterface`.
+    You may write your own authentication manager, the only requirement is that
+    it implements :class:`Symfony\\Component\\Security\\Core\\Authentication\\AuthenticationManagerInterface`.
 
 .. _authentication_providers:
 
@@ -100,10 +99,10 @@ Authentication Providers
 
 Each provider (since it implements
 :class:`Symfony\\Component\\Security\\Core\\Authentication\\Provider\\AuthenticationProviderInterface`)
-has a method :method:`Symfony\\Component\\Security\\Core\\Authentication\\Provider\\AuthenticationProviderInterface::supports`
+has a :method:`Symfony\\Component\\Security\\Core\\Authentication\\Provider\\AuthenticationProviderInterface::supports` method
 by which the ``AuthenticationProviderManager``
 can determine if it supports the given token. If this is the case, the
-manager then calls the provider's method :method:`Symfony\\Component\\Security\\Core\\Authentication\\Provider\\AuthenticationProviderInterface::authenticate`.
+manager then calls the provider's :method:`Symfony\\Component\\Security\\Core\\Authentication\\Provider\\AuthenticationProviderInterface::authenticate` method.
 This method should return an authenticated token or throw an
 :class:`Symfony\\Component\\Security\\Core\\Exception\\AuthenticationException`
 (or any other exception extending it).
@@ -122,36 +121,38 @@ the given password is valid.
 
 This functionality is offered by the :class:`Symfony\\Component\\Security\\Core\\Authentication\\Provider\\DaoAuthenticationProvider`.
 It fetches the user's data from a :class:`Symfony\\Component\\Security\\Core\\User\\UserProviderInterface`,
-uses a :class:`Symfony\\Component\\Security\\Core\\Encoder\\PasswordEncoderInterface`
+uses a :class:`Symfony\\Component\\PasswordHasher\\Hasher\\UserPasswordHasherInterface`
 to create a hash of the password and returns an authenticated token if the
 password was valid::
 
+    use Symfony\Component\PasswordHasher\Hasher\PasswordHasherFactoryInterface;
     use Symfony\Component\Security\Core\Authentication\Provider\DaoAuthenticationProvider;
-    use Symfony\Component\Security\Core\User\UserChecker;
     use Symfony\Component\Security\Core\User\InMemoryUserProvider;
-    use Symfony\Component\Security\Core\Encoder\EncoderFactory;
+    use Symfony\Component\Security\Core\User\UserChecker;
 
+    // The 'InMemoryUser' class was introduced in Symfony 5.3.
+    // In previous versions it was called 'User'
     $userProvider = new InMemoryUserProvider(
-        array(
-            'admin' => array(
+        [
+            'admin' => [
                 // password is "foo"
                 'password' => '5FZ2Z8QIkA7UTZ4BYkoC+GsReLf569mSKDsfods6LYQ8t+a8EW9oaircfMpmaLbPBh4FOBiiFyLfuZmTSUwzZg==',
-                'roles'    => array('ROLE_ADMIN'),
-            ),
-        )
+                'roles'    => ['ROLE_ADMIN'],
+            ],
+        ]
     );
 
     // for some extra checks: is account enabled, locked, expired, etc.
     $userChecker = new UserChecker();
 
-    // an array of password encoders (see below)
-    $encoderFactory = new EncoderFactory(...);
+    // an array of password hashers (see below)
+    $hasherFactory = new PasswordHasherFactoryInterface(...);
 
     $daoProvider = new DaoAuthenticationProvider(
         $userProvider,
         $userChecker,
         'secured_area',
-        $encoderFactory
+        $hasherFactory
     );
 
     $daoProvider->authenticate($unauthenticatedToken);
@@ -164,68 +165,76 @@ password was valid::
     It is also possible to let multiple user providers try to find the user's
     data, using the :class:`Symfony\\Component\\Security\\Core\\User\\ChainUserProvider`.
 
-The Password Encoder Factory
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. _the-password-encoder-factory:
+
+The Password Hasher Factory
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The :class:`Symfony\\Component\\Security\\Core\\Authentication\\Provider\\DaoAuthenticationProvider`
-uses an encoder factory to create a password encoder for a given type of
-user. This allows you to use different encoding strategies for different
-types of users. The default :class:`Symfony\\Component\\Security\\Core\\Encoder\\EncoderFactory`
-receives an array of encoders::
+uses a factory to create a password hasher for a given type of user. This allows
+you to use different hashing strategies for different types of users.
+The default :class:`Symfony\\Component\\PasswordHasher\\Hasher\\PasswordHasherFactory`
+receives an array of hashers::
 
     use Acme\Entity\LegacyUser;
-    use Symfony\Component\Security\Core\Encoder\EncoderFactory;
-    use Symfony\Component\Security\Core\Encoder\MessageDigestPasswordEncoder;
-    use Symfony\Component\Security\Core\User\User;
+    use Symfony\Component\PasswordHasher\Hasher\MessageDigestPasswordHasher;
+    use Symfony\Component\PasswordHasher\Hasher\PasswordHasherFactory;
+    use Symfony\Component\Security\Core\User\InMemoryUser;
 
-    $defaultEncoder = new MessageDigestPasswordEncoder('sha512', true, 5000);
-    $weakEncoder = new MessageDigestPasswordEncoder('md5', true, 1);
+    $defaultHasher = new MessageDigestPasswordHasher('sha512', true, 5000);
+    $weakHasher = new MessageDigestPasswordHasher('md5', true, 1);
 
-    $encoders = array(
-        User::class       => $defaultEncoder,
-        LegacyUser::class => $weakEncoder,
+    $hashers = [
+        InMemoryUser::class => $defaultHasher,
+        LegacyUser::class   => $weakHasher,
         // ...
-    );
-    $encoderFactory = new EncoderFactory($encoders);
+    ];
+    $hasherFactory = new PasswordHasherFactory($hashers);
 
-Each encoder should implement :class:`Symfony\\Component\\Security\\Core\\Encoder\\PasswordEncoderInterface`
+Each hasher should implement :class:`Symfony\\Component\\PasswordHasher\\Hasher\\UserPasswordHasherInterface`
 or be an array with a ``class`` and an ``arguments`` key, which allows the
-encoder factory to construct the encoder only when it is needed.
+hasher factory to construct the hasher only when it is needed.
 
-Creating a custom Password Encoder
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. _creating-a-custom-password-encoder:
 
-There are many built-in password encoders. But if you need to create your
-own, it just needs to follow these rules:
+Creating a custom Password Hasher
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-#. The class must implement :class:`Symfony\\Component\\Security\\Core\\Encoder\\PasswordEncoderInterface`;
+There are many built-in password hasher. But if you need to create your
+own, it needs to follow these rules:
+
+#. The class must implement :class:`Symfony\\Component\\PasswordHasher\\Hasher\\UserPasswordHasherInterface`
+   (you can also extend :class:`Symfony\\Component\\PasswordHasher\\Hasher\\UserPasswordHasher`);
 
 #. The implementations of
-   :method:`Symfony\\Component\\Security\\Core\\Encoder\\PasswordEncoderInterface::encodePassword`
+   :method:`Symfony\\Component\\PasswordHasher\\Hasher\\UserPasswordHasherInterface::hashPassword`
    and
-   :method:`Symfony\\Component\\Security\\Core\\Encoder\\PasswordEncoderInterface::isPasswordValid`
+   :method:`Symfony\\Component\\PasswordHasher\\Hasher\\UserPasswordHasherInterface::isPasswordValid`
    must first of all make sure the password is not too long, i.e. the password length is no longer
    than 4096 characters. This is for security reasons (see `CVE-2013-5750`_), and you can use the
-   :method:`Symfony\\Component\\Security\\Core\\Encoder\\BasePasswordEncoder::isPasswordTooLong`
+   :method:`Symfony\\Component\\PasswordHasher\\Hasher\\CheckPasswordLengthTrait::isPasswordTooLong`
    method for this check::
 
-       use Symfony\Component\Security\Core\Encoder\BasePasswordEncoder;
+       use Symfony\Component\PasswordHasher\Hasher\CheckPasswordLengthTrait;
+       use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasher;
        use Symfony\Component\Security\Core\Exception\BadCredentialsException;
 
-       class FoobarEncoder extends BasePasswordEncoder
+       class FoobarHasher extends UserPasswordHasher
        {
-           public function encodePassword($raw, $salt)
+           use CheckPasswordLengthTrait;
+
+           public function hashPassword(UserInterface $user, string $plainPassword): string
            {
-               if ($this->isPasswordTooLong($raw)) {
+               if ($this->isPasswordTooLong($user->getPassword())) {
                    throw new BadCredentialsException('Invalid password.');
                }
 
                // ...
            }
 
-           public function isPasswordValid($encoded, $raw, $salt)
+           public function isPasswordValid(UserInterface $user, string $plainPassword)
            {
-               if ($this->isPasswordTooLong($raw)) {
+               if ($this->isPasswordTooLong($user->getPassword())) {
                    return false;
                }
 
@@ -233,13 +242,15 @@ own, it just needs to follow these rules:
            }
        }
 
-Using Password Encoders
-~~~~~~~~~~~~~~~~~~~~~~~
+.. _using-password-encoders:
 
-When the :method:`Symfony\\Component\\Security\\Core\\Encoder\\EncoderFactory::getEncoder`
-method of the password encoder factory is called with the user object as
-its first argument, it will return an encoder of type :class:`Symfony\\Component\\Security\\Core\\Encoder\\PasswordEncoderInterface`
-which should be used to encode this user's password::
+Using Password Hashers
+~~~~~~~~~~~~~~~~~~~~~~
+
+When the :method:`Symfony\\Component\\PasswordHasher\\Hasher\\PasswordHasherFactory::getPasswordHasher`
+method of the password hasher factory is called with the user object as
+its first argument, it will return a hasher of type :class:`Symfony\\Component\\PasswordHasher\\PasswordHasherInterface`
+which should be used to hash this user's password::
 
     // a Acme\Entity\LegacyUser instance
     $user = ...;
@@ -247,12 +258,12 @@ which should be used to encode this user's password::
     // the password that was submitted, e.g. when registering
     $plainPassword = ...;
 
-    $encoder = $encoderFactory->getEncoder($user);
+    $hasher = $hasherFactory->getPasswordHasher($user);
 
-    // returns $weakEncoder (see above)
-    $encodedPassword = $encoder->encodePassword($plainPassword, $user->getSalt());
+    // returns $weakHasher (see above)
+    $hashedPassword = $hasher->hashPassword($user, $plainPassword);
 
-    $user->setPassword($encodedPassword);
+    $user->setPassword($hashedPassword);
 
     // ... save the user
 
@@ -265,33 +276,31 @@ in) is correct, you can use::
     // the submitted password, e.g. from the login form
     $plainPassword = ...;
 
-    $validPassword = $encoder->isPasswordValid(
-        $user->getPassword(), // the encoded password
-        $plainPassword,       // the submitted password
-        $user->getSalt()
-    );
+    $validPassword = $hasher->isPasswordValid($user, $plainPassword);
 
 Authentication Events
 ---------------------
 
-The security component provides 4 related authentication events:
+The security component provides the following authentication events:
 
-===============================  ================================================  ==============================================================================
-Name                             Event Constant                                    Argument Passed to the Listener
-===============================  ================================================  ==============================================================================
-security.authentication.success  ``AuthenticationEvents::AUTHENTICATION_SUCCESS``  :class:`Symfony\\Component\\Security\\Core\\Event\\AuthenticationEvent`
-security.authentication.failure  ``AuthenticationEvents::AUTHENTICATION_FAILURE``  :class:`Symfony\\Component\\Security\\Core\\Event\\AuthenticationFailureEvent`
-security.interactive_login       ``SecurityEvents::INTERACTIVE_LOGIN``             :class:`Symfony\\Component\\Security\\Http\\Event\\InteractiveLoginEvent`
-security.switch_user             ``SecurityEvents::SWITCH_USER``                   :class:`Symfony\\Component\\Security\\Http\\Event\\SwitchUserEvent`
-===============================  ================================================  ==============================================================================
+===============================  ======================================================================== ==============================================================================
+Name                             Event Constant                                                           Argument Passed to the Listener
+===============================  ======================================================================== ==============================================================================
+security.authentication.success  ``AuthenticationEvents::AUTHENTICATION_SUCCESS``                         :class:`Symfony\\Component\\Security\\Core\\Event\\AuthenticationSuccessEvent`
+security.authentication.failure  ``AuthenticationEvents::AUTHENTICATION_FAILURE``                         :class:`Symfony\\Component\\Security\\Core\\Event\\AuthenticationFailureEvent`
+security.interactive_login       ``SecurityEvents::INTERACTIVE_LOGIN``                                    :class:`Symfony\\Component\\Security\\Http\\Event\\InteractiveLoginEvent`
+security.switch_user             ``SecurityEvents::SWITCH_USER``                                          :class:`Symfony\\Component\\Security\\Http\\Event\\SwitchUserEvent`
+security.logout_on_change        ``Symfony\Component\Security\Http\Event\DeauthenticatedEvent::class``    :class:`Symfony\\Component\\Security\\Http\\Event\\DeauthenticatedEvent`
+===============================  ======================================================================== ==============================================================================
 
 Authentication Success and Failure Events
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 When a provider authenticates the user, a ``security.authentication.success``
-event is dispatched. But beware - this event will fire, for example, on *every*
-request if you have session-based authentication. See ``security.interactive_login``
-below if you need to do something when a user *actually* logs in.
+event is dispatched. But beware - this event may fire, for example, on *every*
+request if you have session-based authentication, if ``always_authenticate_before_granting``
+is enabled or if token is not authenticated before AccessListener is invoked.
+See ``security.interactive_login`` below if you need to do something when a user *actually* logs in.
 
 When a provider attempts authentication but fails (i.e. throws an ``AuthenticationException``),
 a ``security.authentication.failure`` event is dispatched. You could listen on
@@ -314,10 +323,12 @@ order to give your user a welcome flash message every time they log in.
 The ``security.switch_user`` event is triggered every time you activate
 the ``switch_user`` firewall listener.
 
+The ``Symfony\Component\Security\Http\Event\DeauthenticatedEvent`` event is triggered when a token has been deauthenticated
+because of a user change, it can help you doing some clean-up task.
+
 .. seealso::
 
     For more information on switching users, see
     :doc:`/security/impersonating_user`.
 
 .. _`CVE-2013-5750`: https://symfony.com/blog/cve-2013-5750-security-issue-in-fosuserbundle-login-form
-.. _`BasePasswordEncoder::checkPasswordLength`: https://github.com/symfony/symfony/blob/master/src/Symfony/Component/Security/Core/Encoder/BasePasswordEncoder.php

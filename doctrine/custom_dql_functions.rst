@@ -33,9 +33,9 @@ In Symfony, you can register your custom DQL functions as follows:
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
             xmlns:doctrine="http://symfony.com/schema/dic/doctrine"
             xsi:schemaLocation="http://symfony.com/schema/dic/services
-                http://symfony.com/schema/dic/services/services-1.0.xsd
+                https://symfony.com/schema/dic/services/services-1.0.xsd
                 http://symfony.com/schema/dic/doctrine
-                http://symfony.com/schema/dic/doctrine/doctrine-1.0.xsd">
+                https://symfony.com/schema/dic/doctrine/doctrine-1.0.xsd">
 
             <doctrine:config>
                 <doctrine:orm>
@@ -53,33 +53,28 @@ In Symfony, you can register your custom DQL functions as follows:
     .. code-block:: php
 
         // config/packages/doctrine.php
-        use App\DQL\StringFunction;
-        use App\DQL\SecondStringFunction;
-        use App\DQL\NumericFunction;
         use App\DQL\DatetimeFunction;
+        use App\DQL\NumericFunction;
+        use App\DQL\SecondStringFunction;
+        use App\DQL\StringFunction;
+        use Symfony\Config\DoctrineConfig;
 
-        $container->loadFromExtension('doctrine', array(
-            'orm' => array(
-                // ...
-                'dql' => array(
-                    'string_functions' => array(
-                        'test_string'   => StringFunction::class,
-                        'second_string' => SecondStringFunction::class,
-                    ),
-                    'numeric_functions' => array(
-                        'test_numeric' => NumericFunction::class,
-                    ),
-                    'datetime_functions' => array(
-                        'test_datetime' => DatetimeFunction::class,
-                    ),
-                ),
-            ),
-        ));
+        return static function (DoctrineConfig $doctrine) {
+            $defaultDql = $doctrine->orm()
+                ->entityManager('default')
+                    // ...
+                    ->dql();
+
+            $defaultDql->stringFunction('test_string', StringFunction::class);
+            $defaultDql->stringFunction('second_string', SecondStringFunction::class);
+            $defaultDql->numericFunction('test_numeric', NumericFunction::class);
+            $defaultDql->datetimeFunction('test_datetime', DatetimeFunction::class);
+        };
 
 .. note::
 
     In case the ``entity_managers`` were named explicitly, configuring the functions with the
-    orm directly will trigger the exception `Unrecognized option "dql" under "doctrine.orm"`.
+    ORM directly will trigger the exception ``Unrecognized option "dql" under "doctrine.orm"``.
     The ``dql`` configuration block must be defined under the named entity manager.
 
     .. configuration-block::
@@ -105,9 +100,9 @@ In Symfony, you can register your custom DQL functions as follows:
                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                 xmlns:doctrine="http://symfony.com/schema/dic/doctrine"
                 xsi:schemaLocation="http://symfony.com/schema/dic/services
-                    http://symfony.com/schema/dic/services/services-1.0.xsd
+                    https://symfony.com/schema/dic/services/services-1.0.xsd
                     http://symfony.com/schema/dic/doctrine
-                    http://symfony.com/schema/dic/doctrine/doctrine-1.0.xsd">
+                    https://symfony.com/schema/dic/doctrine/doctrine-1.0.xsd">
 
                 <doctrine:config>
                     <doctrine:orm>
@@ -129,23 +124,15 @@ In Symfony, you can register your custom DQL functions as follows:
 
             // config/packages/doctrine.php
             use App\DQL\DatetimeFunction;
+            use Symfony\Config\DoctrineConfig;
 
-            $container->loadFromExtension('doctrine', array(
-                'doctrine' => array(
-                    'orm' => array(
-                        // ...
-                        'entity_managers' => array(
-                            'example_manager' => array(
-                                // place your functions here
-                                'dql' => array(
-                                    'datetime_functions' => array(
-                                        'test_datetime' => DatetimeFunction::class,
-                                    ),
-                                ),
-                            ),
-                        ),
-                    ),
-                ),
-            ));
+            return static function (DoctrineConfig $doctrine) {
+                $doctrine->orm()
+                    // ...
+                    ->entityManager('example_manager')
+                        // place your functions here
+                        ->dql()
+                            ->datetimeFunction('test_datetime', DatetimeFunction::class);
+            };
 
-.. _`DQL User Defined Functions`: http://docs.doctrine-project.org/projects/doctrine-orm/en/latest/cookbook/dql-user-defined-functions.html
+.. _`DQL User Defined Functions`: https://www.doctrine-project.org/projects/doctrine-orm/en/current/cookbook/dql-user-defined-functions.html

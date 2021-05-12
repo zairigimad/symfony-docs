@@ -7,7 +7,7 @@
 PDO & Doctrine DBAL Cache Adapter
 =================================
 
-This adapter stores the cache items in an SQL database. It requires a `PDO`_,
+This adapter stores the cache items in an SQL database. It requires a :phpclass:`PDO`,
 `Doctrine DBAL Connection`_, or `Data Source Name (DSN)`_ as its first parameter, and
 optionally a namespace, default cache lifetime, and options array as its second,
 third, and forth parameters::
@@ -28,11 +28,8 @@ third, and forth parameters::
         $defaultLifetime = 0,
 
         // an array of options for configuring the database table and connection
-        $options = array()
+        $options = []
     );
-
-.. versionadded:: 4.2
-    Automatic table creation was introduced in Symfony 4.2.
 
 The table where values are stored is created automatically on the first call to
 the :method:`Symfony\\Component\\Cache\\Adapter\\PdoAdapter::save` method.
@@ -47,10 +44,9 @@ your code.
 
 .. note::
 
-    Since Symfony 3.4, this adapter implements :class:`Symfony\\Component\\Cache\\PruneableInterface`,
+    This adapter implements :class:`Symfony\\Component\\Cache\\PruneableInterface`,
     allowing for manual :ref:`pruning of expired cache entries <component-cache-cache-pool-prune>` by
     calling its ``prune()`` method.
 
-.. _`PDO`: http://php.net/manual/en/class.pdo.php
-.. _`Doctrine DBAL Connection`: https://github.com/doctrine/dbal/blob/master/lib/Doctrine/DBAL/Connection.php
+.. _`Doctrine DBAL Connection`: https://github.com/doctrine/dbal/blob/master/src/Connection.php
 .. _`Data Source Name (DSN)`: https://en.wikipedia.org/wiki/Data_source_name

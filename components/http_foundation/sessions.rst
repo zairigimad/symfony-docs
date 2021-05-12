@@ -6,10 +6,10 @@ Session Management
 ==================
 
 The Symfony HttpFoundation component has a very powerful and flexible session
-subsystem which is designed to provide session management through a simple
+subsystem which is designed to provide session management through a clear
 object-oriented interface using a variety of session storage drivers.
 
-Sessions are used via the simple :class:`Symfony\\Component\\HttpFoundation\\Session\\Session`
+Sessions are used via the :class:`Symfony\\Component\\HttpFoundation\\Session\\Session`
 implementation of :class:`Symfony\\Component\\HttpFoundation\\Session\\SessionInterface` interface.
 
 .. caution::
@@ -33,7 +33,7 @@ Quick example::
     $session->getFlashBag()->add('notice', 'Profile updated');
 
     // retrieve messages
-    foreach ($session->getFlashBag()->get('notice', array()) as $message) {
+    foreach ($session->getFlashBag()->get('notice', []) as $message) {
         echo '<div class="flash-notice">'.$message.'</div>';
     }
 
@@ -62,8 +62,8 @@ Session API
 The :class:`Symfony\\Component\\HttpFoundation\\Session\\Session` class implements
 :class:`Symfony\\Component\\HttpFoundation\\Session\\SessionInterface`.
 
-The :class:`Symfony\\Component\\HttpFoundation\\Session\\Session` has a simple API
-as follows divided into a couple of groups.
+The :class:`Symfony\\Component\\HttpFoundation\\Session\\Session` has the
+following API, divided into a couple of groups.
 
 Session Workflow
 ................
@@ -151,6 +151,9 @@ the following API which is intended mainly for internal purposes:
 :method:`Symfony\\Component\\HttpFoundation\\Session\\SessionBagInterface::getName`
     Returns the name of the session bag.
 
+:method:`Symfony\\Component\\HttpFoundation\\Session\\SessionBagInterface::clear`
+    Clears out data from bag.
+
 .. _attribute-bag-interface:
 
 Attributes
@@ -166,8 +169,13 @@ and "Remember Me" login settings or other user based state information.
 :class:`Symfony\\Component\\HttpFoundation\\Session\\Attribute\\NamespacedAttributeBag`
     This implementation allows for attributes to be stored in a structured namespace.
 
+    .. deprecated:: 5.3
+
+        The ``NamespacedAttributeBag`` class is deprecated since Symfony 5.3.
+        If you need this feature, you will have to implement the class yourself.
+
 :class:`Symfony\\Component\\HttpFoundation\\Session\\Attribute\\AttributeBagInterface`
-has a simple API
+has the API
 
 :method:`Symfony\\Component\\HttpFoundation\\Session\\Attribute\\AttributeBagInterface::set`
     Sets an attribute by name (``set('name', 'value')``).
@@ -207,6 +215,8 @@ Example::
     // ...
     $session->clear();
 
+.. _namespaced-attributes:
+
 Namespaced Attributes
 .....................
 
@@ -219,19 +229,23 @@ data is an array, for example a set of tokens. In this case, managing the array
 becomes a burden because you have to retrieve the array then process it and
 store it again::
 
-    $tokens = array(
-        'tokens' => array(
+    $tokens = [
+        'tokens' => [
             'a' => 'a6c1e0b6',
             'b' => 'f4a7b1f3',
-        ),
-    );
+        ],
+    ];
 
-So any processing of this might quickly get ugly, even simply adding a token to
-the array::
+So any processing of this might quickly get ugly, even adding a token to the array::
 
     $tokens = $session->get('tokens');
     $tokens['c'] = $value;
     $session->set('tokens', $tokens);
+
+.. deprecated:: 5.3
+
+    The ``NamespacedAttributeBag`` class is deprecated since Symfony 5.3.
+    If you need this feature, you will have to implement the class yourself.
 
 With structured namespacing, the key can be translated to the array
 structure like this using a namespace character (which defaults to ``/``)::
@@ -265,7 +279,7 @@ This is however just one application for flash messages.
     caching.
 
 :class:`Symfony\\Component\\HttpFoundation\\Session\\Flash\\FlashBagInterface`
-has a simple API
+has the API
 
 :method:`Symfony\\Component\\HttpFoundation\\Session\\Flash\\FlashBagInterface::add`
     Adds a flash message to the stack of specified type.
@@ -278,7 +292,7 @@ has a simple API
     Gets flashes by type and clears those flashes from the bag.
 
 :method:`Symfony\\Component\\HttpFoundation\\Session\\Flash\\FlashBagInterface::setAll`
-    Sets all flashes, accepts a keyed array of arrays ``type => array(messages)``.
+    Sets all flashes, accepts a keyed array of arrays ``type => [messages]``.
 
 :method:`Symfony\\Component\\HttpFoundation\\Session\\Flash\\FlashBagInterface::all`
     Gets all flashes (as a keyed array of arrays) and clears the flashes from the bag.
@@ -321,15 +335,15 @@ Examples of setting multiple flashes::
 
 Displaying the flash messages might look as follows.
 
-Simple, display one type of message::
+Display one type of message::
 
     // display warnings
-    foreach ($session->getFlashBag()->get('warning', array()) as $message) {
+    foreach ($session->getFlashBag()->get('warning', []) as $message) {
         echo '<div class="flash-warning">'.$message.'</div>';
     }
 
     // display errors
-    foreach ($session->getFlashBag()->get('error', array()) as $message) {
+    foreach ($session->getFlashBag()->get('error', []) as $message) {
         echo '<div class="flash-error">'.$message.'</div>';
     }
 

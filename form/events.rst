@@ -11,11 +11,8 @@ Using form events, you may modify information or fields at different steps
 of the workflow: from the population of the form to the submission of the
 data from the request.
 
-Registering an event listener is very easy using the Form component.
-
-For example, if you wish to register a function to the
-``FormEvents::PRE_SUBMIT`` event, the following code lets you add a field,
-depending on the request values::
+For example, if you need to add a field depending on request values, you can
+register an event listener to the ``FormEvents::PRE_SUBMIT`` event as follows::
 
     // ...
 
@@ -35,17 +32,16 @@ depending on the request values::
 The Form Workflow
 -----------------
 
-The Form Submission Workflow
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. raw:: html
 
-.. image:: /_images/components/form/general_flow.png
-    :align: center
+    <object data="../_images/form/form_workflow.svg" type="image/svg+xml"></object>
 
 1) Pre-populating the Form (``FormEvents::PRE_SET_DATA`` and ``FormEvents::POST_SET_DATA``)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. image:: /_images/components/form/set_data_flow.png
-    :align: center
+.. raw:: html
+
+    <object data="../_images/form/form_prepopulation_workflow.svg" type="image/svg+xml"></object>
 
 Two events are dispatched during pre-population of a form, when
 :method:`Form::setData() <Symfony\\Component\\Form\\Form::setData>`
@@ -121,8 +117,9 @@ View data        Normalized data transformed using a view transformer
 2) Submitting a Form (``FormEvents::PRE_SUBMIT``, ``FormEvents::SUBMIT`` and ``FormEvents::POST_SUBMIT``)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. image:: /_images/components/form/submission_flow.png
-    :align: center
+.. raw:: html
+
+    <object data="../_images/form/form_submission_workflow.svg" type="image/svg+xml"></object>
 
 Three events are dispatched when
 :method:`Form::handleRequest() <Symfony\\Component\\Form\\Form::handleRequest>`
@@ -166,7 +163,7 @@ View data        Same as in ``FormEvents::POST_SET_DATA``
 B) The ``FormEvents::SUBMIT`` Event
 ...................................
 
-The ``FormEvents::SUBMIT`` event is dispatched just before the
+The ``FormEvents::SUBMIT`` event is dispatched right before the
 :method:`Form::submit() <Symfony\\Component\\Form\\Form::submit>` method
 transforms back the normalized data to the model and view data.
 
@@ -260,21 +257,21 @@ Name                    ``FormEvents`` Constant        Event's Data
 Event Listeners
 ~~~~~~~~~~~~~~~
 
-An event listener may be any type of valid callable.
-
-Creating and binding an event listener to the form is very easy::
+An event listener may be any type of valid callable. For example, you can
+define an event listener function inline right in the ``addEventListener``
+method of the ``FormFactory``::
 
     // ...
 
-    use Symfony\Component\Form\FormEvent;
-    use Symfony\Component\Form\FormEvents;
-    use Symfony\Component\Form\Extension\Core\Type\TextType;
     use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
     use Symfony\Component\Form\Extension\Core\Type\EmailType;
+    use Symfony\Component\Form\Extension\Core\Type\TextType;
+    use Symfony\Component\Form\FormEvent;
+    use Symfony\Component\Form\FormEvents;
 
     $form = $formFactory->createBuilder()
         ->add('username', TextType::class)
-        ->add('show_email', CheckboxType::class)
+        ->add('showEmail', CheckboxType::class)
         ->addEventListener(FormEvents::PRE_SUBMIT, function (FormEvent $event) {
             $user = $event->getData();
             $form = $event->getForm();
@@ -286,7 +283,7 @@ Creating and binding an event listener to the form is very easy::
             // checks whether the user has chosen to display their email or not.
             // If the data was submitted previously, the additional value that is
             // included in the request variables needs to be removed.
-            if (true === $user['show_email']) {
+            if (isset($user['showEmail']) && $user['showEmail']) {
                 $form->add('email', EmailType::class);
             } else {
                 unset($user['email']);
@@ -303,27 +300,27 @@ callback for better readability::
     // src/Form/SubscriptionType.php
     namespace App\Form;
 
-    use Symfony\Component\Form\Extension\Core\Type\TextType;
     use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
+    use Symfony\Component\Form\Extension\Core\Type\TextType;
     use Symfony\Component\Form\FormEvent;
     use Symfony\Component\Form\FormEvents;
 
     // ...
     class SubscriptionType extends AbstractType
     {
-        public function buildForm(FormBuilderInterface $builder, array $options)
+        public function buildForm(FormBuilderInterface $builder, array $options): void
         {
             $builder
                 ->add('username', TextType::class)
-                ->add('show_email', CheckboxType::class)
+                ->add('showEmail', CheckboxType::class)
                 ->addEventListener(
                     FormEvents::PRE_SET_DATA,
-                    array($this, 'onPreSetData')
+                    [$this, 'onPreSetData']
                 )
             ;
         }
 
-        public function onPreSetData(FormEvent $event)
+        public function onPreSetData(FormEvent $event): void
         {
             // ...
         }
@@ -338,27 +335,27 @@ Event subscribers have different uses:
 * Listening to multiple events;
 * Regrouping multiple listeners inside a single class.
 
-.. code-block:: php
+Consider the following example of a form event subscriber::
 
     // src/Form/EventListener/AddEmailFieldListener.php
     namespace App\Form\EventListener;
 
     use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+    use Symfony\Component\Form\Extension\Core\Type\EmailType;
     use Symfony\Component\Form\FormEvent;
     use Symfony\Component\Form\FormEvents;
-    use Symfony\Component\Form\Extension\Core\Type\EmailType;
 
     class AddEmailFieldListener implements EventSubscriberInterface
     {
-        public static function getSubscribedEvents()
+        public static function getSubscribedEvents(): array
         {
-            return array(
+            return [
                 FormEvents::PRE_SET_DATA => 'onPreSetData',
                 FormEvents::PRE_SUBMIT   => 'onPreSubmit',
-            );
+            ];
         }
 
-        public function onPreSetData(FormEvent $event)
+        public function onPreSetData(FormEvent $event): void
         {
             $user = $event->getData();
             $form = $event->getForm();
@@ -370,7 +367,7 @@ Event subscribers have different uses:
             }
         }
 
-        public function onPreSubmit(FormEvent $event)
+        public function onPreSubmit(FormEvent $event): void
         {
             $user = $event->getData();
             $form = $event->getForm();
@@ -382,7 +379,7 @@ Event subscribers have different uses:
             // checks whether the user has chosen to display their email or not.
             // If the data was submitted previously, the additional value that
             // is included in the request variables needs to be removed.
-            if (true === $user['show_email']) {
+            if (isset($user['showEmail']) && $user['showEmail']) {
                 $form->add('email', EmailType::class);
             } else {
                 unset($user['email']);
@@ -394,14 +391,14 @@ Event subscribers have different uses:
 To register the event subscriber, use the ``addEventSubscriber()`` method::
 
     use App\Form\EventListener\AddEmailFieldListener;
-    use Symfony\Component\Form\Extension\Core\Type\TextType;
     use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
+    use Symfony\Component\Form\Extension\Core\Type\TextType;
 
     // ...
 
     $form = $formFactory->createBuilder()
         ->add('username', TextType::class)
-        ->add('show_email', CheckboxType::class)
+        ->add('showEmail', CheckboxType::class)
         ->addEventSubscriber(new AddEmailFieldListener())
         ->getForm();
 

@@ -1,9 +1,9 @@
 Using Bootstrap CSS & JS
 ========================
 
-Want to use Bootstrap (or something similar) in your project? No problem!
-First, install it. To be able to customize things further, we'll install
-``bootstrap``:
+This article explains how to install and integrate the `Bootstrap CSS framework`_
+in your Symfony application using :doc:`Webpack Encore </frontend>`.
+First, to be able to customize things further, we'll install ``bootstrap``:
 
 .. code-block:: terminal
 
@@ -18,7 +18,7 @@ a ``global.scss`` file, import it from there:
 
 .. code-block:: scss
 
-    // assets/css/global.scss
+    // assets/styles/global.scss
 
     // customize some Bootstrap variables
     $primary: darken(#428bca, 20%);
@@ -37,33 +37,23 @@ file into ``global.scss``. You can even customize the Bootstrap variables first!
 Importing Bootstrap JavaScript
 ------------------------------
 
-Bootstrap JavaScript requires jQuery and Popper.js, so make sure you have this installed:
+First, install the JavaScript dependencies required by the Bootstrap version
+used in your application:
 
 .. code-block:: terminal
 
-    $ yarn add jquery --dev
-    $ yarn add popper.js --dev
+    // jQuery is only required in versions prior to Bootstrap 5
+    $ yarn add jquery popper.js --dev
 
-Next, make sure to call ``.autoProvidejQuery()`` in your ``webpack.config.js`` file:
-
-.. code-block:: diff
-
-    // webpack.config.js
-    Encore
-        // ...
-    +     .autoProvidejQuery()
-    ;
-
-This is needed because Bootstrap expects jQuery to be available as a global
-variable. Now, require bootstrap from any of your JavaScript files:
+Now, require bootstrap from any of your JavaScript files:
 
 .. code-block:: javascript
 
     // app.js
 
     const $ = require('jquery');
-    // JS is equivalent to the normal "bootstrap" package
-    // no need to set this to a variable, just require it
+    // this "modifies" the jquery module: adding behavior to it
+    // the bootstrap module doesn't export/return anything
     require('bootstrap');
 
     // or you can include specific pieces
@@ -74,8 +64,13 @@ variable. Now, require bootstrap from any of your JavaScript files:
         $('[data-toggle="popover"]').popover();
     });
 
-Thanks to ``autoProvidejQuery()``, you can require any other jQuery
-plugins in a similar way:
+Using other Bootstrap / jQuery Plugins
+--------------------------------------
+
+If you need to use jQuery plugins that work well with jQuery, you may need to use
+Encore's :ref:`autoProvidejQuery() <encore-autoprovide-jquery>` method so that
+these plugins know where to find jQuery. Then, you can include the needed JavaScript
+and CSS like normal:
 
 .. code-block:: javascript
 
@@ -86,3 +81,5 @@ plugins in a similar way:
     // require 2 CSS files needed
     require('bootstrap-star-rating/css/star-rating.css');
     require('bootstrap-star-rating/themes/krajee-svg/theme.css');
+
+.. _`Bootstrap CSS framework`: https://getbootstrap.com/

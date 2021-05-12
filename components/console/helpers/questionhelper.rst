@@ -6,13 +6,13 @@ Question Helper
 
 The :class:`Symfony\\Component\\Console\\Helper\\QuestionHelper` provides
 functions to ask the user for more information. It is included in the default
-helper set, which you can get by calling
-:method:`Symfony\\Component\\Console\\Command\\Command::getHelperSet`::
+helper set and you can get it by calling
+:method:`Symfony\\Component\\Console\\Command\\Command::getHelper`::
 
     $helper = $this->getHelper('question');
 
 The Question Helper has a single method
-:method:`Symfony\\Component\\Console\\Command\\Command::ask` that needs an
+:method:`Symfony\\Component\\Console\\Helper\\QuestionHelper::ask` that needs an
 :class:`Symfony\\Component\\Console\\Input\\InputInterface` instance as the
 first argument, an :class:`Symfony\\Component\\Console\\Output\\OutputInterface`
 instance as the second argument and a
@@ -25,6 +25,7 @@ Suppose you want to confirm an action before actually executing it. Add
 the following to your command::
 
     // ...
+    use Symfony\Component\Console\Command\Command;
     use Symfony\Component\Console\Input\InputInterface;
     use Symfony\Component\Console\Output\OutputInterface;
     use Symfony\Component\Console\Question\ConfirmationQuestion;
@@ -39,7 +40,7 @@ the following to your command::
             $question = new ConfirmationQuestion('Continue with this action?', false);
 
             if (!$helper->ask($input, $output, $question)) {
-                return;
+                return Command::SUCCESS;
             }
         }
     }
@@ -104,7 +105,8 @@ from a predefined list::
         $helper = $this->getHelper('question');
         $question = new ChoiceQuestion(
             'Please select your favorite color (defaults to red)',
-            array('red', 'blue', 'yellow'),
+            // choices can also be PHP objects that implement __toString() method
+            ['red', 'blue', 'yellow'],
             0
         );
         $question->setErrorMessage('Color %s is invalid.');
@@ -114,6 +116,10 @@ from a predefined list::
 
         // ... do something with the color
     }
+
+.. versionadded:: 5.2
+
+    Support for using PHP objects as choice values was introduced in Symfony 5.2.
 
 The option which should be selected by default is provided with the third
 argument of the constructor. The default is ``null``, which means that no
@@ -142,7 +148,7 @@ this use :method:`Symfony\\Component\\Console\\Question\\ChoiceQuestion::setMult
         $helper = $this->getHelper('question');
         $question = new ChoiceQuestion(
             'Please select your favorite colors (defaults to red and blue)',
-            array('red', 'blue', 'yellow'),
+            ['red', 'blue', 'yellow'],
             '0,1'
         );
         $question->setMultiselect(true);
@@ -171,12 +177,97 @@ will be autocompleted as the user types::
         // ...
         $helper = $this->getHelper('question');
 
-        $bundles = array('AcmeDemoBundle', 'AcmeBlogBundle', 'AcmeStoreBundle');
+        $bundles = ['AcmeDemoBundle', 'AcmeBlogBundle', 'AcmeStoreBundle'];
         $question = new Question('Please enter the name of a bundle', 'FooBundle');
         $question->setAutocompleterValues($bundles);
 
         $bundleName = $helper->ask($input, $output, $question);
     }
+
+In more complex use cases, it may be necessary to generate suggestions on the
+fly, for instance if you wish to autocomplete a file path. In that case, you can
+provide a callback function to dynamically generate suggestions::
+
+    use Symfony\Component\Console\Question\Question;
+
+    // ...
+    public function execute(InputInterface $input, OutputInterface $output)
+    {
+        $helper = $this->getHelper('question');
+
+        // This function is called whenever the input changes and new
+        // suggestions are needed.
+        $callback = function (string $userInput): array {
+            // Strip any characters from the last slash to the end of the string
+            // to keep only the last directory and generate suggestions for it
+            $inputPath = preg_replace('%(/|^)[^/]*$%', '$1', $userInput);
+            $inputPath = '' === $inputPath ? '.' : $inputPath;
+
+            // CAUTION - this example code allows unrestricted access to the
+            // entire filesystem. In real applications, restrict the directories
+            // where files and dirs can be found
+            $foundFilesAndDirs = @scandir($inputPath) ?: [];
+
+            return array_map(function ($dirOrFile) use ($inputPath) {
+                return $inputPath.$dirOrFile;
+            }, $foundFilesAndDirs);
+        };
+
+        $question = new Question('Please provide the full path of a file to parse');
+        $question->setAutocompleterCallback($callback);
+
+        $filePath = $helper->ask($input, $output, $question);
+    }
+
+Do not Trim the Answer
+~~~~~~~~~~~~~~~~~~~~~~
+
+You can also specify if you want to not trim the answer by setting it directly with
+:method:`Symfony\\Component\\Console\\Question\\Question::setTrimmable`::
+
+    use Symfony\Component\Console\Question\Question;
+
+    // ...
+    public function execute(InputInterface $input, OutputInterface $output)
+    {
+        // ...
+        $helper = $this->getHelper('question');
+
+        $question = new Question('What is the name of the child?');
+        $question->setTrimmable(false);
+        // if the users inputs 'elsa ' it will not be trimmed and you will get 'elsa ' as value
+        $name = $helper->ask($input, $output, $question);
+    }
+
+Accept Multiline Answers
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. versionadded:: 5.2
+
+    The ``setMultiline()`` and ``isMultiline()`` methods were introduced in
+    Symfony 5.2.
+
+By default, the question helper stops reading user input when it receives a newline
+character (i.e., when the user hits ``ENTER`` once). However, you may specify that
+the response to a question should allow multiline answers by passing ``true`` to
+:method:`Symfony\\Component\\Console\\Question\\Question::setMultiline`::
+
+    use Symfony\Component\Console\Question\Question;
+
+    // ...
+    public function execute(InputInterface $input, OutputInterface $output)
+    {
+        // ...
+        $helper = $this->getHelper('question');
+
+        $question = new Question('How do you solve world peace?');
+        $question->setMultiline(true);
+
+        $answer = $helper->ask($input, $output, $question);
+    }
+
+Multiline questions stop reading user input after receiving an end-of-transmission
+control character (``Ctrl-D`` on Unix systems or ``Ctrl-Z`` on Windows).
 
 Hiding the User's Response
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -202,7 +293,7 @@ convenient for passwords::
 .. caution::
 
     When you ask for a hidden response, Symfony will use either a binary, change
-    stty mode or use another trick to hide the response. If none is available,
+    ``stty`` mode or use another trick to hide the response. If none is available,
     it will fallback and allow the response to be visible unless you set this
     behavior to ``false`` using
     :method:`Symfony\\Component\\Console\\Question\\Question::setHiddenFallback`
@@ -339,8 +430,8 @@ Testing a Command that Expects Input
 If you want to write a unit test for a command which expects some kind of input
 from the command line, you need to set the inputs that the command expects::
 
-    use Symfony\Component\Console\Helper\QuestionHelper;
     use Symfony\Component\Console\Helper\HelperSet;
+    use Symfony\Component\Console\Helper\QuestionHelper;
     use Symfony\Component\Console\Tester\CommandTester;
 
     // ...
@@ -350,17 +441,17 @@ from the command line, you need to set the inputs that the command expects::
         $commandTester = new CommandTester($command);
 
         // Equals to a user inputting "Test" and hitting ENTER
-        $commandTester->setInputs(array('Test'));
+        $commandTester->setInputs(['Test']);
 
         // Equals to a user inputting "This", "That" and hitting ENTER
         // This can be used for answering two separated questions for instance
-        $commandTester->setInputs(array('This', 'That'));
+        $commandTester->setInputs(['This', 'That']);
 
         // For simulating a positive answer to a confirmation question, adding an
         // additional input saying "yes" will work
-        $commandTester->setInputs(array('yes'));
+        $commandTester->setInputs(['yes']);
 
-        $commandTester->execute(array('command' => $command->getName()));
+        $commandTester->execute(['command' => $command->getName()]);
 
         // $this->assertRegExp('/.../', $commandTester->getDisplay());
     }

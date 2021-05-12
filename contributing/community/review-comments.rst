@@ -26,7 +26,7 @@ constructive, respectful and helpful reviews and replies.
     your ideas and opinions but helping you to better communicate,
     prevent possible confusion, and keeping the Symfony community a
     welcoming place for everyone. **You are free to disagree with
-    someone's opinions, just don't be disrespectful.**
+    someone's opinions, but don't be disrespectful.**
 
 First of, accept that many programming decisions are opinions.
 Discuss trade offs, which you prefer, and reach a resolution quickly.
@@ -38,7 +38,7 @@ Tone of Voice
 We don't expect you to be completely formal, or to even write error-free
 English. Just remember this: don't swear, and be respectful to others.
 
-Don't reply in anger or with an aggressive tone. You're angry, we understand
+Don't reply in anger or with an aggressive tone. If you're angry, we understand
 that, but swearing/cursing and name calling doesn't really encourage anyone to
 help you. Take a deep breath, count to 10 and try to *clearly* explain what problems
 you encounter.
@@ -74,12 +74,12 @@ Assume everyone is intelligent and well-meaning.
 
 .. tip::
 
-    Good questions avoid judgement and avoid assumptions about the author's perspective.
+    Good questions avoid judgment and avoid assumptions about the author's perspective.
 
     Maybe you can ask for clarification? Suggest an alternative?
     Or provide a simple explanation *why* you disagree with their proposal.
 
-    * ``This looks wrong. Are you sure it's correct?`` (eg. typo/syntax error)
+    * ``This looks wrong. Are you sure it's correct?`` (e.g. typo/syntax error)
 
     * ``What do you think of "RequestFactory" instead of RequestCreator?``
 
@@ -91,34 +91,34 @@ Don't use hyperbole ("always", "never", "endlessly", "nothing", "worst", "horrib
 **Don't:** *"I don't like how you wrote this code"* - there is no clear explanation why you
 don't like how it's written.
 
-**Better:** *"I find it hard to read this code as there many nested if statements, can you make it more
-readable? By encapsulating some of it's details or maybe adding some comments to explain the overall logic."* -
+**Better:** *"I find it hard to read this code as there are many nested if statements, can you make it more
+readable? By encapsulating some of the details or maybe adding some comments to explain the overall logic."* -
 You explain why you find the code hard to read *and* give some suggestions for improvement.
 
 If a piece of code is in fact wrong, explain why:
 
-* ``This code doesn't comply with Symfony's CS rules. Please see [...] for details``.
+* "This code doesn't comply with Symfony's CS rules. Please see [...] for details."
 
-* ``Symfony 3 still uses PHP 5 and doesn't allow the usage scalar type-hints.``.
+* "Symfony 3 still uses PHP 5 and doesn't allow the usage of scalar type-hints."
 
-* ``I think the code is less readable now`` - careful here, be sure explain why you think
+* "I think the code is less readable now." - careful here, be sure explain why you think
   the code is less readable, and maybe give some suggestions?
 
 **Examples of valid reasons to reject:**
 
-    * We tried that in the past (link to the relevant PR) but we needed to revert it for XXX reason.
+* "We tried that in the past (link to the relevant PR) but we needed to revert it for XXX reason."
 
-    * That change would introduce too many merge conflicts when merging up Symfony branches.
-      In the past we've always rejected changes like this.
+* "That change would introduce too many merge conflicts when merging up Symfony branches.
+  In the past we've always rejected changes like this."
 
-    * I profiled this change and it hurts performance significantly (if you don't profile, it's an opinion, so we can ignore)
+* "I profiled this change and it hurts performance significantly" - if you don't profile, it's an opinion, so we can ignore
 
-    * Code doesn't match Symfony's CS rules (e.g. ``use array()`` instead of ``[]``)
+* "Code doesn't match Symfony's CS rules (e.g. use ``[]`` instead of ``array()``)"
 
-    * We only provide integration with very popular projects (e.g. we integrate Bootstrap but not your own CSS framework)
+* "We only provide integration with very popular projects (e.g. we integrate Bootstrap but not your own CSS framework)"
 
-    * This would require adding lots of code and making lots of changes for a feature that doesn't look so important.
-      That could hurt maintaining in the future.
+* "This would require adding lots of code and making lots of changes for a feature that doesn't look so important.
+  That could hurt maintaining in the future."
 
 Asking for Changes
 ------------------
@@ -149,6 +149,17 @@ you don't have to use "Please" all the time. But it wouldn't hurt.
 It may not seem like much, but saying "Thank you" does make others feel
 more welcome.
 
+
+Preventing Escalations
+----------------------
+
+Sometimes when people receive feedback they may get defensive.
+In that case, it is better to try to approach the discussion in
+a different way, to not escalate further.
+
+If you want someone to mediate, please join the ``#contribs`` channel on `Symfony Slack`_,
+to have a safe environment and keep working together on the common goals.
+
 Using Humor
 -----------
 
@@ -176,3 +187,5 @@ But don't say it "just because", if your apology is not really meant
 you *will* lose credibility and respect from other developers.
 
 *Do unto others as you would have them do unto you.*
+
+.. _`Symfony Slack`: https://symfony.com/slack-invite

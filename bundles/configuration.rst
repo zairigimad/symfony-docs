@@ -29,33 +29,29 @@ as integration of other related components:
         <container xmlns="http://symfony.com/schema/dic/services"
             xmlns:framework="http://symfony.com/schema/dic/symfony"
             xsi:schemaLocation="http://symfony.com/schema/dic/services
-                http://symfony.com/schema/dic/services/services-1.0.xsd
+                https://symfony.com/schema/dic/services/services-1.0.xsd
                 http://symfony.com/schema/dic/symfony
-                http://symfony.com/schema/dic/symfony/symfony-1.0.xsd">
+                https://symfony.com/schema/dic/symfony/symfony-1.0.xsd">
 
             <framework:config>
-                <framework:form />
+                <framework:form/>
             </framework:config>
         </container>
 
     .. code-block:: php
 
-        $container->loadFromExtension('framework', array(
-            'form' => true,
-        ));
+        use Symfony\Config\FrameworkConfig;
+
+        return static function (FrameworkConfig $framework) {
+            $framework->form()->enabled(true);
+        };
 
 Using the Bundle Extension
 --------------------------
 
-The basic idea is that instead of having the user override individual
-parameters, you let the user configure just a few, specifically created,
-options. As the bundle developer, you then parse through that configuration and
-load correct services and parameters inside an "Extension" class.
-
-As an example, imagine you are creating a social bundle, which provides
-integration with Twitter and such. To be able to reuse your bundle, you have to
-make the ``client_id`` and ``client_secret`` variables configurable. Your
-bundle configuration would look like:
+Imagine you are creating a new bundle - AcmeSocialBundle - which provides
+integration with Twitter. To make your bundle configurable to the user, you
+can add some configuration that looks like this:
 
 .. configuration-block::
 
@@ -70,27 +66,41 @@ bundle configuration would look like:
     .. code-block:: xml
 
         <!-- config/packages/acme_social.xml -->
-        <?xml version="1.0" ?>
+        <?xml version="1.0" encoding="UTF-8" ?>
         <container xmlns="http://symfony.com/schema/dic/services"
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
             xmlns:acme-social="http://example.org/schema/dic/acme_social"
             xsi:schemaLocation="http://symfony.com/schema/dic/services
-                http://symfony.com/schema/dic/services/services-1.0.xsd">
+                https://symfony.com/schema/dic/services/services-1.0.xsd">
 
-           <acme-social:config>
-               <acme-social:twitter client-id="123" client-secret="your_secret" />
-           </acme-social:config>
+            <acme-social:config>
+                <acme-social:twitter client-id="123" client-secret="your_secret"/>
+            </acme-social:config>
 
-           <!-- ... -->
+            <!-- ... -->
         </container>
 
     .. code-block:: php
 
         // config/packages/acme_social.php
-        $container->loadFromExtension('acme_social', array(
-            'client_id'     => 123,
-            'client_secret' => 'your_secret',
-        ));
+        use Symfony\Config\AcmeSocialConfig;
+
+        return static function (AcmeSocialConfig $acmeSocial) {
+            $acmeSocial->twitter()
+                ->clientId(123)
+                ->clientSecret('your_secret');
+        };
+
+The basic idea is that instead of having the user override individual
+parameters, you let the user configure just a few, specifically created,
+options. As the bundle developer, you then parse through that configuration and
+load correct services and parameters inside an "Extension" class.
+
+.. note::
+
+    The root key of your bundle configuration (``acme_social`` in the previous
+    example) is automatically determined from your bundle name (it's the
+    `snake case`_ of the bundle name without the ``Bundle`` suffix ).
 
 .. seealso::
 
@@ -124,14 +134,14 @@ automatically converts XML and YAML to an array).
 For the configuration example in the previous section, the array passed to your
 ``load()`` method will look like this::
 
-    array(
-        array(
-            'twitter' => array(
+    [
+        [
+            'twitter' => [
                 'client_id' => 123,
                 'client_secret' => 'your_secret',
-            ),
-        ),
-    )
+            ],
+        ],
+    ]
 
 Notice that this is an *array of arrays*, not just a single flat array of the
 configuration values. This is intentional, as it allows Symfony to parse several
@@ -139,21 +149,21 @@ configuration resources. For example, if ``acme_social`` appears in another
 configuration file - say ``config/packages/dev/acme_social.yaml`` - with
 different values beneath it, the incoming array might look like this::
 
-    array(
+    [
         // values from config/packages/acme_social.yaml
-        array(
-            'twitter' => array(
+        [
+            'twitter' => [
                 'client_id' => 123,
                 'client_secret' => 'your_secret',
-            ),
-        ),
+            ],
+        ],
         // values from config/packages/dev/acme_social.yaml
-        array(
-            'twitter' => array(
+        [
+            'twitter' => [
                 'client_id' => 456,
-            ),
-        ),
-    )
+            ],
+        ],
+    ]
 
 The order of the two arrays depends on which one is set first.
 
@@ -175,10 +185,9 @@ The ``Configuration`` class to handle the sample configuration looks like::
     {
         public function getConfigTreeBuilder()
         {
-            $treeBuilder = new TreeBuilder();
-            $rootNode = $treeBuilder->root('acme_social');
+            $treeBuilder = new TreeBuilder('acme_social');
 
-            $rootNode
+            $treeBuilder->getRootNode()
                 ->children()
                     ->arrayNode('twitter')
                         ->children()
@@ -232,7 +241,7 @@ For example, imagine your bundle has the following example config:
     <container xmlns="http://symfony.com/schema/dic/services"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://symfony.com/schema/dic/services
-            http://symfony.com/schema/dic/services/services-1.0.xsd">
+            https://symfony.com/schema/dic/services/services-1.0.xsd">
 
         <services>
             <service id="acme.social.twitter_client" class="Acme\SocialBundle\TwitterClient">
@@ -247,8 +256,8 @@ In your extension, you can load this and dynamically set its arguments::
     // src/Acme/SocialBundle/DependencyInjection/AcmeSocialExtension.php
     // ...
 
-    use Symfony\Component\DependencyInjection\Loader\XmlFileLoader;
     use Symfony\Component\Config\FileLocator;
+    use Symfony\Component\DependencyInjection\Loader\XmlFileLoader;
 
     public function load(array $configs, ContainerBuilder $container)
     {
@@ -291,15 +300,13 @@ In your extension, you can load this and dynamically set its arguments::
 .. sidebar:: Processing the Configuration yourself
 
     Using the Config component is fully optional. The ``load()`` method gets an
-    array of configuration values. You can simply parse these arrays yourself
+    array of configuration values. You can instead parse these arrays yourself
     (e.g. by overriding configurations and using :phpfunction:`isset` to check
-    for the existence of a value). Be aware that it'll be very hard to support XML.
-
-    .. code-block:: php
+    for the existence of a value). Be aware that it'll be very hard to support XML::
 
         public function load(array $configs, ContainerBuilder $container)
         {
-            $config = array();
+            $config = [];
             // let resources override the previous set value
             foreach ($configs as $subConfig) {
                 $config = array_merge($config, $subConfig);
@@ -326,7 +333,7 @@ As long as your bundle's configuration is located in the standard location
 (``YourBundle\DependencyInjection\Configuration``) and does not have
 a constructor it will work automatically. If you
 have something different, your ``Extension`` class must override the
-:method:`Extension::getConfiguration() <Symfony\\Component\\HttpKernel\\DependencyInjection\\Extension::getConfiguration>`
+:method:`Extension::getConfiguration() <Symfony\\Component\\DependencyInjection\\Extension\\Extension::getConfiguration>`
 method and return an instance of your ``Configuration``.
 
 Supporting XML
@@ -353,7 +360,7 @@ In XML, the `XML namespace`_ is used to determine which elements belong to the
 configuration of a specific bundle. The namespace is returned from the
 :method:`Extension::getNamespace() <Symfony\\Component\\DependencyInjection\\Extension\\Extension::getNamespace>`
 method. By convention, the namespace is a URL (it doesn't have to be a valid
-URL nor does it need to exists). By default, the namespace for a bundle is
+URL nor does it need to exist). By default, the namespace for a bundle is
 ``http://example.org/schema/dic/DI_ALIAS``, where ``DI_ALIAS`` is the DI alias of
 the extension. You might want to change this to a more professional URL::
 
@@ -375,7 +382,7 @@ Providing an XML Schema
 
 XML has a very useful feature called `XML schema`_. This allows you to
 describe all possible elements and attributes and their values in an XML Schema
-Definition (an xsd file). This XSD file is used by IDEs for auto completion and
+Definition (an XSD file). This XSD file is used by IDEs for auto completion and
 it is used by the Config component to validate the elements.
 
 In order to use the schema, the XML configuration file must provide an
@@ -403,17 +410,19 @@ can place it anywhere you like. You should return this path as the base path::
     }
 
 Assuming the XSD file is called ``hello-1.0.xsd``, the schema location will be
-``http://acme_company.com/schema/dic/hello/hello-1.0.xsd``:
+``https://acme_company.com/schema/dic/hello/hello-1.0.xsd``:
 
 .. code-block:: xml
 
     <!-- config/packages/acme_hello.xml -->
-    <?xml version="1.0" ?>
+    <?xml version="1.0" encoding="UTF-8" ?>
     <container xmlns="http://symfony.com/schema/dic/services"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xmlns:acme-hello="http://acme_company.com/schema/dic/hello"
-        xsi:schemaLocation="http://acme_company.com/schema/dic/hello
-            http://acme_company.com/schema/dic/hello/hello-1.0.xsd">
+        xsi:schemaLocation="http://symfony.com/schema/dic/services
+            https://symfony.com/schema/dic/services/services-1.0.xsd
+            http://acme_company.com/schema/dic/hello
+            https://acme_company.com/schema/dic/hello/hello-1.0.xsd">
 
         <acme-hello:config>
             <!-- ... -->
@@ -426,3 +435,4 @@ Assuming the XSD file is called ``hello-1.0.xsd``, the schema location will be
 .. _`TwigBundle Configuration`: https://github.com/symfony/symfony/blob/master/src/Symfony/Bundle/TwigBundle/DependencyInjection/Configuration.php
 .. _`XML namespace`: https://en.wikipedia.org/wiki/XML_namespace
 .. _`XML schema`: https://en.wikipedia.org/wiki/XML_schema
+.. _`snake case`: https://en.wikipedia.org/wiki/Snake_case

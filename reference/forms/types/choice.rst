@@ -9,62 +9,78 @@ It can be rendered as a ``select`` tag, radio buttons, or checkboxes.
 
 To use this field, you must specify *either* ``choices`` or ``choice_loader`` option.
 
-+-------------+------------------------------------------------------------------------------+
-| Rendered as | can be various tags (see below)                                              |
-+-------------+------------------------------------------------------------------------------+
-| Options     | - `choices`_                                                                 |
-|             | - `choice_attr`_                                                             |
-|             | - `choice_label`_                                                            |
-|             | - `choice_loader`_                                                           |
-|             | - `choice_name`_                                                             |
-|             | - `choice_translation_domain`_                                               |
-|             | - `choice_value`_                                                            |
-|             | - `expanded`_                                                                |
-|             | - `group_by`_                                                                |
-|             | - `multiple`_                                                                |
-|             | - `placeholder`_                                                             |
-|             | - `preferred_choices`_                                                       |
-+-------------+------------------------------------------------------------------------------+
-| Overridden  | - `compound`_                                                                |
-| options     | - `empty_data`_                                                              |
-|             | - `error_bubbling`_                                                          |
-|             | - `trim`_                                                                    |
-+-------------+------------------------------------------------------------------------------+
-| Inherited   | - `attr`_                                                                    |
-| options     | - `by_reference`_                                                            |
-|             | - `data`_                                                                    |
-|             | - `disabled`_                                                                |
-|             | - `error_mapping`_                                                           |
-|             | - `help`_                                                                    |
-|             | - `inherit_data`_                                                            |
-|             | - `label`_                                                                   |
-|             | - `label_attr`_                                                              |
-|             | - `label_format`_                                                            |
-|             | - `mapped`_                                                                  |
-|             | - `required`_                                                                |
-|             | - `translation_domain`_                                                      |
-+-------------+------------------------------------------------------------------------------+
-| Parent type | :doc:`FormType </reference/forms/types/form>`                                |
-+-------------+------------------------------------------------------------------------------+
-| Class       | :class:`Symfony\\Component\\Form\\Extension\\Core\\Type\\ChoiceType`         |
-+-------------+------------------------------------------------------------------------------+
++---------------------------+----------------------------------------------------------------------+
+| Rendered as               | can be various tags (see below)                                      |
++---------------------------+----------------------------------------------------------------------+
+| Options                   | - `choices`_                                                         |
+|                           | - `choice_attr`_                                                     |
+|                           | - `choice_filter`_                                                   |
+|                           | - `choice_label`_                                                    |
+|                           | - `choice_loader`_                                                   |
+|                           | - `choice_name`_                                                     |
+|                           | - `choice_translation_domain`_                                       |
+|                           | - `choice_translation_parameters`_                                   |
+|                           | - `choice_value`_                                                    |
+|                           | - `expanded`_                                                        |
+|                           | - `group_by`_                                                        |
+|                           | - `multiple`_                                                        |
+|                           | - `placeholder`_                                                     |
+|                           | - `preferred_choices`_                                               |
++---------------------------+----------------------------------------------------------------------+
+| Overridden options        | - `compound`_                                                        |
+|                           | - `empty_data`_                                                      |
+|                           | - `error_bubbling`_                                                  |
+|                           | - `trim`_                                                            |
+|                           | - `invalid_message`_                                                 |
++---------------------------+----------------------------------------------------------------------+
+| Inherited options         | - `attr`_                                                            |
+|                           | - `by_reference`_                                                    |
+|                           | - `data`_                                                            |
+|                           | - `disabled`_                                                        |
+|                           | - `error_mapping`_                                                   |
+|                           | - `help`_                                                            |
+|                           | - `help_attr`_                                                       |
+|                           | - `help_html`_                                                       |
+|                           | - `inherit_data`_                                                    |
+|                           | - `label`_                                                           |
+|                           | - `label_attr`_                                                      |
+|                           | - `label_format`_                                                    |
+|                           | - `mapped`_                                                          |
+|                           | - `required`_                                                        |
+|                           | - `row_attr`_                                                        |
+|                           | - `translation_domain`_                                              |
+|                           | - `label_translation_parameters`_                                    |
+|                           | - `attr_translation_parameters`_                                     |
+|                           | - `help_translation_parameters`_                                     |
++---------------------------+----------------------------------------------------------------------+
+| Default invalid message   | The selected choice is invalid.                                      |
++---------------------------+----------------------------------------------------------------------+
+| Legacy invalid message    | The value {{ value }} is not valid.                                  |
++---------------------------+----------------------------------------------------------------------+
+| Parent type               | :doc:`FormType </reference/forms/types/form>`                        |
++---------------------------+----------------------------------------------------------------------+
+| Class                     | :class:`Symfony\\Component\\Form\\Extension\\Core\\Type\\ChoiceType` |
++---------------------------+----------------------------------------------------------------------+
+
+.. include:: /reference/forms/types/options/_debug_form.rst.inc
 
 Example Usage
 -------------
 
-The easiest way to use this field is to specify the choices directly via
-the ``choices`` option::
+The easiest way to use this field is to define the ``choices`` option to specify
+the choices as an associative array where the keys are the labels displayed to
+end users and the array values are the internal values used in the form field::
 
     use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
     // ...
 
-    $builder->add('isAttending', ChoiceType::class, array(
-        'choices'  => array(
+    $builder->add('isAttending', ChoiceType::class, [
+        'choices'  => [
             'Maybe' => null,
             'Yes' => true,
             'No' => false,
-        ),
-    ));
+        ],
+    ]);
 
 This will create a ``select`` drop-down like this:
 
@@ -73,8 +89,8 @@ This will create a ``select`` drop-down like this:
 
 If the user selects ``No``, the form will return ``false`` for this field. Similarly,
 if the starting data for this field is ``true``, then ``Yes`` will be auto-selected.
-In other words, the **value** of each item is the value you want to get/set in PHP
-code, while the **key** is what will be shown to the user.
+In other words, the **choice** of each item is the value you want to get/set in PHP
+code, while the **key** is the **label** that will be shown to the user.
 
 Advanced Example (with Objects!)
 --------------------------------
@@ -94,24 +110,40 @@ method::
             new Category('Cat3'),
             new Category('Cat4'),
         ],
-        'choice_label' => function($category, $key, $value) {
-            /** @var Category $category */
-            return strtoupper($category->getName());
+        // "name" is a property path, meaning Symfony will look for a public
+        // property or a public method like "getName()" to define the input
+        // string value that will be submitted by the form
+        'choice_value' => 'name',
+        // a callback to return the label for a given choice
+        // if a placeholder is used, its empty value (null) may be passed but
+        // its label is defined by its own "placeholder" option
+        'choice_label' => function(?Category $category) {
+            return $category ? strtoupper($category->getName()) : '';
         },
-        'choice_attr' => function($category, $key, $value) {
-            return ['class' => 'category_'.strtolower($category->getName())];
+        // returns the html attributes for each option input (may be radio/checkbox)
+        'choice_attr' => function(?Category $category) {
+            return $category ? ['class' => 'category_'.strtolower($category->getName())] : [];
         },
-        'group_by' => function($category, $key, $value) {
+        // every option can use a string property path or any callable that get
+        // passed each choice as argument, but it may not be needed
+        'group_by' => function() {
             // randomly assign things into 2 groups
             return rand(0, 1) == 1 ? 'Group A' : 'Group B';
         },
-        'preferred_choices' => function($category, $key, $value) {
-            return $category->getName() == 'Cat2' || $category->getName() == 'Cat3';
+        // a callback to return whether a category is preferred
+        'preferred_choices' => function(?Category $category) {
+            return $category && 100 < $category->getArticleCounts();
         },
     ]);
 
-You can also customize the `choice_name`_ and `choice_value`_ of each choice if
-you need further HTML customization.
+You can also customize the `choice_name`_ of each choice. You can learn more
+about all of these options in the sections below.
+
+.. caution::
+
+    The *placeholder* is a specific field, when the choices are optional the
+    first item in the list must be empty, so the user can unselect.
+    Be sure to always handle the empty choice ``null`` when using callbacks.
 
 .. _forms-reference-choice-tags:
 
@@ -129,36 +161,42 @@ text that's shown to the user. But that can be completely customized via the
 Grouping Options
 ----------------
 
-You can easily "group" options in a select by passing a multi-dimensional choices array::
+You can group the ``<option>`` elements of a ``<select>`` into ``<optgroup>``
+by passing a multi-dimensional ``choices`` array::
 
     use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
     // ...
 
-    $builder->add('stockStatus', ChoiceType::class, array(
-        'choices' => array(
-            'Main Statuses' => array(
+    $builder->add('stockStatus', ChoiceType::class, [
+        'choices' => [
+            'Main Statuses' => [
                 'Yes' => 'stock_yes',
                 'No' => 'stock_no',
-            ),
-            'Out of Stock Statuses' => array(
+            ],
+            'Out of Stock Statuses' => [
                 'Backordered' => 'stock_backordered',
                 'Discontinued' => 'stock_discontinued',
-            ),
-        ),
-    ));
+            ],
+        ],
+    ]);
 
 .. image:: /_images/reference/form/choice-example4.png
    :align: center
 
-To get fancier, use the `group_by`_ option.
+To get fancier, use the `group_by`_ option instead.
 
 Field Options
 -------------
 
+.. versionadded:: 5.1
+
+    The :class:`Symfony\\Component\\Form\\ChoiceList\\ChoiceList` class was
+    introduced in Symfony 5.1, to help configuring choices options.
+
 choices
 ~~~~~~~
 
-**type**: ``array`` **default**: ``array()``
+**type**: ``array`` **default**: ``[]``
 
 This is the most basic way to specify the choices that should be used
 by this field. The ``choices`` option is an array, where the array key
@@ -167,45 +205,35 @@ is the item's label and the array value is the item's value::
     use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
     // ...
 
-    $builder->add('inStock', ChoiceType::class, array(
-        'choices' => array('In Stock' => true, 'Out of Stock' => false),
-    ));
+    $builder->add('inStock', ChoiceType::class, [
+        'choices' => [
+            'In Stock' => true,
+            'Out of Stock' => false,
+        ],
+    ]);
+
+If there are choice values that are not scalar or the stringified
+representation is not unique Symfony will use incrementing integers
+as values. When the form gets submitted the correct values with the
+correct types will be assigned to the model.
 
 .. include:: /reference/forms/types/options/choice_attr.rst.inc
+
+.. include:: /reference/forms/types/options/choice_filter.rst.inc
 
 .. _reference-form-choice-label:
 
 .. include:: /reference/forms/types/options/choice_label.rst.inc
 
-choice_loader
-~~~~~~~~~~~~~
+.. _reference-form-choice-loader:
 
-**type**: :class:`Symfony\\Component\\Form\\ChoiceList\\Loader\\ChoiceLoaderInterface`
-
-The ``choice_loader`` can be used to only partially load the choices in cases where
-a fully-loaded list is not necessary. This is only needed in advanced cases and
-would replace the ``choices`` option.
-
-You can use an instance of :class:`Symfony\\Component\\Form\\ChoiceList\\Loader\\CallbackChoiceLoader`
-if you want to take advantage of lazy loading::
-
-    use Symfony\Component\Form\ChoiceList\Loader\CallbackChoiceLoader;
-    use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
-    // ...
-
-    $builder->add('constants', ChoiceType::class, array(
-        'choice_loader' => new CallbackChoiceLoader(function() {
-            return StaticClass::getConstants();
-        }),
-    ));
-
-This will cause the call of ``StaticClass::getConstants()`` to not happen if the
-request is redirected and if there is no pre set or submitted data. Otherwise
-the choice options would need to be resolved thus triggering the callback.
+.. include:: /reference/forms/types/options/choice_loader.rst.inc
 
 .. include:: /reference/forms/types/options/choice_name.rst.inc
 
-.. include:: /reference/forms/types/options/choice_translation_domain.rst.inc
+.. include:: /reference/forms/types/options/choice_translation_domain_enabled.rst.inc
+
+.. include:: /reference/forms/types/options/choice_translation_parameters.rst.inc
 
 .. include:: /reference/forms/types/options/choice_value.rst.inc
 
@@ -237,7 +265,7 @@ The actual default value of this option depends on other field options:
 
 * If ``multiple`` is ``false`` and ``expanded`` is ``false``, then ``''``
   (empty string);
-* Otherwise ``array()`` (empty array).
+* Otherwise ``[]`` (empty array).
 
 .. include:: /reference/forms/types/options/empty_data.rst.inc
     :start-after: DEFAULT_PLACEHOLDER
@@ -251,6 +279,8 @@ Set that error on this field must be attached to the field instead of
 the parent field (the form in most cases).
 
 .. include:: /reference/forms/types/options/choice_type_trim.rst.inc
+
+.. include:: /reference/forms/types/options/invalid_message.rst.inc
 
 Inherited Options
 -----------------
@@ -269,6 +299,10 @@ These options inherit from the :doc:`FormType </reference/forms/types/form>`:
 
 .. include:: /reference/forms/types/options/help.rst.inc
 
+.. include:: /reference/forms/types/options/help_attr.rst.inc
+
+.. include:: /reference/forms/types/options/help_html.rst.inc
+
 .. include:: /reference/forms/types/options/inherit_data.rst.inc
 
 .. include:: /reference/forms/types/options/label.rst.inc
@@ -281,7 +315,15 @@ These options inherit from the :doc:`FormType </reference/forms/types/form>`:
 
 .. include:: /reference/forms/types/options/required.rst.inc
 
+.. include:: /reference/forms/types/options/row_attr.rst.inc
+
 .. include:: /reference/forms/types/options/choice_type_translation_domain.rst.inc
+
+.. include:: /reference/forms/types/options/label_translation_parameters.rst.inc
+
+.. include:: /reference/forms/types/options/attr_translation_parameters.rst.inc
+
+.. include:: /reference/forms/types/options/help_translation_parameters.rst.inc
 
 Field Variables
 ---------------

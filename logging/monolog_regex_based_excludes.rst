@@ -39,9 +39,9 @@ configuration:
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
             xmlns:monolog="http://symfony.com/schema/dic/monolog"
             xsi:schemaLocation="http://symfony.com/schema/dic/services
-                http://symfony.com/schema/dic/services/services-1.0.xsd
+                https://symfony.com/schema/dic/services/services-1.0.xsd
                 http://symfony.com/schema/dic/monolog
-                http://symfony.com/schema/dic/monolog/monolog-1.0.xsd">
+                https://symfony.com/schema/dic/monolog/monolog-1.0.xsd">
 
             <monolog:config>
                 <monolog:handler type="fingers_crossed" name="main" handler="...">
@@ -54,15 +54,23 @@ configuration:
     .. code-block:: php
 
         // config/packages/prod/monolog.php
-        $container->loadFromExtension('monolog', array(
-            'handlers' => array(
-                'main' => array(
-                    // ...
-                    'type'          => 'fingers_crossed',
-                    'handler'       => ...,
-                    'excluded_404s' => array(
-                        '^/phpmyadmin',
-                    ),
-                ),
-            ),
-        ));
+        use Symfony\Config\MonologConfig;
+
+        return static function (MonologConfig $monolog) {
+            $monolog->handler('main')
+                // ...
+                ->type('fingers_crossed')
+                ->handler(...)
+                ->excluded404s(['^/phpmyadmin'])
+            ;
+        };
+
+
+.. caution::
+
+    Combining ``excluded_404s`` with a ``passthru_level`` lower than
+    ``error`` (i.e. ``debug``, ``info``, ``notice`` or ``warning``) will not
+    actually exclude log messages for the URL(s) listed in ``excluded_404s``
+    because they are logged with level of ``error`` or higher and
+    ``passthru_level`` takes precedence over the URLs being listed in
+    ``excluded_404s``.

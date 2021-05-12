@@ -16,7 +16,6 @@ example:
         # config/services.yaml
         services:
             App\Twig\AppExtension:
-                public: false
                 tags: ['twig.extension']
 
     .. code-block:: xml
@@ -26,11 +25,11 @@ example:
         <container xmlns="http://symfony.com/schema/dic/services"
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
             xsi:schemaLocation="http://symfony.com/schema/dic/services
-                http://symfony.com/schema/dic/services/services-1.0.xsd">
+                https://symfony.com/schema/dic/services/services-1.0.xsd">
 
             <services>
-                <service id="App\Twig\AppExtension" public="false">
-                    <tag name="twig.extension" />
+                <service id="App\Twig\AppExtension">
+                    <tag name="twig.extension"/>
                 </service>
             </services>
         </container>
@@ -38,11 +37,17 @@ example:
     .. code-block:: php
 
         // config/services.php
+        namespace Symfony\Component\DependencyInjection\Loader\Configurator;
+
         use App\Twig\AppExtension;
 
-        $container->register(AppExtension::class)
-            ->setPublic(false)
-            ->addTag('twig.extension');
+        return function(ContainerConfigurator $configurator) {
+            $services = $configurator->services();
+
+            $services->set(AppExtension::class)
+                ->tag('twig.extension');
+        };
+
 
 Services tagged with the ``twig.extension`` tag are collected during the
 initialization of TwigBundle and added to Twig as extensions.
@@ -50,10 +55,12 @@ initialization of TwigBundle and added to Twig as extensions.
 Other tags are used to integrate your services into other systems. For a list of
 all the tags available in the core Symfony Framework, check out
 :doc:`/reference/dic_tags`. Each of these has a different effect on your service
-and many tags require additional arguments (beyond just the ``name`` parameter).
+and many tags require additional arguments (beyond the ``name`` parameter).
 
 **For most users, this is all you need to know**. If you want to go further and
 learn how to create your own custom tags, keep reading.
+
+.. _di-instanceof:
 
 Autoconfiguring Tags
 --------------------
@@ -63,24 +70,87 @@ automatically applied for you. That's true for the ``twig.extension`` tag: the
 container sees that your class extends ``AbstractExtension`` (or more accurately,
 that it implements ``ExtensionInterface``) and adds the tag for you.
 
-.. tip::
+If you want to apply tags automatically for your own services, use the
+``_instanceof`` option:
 
-    To apply a tag to all your autoconfigured services extending a class or implementing an
-    interface, call the :method:`Symfony\\Component\\DependencyInjection\\ContainerBuilder::registerForAutoconfiguration`
-    method in an :doc:`extension </bundles/extension>` or from your kernel::
+.. configuration-block::
 
-        // src/Kernel.php
-        class Kernel extends Kernel
+    .. code-block:: yaml
+
+        # config/services.yaml
+        services:
+            # this config only applies to the services created by this file
+            _instanceof:
+                # services whose classes are instances of CustomInterface will be tagged automatically
+                App\Security\CustomInterface:
+                    tags: ['app.custom_tag']
+            # ...
+
+    .. code-block:: xml
+
+        <!-- config/services.xml -->
+        <?xml version="1.0" encoding="UTF-8" ?>
+        <container xmlns="http://symfony.com/schema/dic/services" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://symfony.com/schema/dic/services https://symfony.com/schema/dic/services/services-1.0.xsd">
+            <services>
+                <!-- this config only applies to the services created by this file -->
+                <instanceof id="App\Security\CustomInterface" autowire="true">
+                    <!-- services whose classes are instances of CustomInterface will be tagged automatically -->
+                    <tag name="app.custom_tag"/>
+                </instanceof>
+            </services>
+        </container>
+
+    .. code-block:: php
+
+        // config/services.php
+        namespace Symfony\Component\DependencyInjection\Loader\Configurator;
+
+        use App\Security\CustomInterface;
+
+        return function(ContainerConfigurator $configurator) {
+            $services = $configurator->services();
+
+            // this config only applies to the services created by this file
+            $services
+                ->instanceof(CustomInterface::class)
+                    // services whose classes are instances of CustomInterface will be tagged automatically
+                    ->tag('app.custom_tag');
+        };
+
+
+For more advanced needs, you can define the automatic tags using the
+:method:`Symfony\\Component\\DependencyInjection\\ContainerBuilder::registerForAutoconfiguration` method.
+
+In a Symfony application, call this method in your kernel class::
+
+    // src/Kernel.php
+    class Kernel extends BaseKernel
+    {
+        // ...
+
+        protected function build(ContainerBuilder $container): void
         {
-            // ...
-
-            protected function build(ContainerBuilder $container)
-            {
-                $container->registerForAutoconfiguration(CustomInterface::class)
-                    ->addTag('app.custom_tag')
-                ;
-            }
+            $container->registerForAutoconfiguration(CustomInterface::class)
+                ->addTag('app.custom_tag')
+            ;
         }
+    }
+
+In a Symfony bundle, call this method in the ``load()`` method of the
+:doc:`bundle extension class </bundles/extension>`::
+
+    // src/DependencyInjection/MyBundleExtension.php
+    class MyBundleExtension extends Extension
+    {
+        // ...
+
+        public function load(array $configs, ContainerBuilder $container): void
+        {
+            $container->registerForAutoconfiguration(CustomInterface::class)
+                ->addTag('app.custom_tag')
+            ;
+        }
+    }
 
 Creating custom Tags
 --------------------
@@ -107,10 +177,10 @@ To begin with, define the ``TransportChain`` class::
 
         public function __construct()
         {
-            $this->transports = array();
+            $this->transports = [];
         }
 
-        public function addTransport(\Swift_Transport $transport)
+        public function addTransport(\Swift_Transport $transport): void
         {
             $this->transports[] = $transport;
         }
@@ -133,19 +203,26 @@ Then, define the chain as a service:
         <container xmlns="http://symfony.com/schema/dic/services"
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
             xsi:schemaLocation="http://symfony.com/schema/dic/services
-                http://symfony.com/schema/dic/services/services-1.0.xsd">
+                https://symfony.com/schema/dic/services/services-1.0.xsd">
 
             <services>
-                <service id="App\Mail\TransportChain" />
+                <service id="App\Mail\TransportChain"/>
             </services>
         </container>
 
     .. code-block:: php
 
         // config/services.php
+        namespace Symfony\Component\DependencyInjection\Loader\Configurator;
+
         use App\Mail\TransportChain;
 
-        $container->autowire(TransportChain::class);
+        return function(ContainerConfigurator $configurator) {
+            $services = $configurator->services();
+
+            $services->set(TransportChain::class);
+        };
+
 
 Define Services with a Custom Tag
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -174,17 +251,17 @@ For example, you may add the following transports as services:
         <container xmlns="http://symfony.com/schema/dic/services"
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
             xsi:schemaLocation="http://symfony.com/schema/dic/services
-                http://symfony.com/schema/dic/services/services-1.0.xsd">
+                https://symfony.com/schema/dic/services/services-1.0.xsd">
 
             <services>
                 <service id="Swift_SmtpTransport">
                     <argument>%mailer_host%</argument>
 
-                    <tag name="app.mail_transport" />
+                    <tag name="app.mail_transport"/>
                 </service>
 
-                <service class="\Swift_SendmailTransport">
-                    <tag name="app.mail_transport" />
+                <service id="Swift_SendmailTransport">
+                    <tag name="app.mail_transport"/>
                 </service>
             </services>
         </container>
@@ -192,12 +269,21 @@ For example, you may add the following transports as services:
     .. code-block:: php
 
         // config/services.php
-        $container->register(\Swift_SmtpTransport::class)
-            ->addArgument('%mailer_host%')
-            ->addTag('app.mail_transport');
+        namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
-        $container->register(\Swift_SendmailTransport::class)
-            ->addTag('app.mail_transport');
+        return function(ContainerConfigurator $configurator) {
+            $services = $configurator->services();
+
+            $services->set(\Swift_SmtpTransport::class)
+                // the param() method was introduced in Symfony 5.2.
+                ->args([param('mailer_host')])
+                ->tag('app.mail_transport')
+            ;
+
+            $services->set(\Swift_SendmailTransport::class)
+                ->tag('app.mail_transport')
+            ;
+        };
 
 Notice that each service was given a tag named ``app.mail_transport``. This is
 the custom tag that you'll use in your compiler pass. The compiler pass is what
@@ -214,14 +300,14 @@ container for any services with the ``app.mail_transport`` tag::
     // src/DependencyInjection/Compiler/MailTransportPass.php
     namespace App\DependencyInjection\Compiler;
 
-    use Symfony\Component\DependencyInjection\ContainerBuilder;
-    use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
-    use Symfony\Component\DependencyInjection\Reference;
     use App\Mail\TransportChain;
+    use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
+    use Symfony\Component\DependencyInjection\ContainerBuilder;
+    use Symfony\Component\DependencyInjection\Reference;
 
     class MailTransportPass implements CompilerPassInterface
     {
-        public function process(ContainerBuilder $container)
+        public function process(ContainerBuilder $container): void
         {
             // always first check if the primary service is defined
             if (!$container->has(TransportChain::class)) {
@@ -234,8 +320,8 @@ container for any services with the ``app.mail_transport`` tag::
             $taggedServices = $container->findTaggedServiceIds('app.mail_transport');
 
             foreach ($taggedServices as $id => $tags) {
-                // add the transport service to the ChainTransport service
-                $definition->addMethodCall('addTransport', array(new Reference($id)));
+                // add the transport service to the TransportChain service
+                $definition->addMethodCall('addTransport', [new Reference($id)]);
             }
         }
     }
@@ -258,7 +344,7 @@ or from your kernel::
     {
         // ...
 
-        protected function build(ContainerBuilder $container)
+        protected function build(ContainerBuilder $container): void
         {
             $container->addCompilerPass(new MailTransportPass());
         }
@@ -286,19 +372,21 @@ To begin with, change the ``TransportChain`` class::
 
         public function __construct()
         {
-            $this->transports = array();
+            $this->transports = [];
         }
 
-        public function addTransport(\Swift_Transport $transport, $alias)
+        public function addTransport(\Swift_Transport $transport, $alias): void
         {
             $this->transports[$alias] = $transport;
         }
 
-        public function getTransport($alias)
+        public function getTransport($alias): ?\Swift_Transport
         {
             if (array_key_exists($alias, $this->transports)) {
                 return $this->transports[$alias];
             }
+
+            return null;
         }
     }
 
@@ -330,17 +418,17 @@ To answer this, change the service declaration:
         <container xmlns="http://symfony.com/schema/dic/services"
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
             xsi:schemaLocation="http://symfony.com/schema/dic/services
-                http://symfony.com/schema/dic/services/services-1.0.xsd">
+                https://symfony.com/schema/dic/services/services-1.0.xsd">
 
             <services>
                 <service id="Swift_SmtpTransport">
                     <argument>%mailer_host%</argument>
 
-                    <tag name="app.mail_transport" alias="smtp" />
+                    <tag name="app.mail_transport" alias="smtp"/>
                 </service>
 
                 <service id="Swift_SendmailTransport">
-                    <tag name="app.mail_transport" alias="sendmail" />
+                    <tag name="app.mail_transport" alias="sendmail"/>
                 </service>
             </services>
         </container>
@@ -348,12 +436,21 @@ To answer this, change the service declaration:
     .. code-block:: php
 
         // config/services.php
-        $container->register(\Swift_SmtpTransport::class)
-            ->addArgument('%mailer_host%')
-            ->addTag('app.mail_transport', array('alias' => 'foo'));
+        namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
-        $container->register(\Swift_SendmailTransport::class)
-            ->addTag('app.mail_transport', array('alias' => 'bar'));
+        return function(ContainerConfigurator $configurator) {
+            $services = $configurator->services();
+
+            $services->set(\Swift_SmtpTransport::class)
+                // the param() method was introduced in Symfony 5.2.
+                ->args([param('mailer_host')])
+                ->tag('app.mail_transport', ['alias' => 'smtp'])
+            ;
+
+            $services->set(\Swift_SendmailTransport::class)
+                ->tag('app.mail_transport', ['alias' => 'sendmail'])
+            ;
+        };
 
 .. tip::
 
@@ -379,13 +476,13 @@ To answer this, change the service declaration:
 Notice that you've added a generic ``alias`` key to the tag. To actually
 use this, update the compiler::
 
-    use Symfony\Component\DependencyInjection\ContainerBuilder;
     use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
+    use Symfony\Component\DependencyInjection\ContainerBuilder;
     use Symfony\Component\DependencyInjection\Reference;
 
     class TransportCompilerPass implements CompilerPassInterface
     {
-        public function process(ContainerBuilder $container)
+        public function process(ContainerBuilder $container): void
         {
             // ...
 
@@ -393,10 +490,10 @@ use this, update the compiler::
 
                 // a service could have the same tag twice
                 foreach ($tags as $attributes) {
-                    $definition->addMethodCall('addTransport', array(
+                    $definition->addMethodCall('addTransport', [
                         new Reference($id),
-                        $attributes["alias"]
-                    ));
+                        $attributes['alias']
+                    ]);
                 }
             }
         }
@@ -404,7 +501,7 @@ use this, update the compiler::
 
 The double loop may be confusing. This is because a service can have more
 than one tag. You tag a service twice or more with the ``app.mail_transport``
-tag. The second foreach loop iterates over the ``app.mail_transport``
+tag. The second ``foreach`` loop iterates over the ``app.mail_transport``
 tags set for the current service and gives you the attributes.
 
 Reference Tagged Services
@@ -431,7 +528,8 @@ first  constructor argument to the ``App\HandlerCollection`` service:
 
             App\HandlerCollection:
                 # inject all services tagged with app.handler as first argument
-                arguments: [!tagged app.handler]
+                arguments:
+                    - !tagged_iterator app.handler
 
     .. code-block:: xml
 
@@ -440,20 +538,20 @@ first  constructor argument to the ``App\HandlerCollection`` service:
         <container xmlns="http://symfony.com/schema/dic/services"
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
             xsi:schemaLocation="http://symfony.com/schema/dic/services
-                http://symfony.com/schema/dic/services/services-1.0.xsd">
+                https://symfony.com/schema/dic/services/services-1.0.xsd">
 
             <services>
                 <service id="App\Handler\One">
-                    <tag name="app.handler" />
+                    <tag name="app.handler"/>
                 </service>
 
                 <service id="App\Handler\Two">
-                    <tag name="app.handler" />
+                    <tag name="app.handler"/>
                 </service>
 
                 <service id="App\HandlerCollection">
                     <!-- inject all services tagged with app.handler as first argument -->
-                    <argument type="tagged" tag="app.handler" />
+                    <argument type="tagged_iterator" tag="app.handler"/>
                 </service>
             </services>
         </container>
@@ -461,22 +559,27 @@ first  constructor argument to the ``App\HandlerCollection`` service:
     .. code-block:: php
 
         // config/services.php
-        use Symfony\Component\DependencyInjection\Argument\TaggedIteratorArgument;
+        namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
-        $container->register(App\Handler\One::class)
-            ->addTag('app.handler');
+        return function(ContainerConfigurator $configurator) {
+            $services = $configurator->services();
 
-        $container->register(App\Handler\Two::class)
-            ->addTag('app.handler');
+            $services->set(App\Handler\One::class)
+                ->tag('app.handler')
+            ;
 
-        $container->register(App\HandlerCollection::class)
-            // inject all services tagged with app.handler as first argument
-            ->addArgument(new TaggedIteratorArgument('app.handler'));
+            $services->set(App\Handler\Two::class)
+                ->tag('app.handler')
+            ;
+
+            $services->set(App\HandlerCollection::class)
+                // inject all services tagged with app.handler as first argument
+                ->args([tagged_iterator('app.handler')])
+            ;
+        };
 
 After compilation the ``HandlerCollection`` service is able to iterate over your
-application handlers.
-
-.. code-block:: php
+application handlers::
 
     // src/HandlerCollection.php
     namespace App;
@@ -488,9 +591,237 @@ application handlers.
         }
     }
 
+.. seealso::
+
+    See also :doc:`tagged locator services </service_container/service_subscribers_locators>`
+
+Tagged Services with Priority
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The tagged services can be prioritized using the ``priority`` attribute.
+The priority is a positive or negative integer. The higher the number,
+the earlier the tagged service will be located in the collection:
+
+.. configuration-block::
+
+    .. code-block:: yaml
+
+        # config/services.yaml
+        services:
+            App\Handler\One:
+                tags:
+                    - { name: 'app.handler', priority: 20 }
+
+    .. code-block:: xml
+
+        <!-- config/services.xml -->
+        <?xml version="1.0" encoding="UTF-8" ?>
+        <container xmlns="http://symfony.com/schema/dic/services"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xsi:schemaLocation="http://symfony.com/schema/dic/services
+                https://symfony.com/schema/dic/services/services-1.0.xsd">
+
+            <services>
+                <service id="App\Handler\One">
+                    <tag name="app.handler" priority="20"/>
+                </service>
+            </services>
+        </container>
+
+    .. code-block:: php
+
+        // config/services.php
+        namespace Symfony\Component\DependencyInjection\Loader\Configurator;
+
+        use App\Handler\One;
+
+        return function(ContainerConfigurator $configurator) {
+            $services = $configurator->services();
+
+            $services->set(One::class)
+                ->tag('app.handler', ['priority' => 20])
+            ;
+        };
+
+Another option, which is particularly useful when using autoconfiguring
+tags, is to implement the static ``getDefaultPriority()`` method on the
+service itself::
+
+    // src/Handler/One.php
+    namespace App\Handler;
+
+    class One
+    {
+        public static function getDefaultPriority(): int
+        {
+            return 3;
+        }
+    }
+
+If you want to have another method defining the priority
+(e.g. ``getPriority()`` rather than ``getDefaultPriority()``),
+you can define it in the configuration of the collecting service:
+
+.. configuration-block::
+
+    .. code-block:: yaml
+
+        # config/services.yaml
+        services:
+            App\HandlerCollection:
+                # inject all services tagged with app.handler as first argument
+                arguments:
+                    - !tagged_iterator { tag: app.handler, default_priority_method: getPriority }
+
+    .. code-block:: xml
+
+        <!-- config/services.xml -->
+        <?xml version="1.0" encoding="UTF-8" ?>
+        <container xmlns="http://symfony.com/schema/dic/services"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xsi:schemaLocation="http://symfony.com/schema/dic/services
+                https://symfony.com/schema/dic/services/services-1.0.xsd">
+            <services>
+                <service id="App\HandlerCollection">
+                    <argument type="tagged_iterator" tag="app.handler" default-priority-method="getPriority"/>
+                </service>
+            </services>
+        </container>
+
+    .. code-block:: php
+
+        // config/services.php
+        namespace Symfony\Component\DependencyInjection\Loader\Configurator;
+
+        use Symfony\Component\DependencyInjection\Argument\TaggedIteratorArgument;
+
+        return function (ContainerConfigurator $configurator) {
+            $services = $configurator->services();
+
+            // ...
+
+            $services->set(App\HandlerCollection::class)
+                ->args([
+                    tagged_iterator('app.handler', null, null, 'getPriority'),
+                ])
+            ;
+        };
+
+Tagged Services with Index
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If you want to retrieve a specific service within the injected collection
+you can use the ``index_by`` and ``default_index_method`` options of the
+argument in combination with ``!tagged_iterator``.
+
+Using the previous example, this service configuration creates a collection
+indexed by the ``key`` attribute:
+
+.. configuration-block::
+
+    .. code-block:: yaml
+
+        # config/services.yaml
+        services:
+            App\Handler\One:
+                tags:
+                    - { name: 'app.handler', key: 'handler_one' }
+
+            App\Handler\Two:
+                tags:
+                    - { name: 'app.handler', key: 'handler_two' }
+
+            App\HandlerCollection:
+                arguments: [!tagged_iterator { tag: 'app.handler', index_by: 'key' }]
+
+    .. code-block:: xml
+
+        <!-- config/services.xml -->
+        <?xml version="1.0" encoding="UTF-8" ?>
+        <container xmlns="http://symfony.com/schema/dic/services"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xsi:schemaLocation="http://symfony.com/schema/dic/services
+                https://symfony.com/schema/dic/services/services-1.0.xsd">
+
+            <services>
+                <service id="App\Handler\One">
+                    <tag name="app.handler" key="handler_one"/>
+                </service>
+
+                <service id="App\Handler\Two">
+                    <tag name="app.handler" key="handler_two"/>
+                </service>
+
+                <service id="App\HandlerCollection">
+                    <argument type="tagged_iterator" tag="app.handler" index-by="key"/>
+                </service>
+            </services>
+        </container>
+
+    .. code-block:: php
+
+        // config/services.php
+        namespace Symfony\Component\DependencyInjection\Loader\Configurator;
+
+        use App\Handler\One;
+        use App\Handler\Two;
+        use Symfony\Component\DependencyInjection\Argument\TaggedIteratorArgument;
+
+        return function (ContainerConfigurator $configurator) {
+            $services = $configurator->services();
+
+            $services->set(One::class)
+                ->tag('app.handler', ['key' => 'handler_one']);
+
+            $services->set(Two::class)
+                ->tag('app.handler', ['key' => 'handler_two']);
+
+            $services->set(App\HandlerCollection::class)
+                ->args([
+                    // 2nd argument is the index attribute name
+                    tagged_iterator('app.handler', 'key'),
+                ])
+            ;
+        };
+
+After compilation the ``HandlerCollection`` is able to iterate over your
+application handlers. To retrieve a specific service from the iterator, call the
+``iterator_to_array()`` function and then use the ``key`` attribute to get the
+array element. For example, to retrieve the ``handler_two`` handler::
+
+    // src/Handler/HandlerCollection.php
+    namespace App\Handler;
+
+    class HandlerCollection
+    {
+        public function __construct(iterable $handlers)
+        {
+            $handlers = $handlers instanceof \Traversable ? iterator_to_array($handlers) : $handlers;
+
+            $handlerTwo = $handlers['handler_two'];
+        }
+    }
+
 .. tip::
 
-    The collected services can be prioritized using the ``priority`` attribute:
+    Just like the priority, you can also implement a static
+    ``getDefaultIndexName()`` method in the handlers and omit the
+    index attribute (``key``)::
+
+        // src/Handler/One.php
+        namespace App\Handler;
+
+        class One
+        {
+            // ...
+            public static function getDefaultIndexName(): string
+            {
+                return 'handler_one';
+            }
+        }
+
+    You also can define the name of the static method to implement on each service
+    with the ``default_index_method`` attribute on the tagged argument:
 
     .. configuration-block::
 
@@ -498,9 +829,11 @@ application handlers.
 
             # config/services.yaml
             services:
-                App\Handler\One:
-                    tags:
-                        - { name: 'app.handler', priority: 20 }
+                # ...
+
+                App\HandlerCollection:
+                    # use getIndex() instead of getDefaultIndexName()
+                    arguments: [!tagged_iterator { tag: 'app.handler', default_index_method: 'getIndex' }]
 
         .. code-block:: xml
 
@@ -509,11 +842,17 @@ application handlers.
             <container xmlns="http://symfony.com/schema/dic/services"
                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                 xsi:schemaLocation="http://symfony.com/schema/dic/services
-                    http://symfony.com/schema/dic/services/services-1.0.xsd">
+                    https://symfony.com/schema/dic/services/services-1.0.xsd">
 
                 <services>
-                    <service id="App\Handler\One">
-                        <tag name="app.handler" priority="20" />
+                    <!-- ... -->
+
+                    <service id="App\HandlerCollection">
+                        <!-- use getIndex() instead of getDefaultIndexName() -->
+                        <argument type="tagged_iterator"
+                            tag="app.handler"
+                            default-index-method="someFunctionName"
+                        />
                     </service>
                 </services>
             </container>
@@ -521,7 +860,20 @@ application handlers.
         .. code-block:: php
 
             // config/services.php
-            $container->register(App\Handler\One::class)
-                ->addTag('app.handler', array('priority' => 20));
+            namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
-    Note that any other custom attributes will be ignored by this feature.
+            use App\HandlerCollection;
+            use Symfony\Component\DependencyInjection\Argument\TaggedIteratorArgument;
+
+            return function (ContainerConfigurator $configurator) {
+                $services = $configurator->services();
+
+                // ...
+
+                // use getIndex() instead of getDefaultIndexName()
+                $services->set(HandlerCollection::class)
+                    ->args([
+                        tagged_iterator('app.handler', null, 'getIndex'),
+                    ])
+                ;
+            };

@@ -23,8 +23,6 @@ Installation
 
     $ composer require symfony/http-foundation
 
-Alternatively, you can clone the `<https://github.com/symfony/http-foundation>`_ repository.
-
 .. include:: /components/require_autoload.rst.inc
 
 .. seealso::
@@ -53,11 +51,13 @@ which is almost equivalent to the more verbose, but also more flexible,
     $request = new Request(
         $_GET,
         $_POST,
-        array(),
+        [],
         $_COOKIE,
         $_FILES,
         $_SERVER
     );
+
+.. _accessing-request-data:
 
 Accessing Request Data
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -83,17 +83,19 @@ can be accessed via several public properties:
 Each property is a :class:`Symfony\\Component\\HttpFoundation\\ParameterBag`
 instance (or a sub-class of), which is a data holder class:
 
-* ``request``: :class:`Symfony\\Component\\HttpFoundation\\ParameterBag`;
+* ``request``: :class:`Symfony\\Component\\HttpFoundation\\ParameterBag` or
+  :class:`Symfony\\Component\\HttpFoundation\\InputBag` if the data is
+  coming from ``$_POST`` parameters;
 
-* ``query``:   :class:`Symfony\\Component\\HttpFoundation\\ParameterBag`;
+* ``query``: :class:`Symfony\\Component\\HttpFoundation\\InputBag`;
 
-* ``cookies``: :class:`Symfony\\Component\\HttpFoundation\\ParameterBag`;
+* ``cookies``: :class:`Symfony\\Component\\HttpFoundation\\InputBag`;
 
 * ``attributes``: :class:`Symfony\\Component\\HttpFoundation\\ParameterBag`;
 
-* ``files``:   :class:`Symfony\\Component\\HttpFoundation\\FileBag`;
+* ``files``: :class:`Symfony\\Component\\HttpFoundation\\FileBag`;
 
-* ``server``:  :class:`Symfony\\Component\\HttpFoundation\\ServerBag`;
+* ``server``: :class:`Symfony\\Component\\HttpFoundation\\ServerBag`;
 
 * ``headers``: :class:`Symfony\\Component\\HttpFoundation\\HeaderBag`.
 
@@ -167,7 +169,7 @@ When PHP imports the request query, it handles request parameters like
     // the query string is '?foo[bar]=baz'
 
     $request->query->get('foo');
-    // returns array('bar' => 'baz')
+    // returns ['bar' => 'baz']
 
     $request->query->get('foo[bar]');
     // returns null
@@ -188,8 +190,17 @@ Finally, the raw data sent with the request body can be accessed using
 
     $content = $request->getContent();
 
-For instance, this may be useful to process a JSON string sent to the
+For instance, this may be useful to process an XML string sent to the
 application by a remote service using the HTTP POST method.
+
+If the request body is a JSON string, it can be accessed using
+:method:`Symfony\\Component\\HttpFoundation\\Request::toArray`::
+
+    $data = $request->toArray();
+
+.. versionadded:: 5.2
+
+    The ``toArray()`` method was introduced in Symfony 5.2.
 
 Identifying a Request
 ~~~~~~~~~~~~~~~~~~~~~
@@ -211,7 +222,7 @@ a request::
     $request = Request::create(
         '/hello-world',
         'GET',
-        array('name' => 'Fabien')
+        ['name' => 'Fabien']
     );
 
 The :method:`Symfony\\Component\\HttpFoundation\\Request::create` method
@@ -236,23 +247,15 @@ Accessing the Session
 ~~~~~~~~~~~~~~~~~~~~~
 
 If you have a session attached to the request, you can access it via the
-:method:`Symfony\\Component\\HttpFoundation\\Request::getSession` method;
+:method:`Symfony\\Component\\HttpFoundation\\Request::getSession` method or the
+:method:`Symfony\\Component\\HttpFoundation\\RequestStack::getSession` method;
 the
 :method:`Symfony\\Component\\HttpFoundation\\Request::hasPreviousSession`
 method tells you if the request contains a session which was started in one of
 the previous requests.
 
-.. versionadded:: 4.1
-    Using :method:`Symfony\\Component\\HttpFoundation\\Request::getSession()`
-    when no session has been set was deprecated in Symfony 4.1. It will throw
-    an exception in Symfony 5.0 when the session is ``null``. Check for an existing session
-    first by calling :method:`Symfony\\Component\\HttpFoundation\\Request::hasSession()`.
-
 Processing HTTP Headers
 ~~~~~~~~~~~~~~~~~~~~~~~
-
-.. versionadded:: 4.1
-    The ``HeaderUtils`` class was introduced in Symfony 4.1.
 
 Processing HTTP headers is not a trivial task because of the escaping and white
 space handling of their contents. Symfony provides a
@@ -263,14 +266,14 @@ this complexity and defines some methods for the most common tasks::
 
     // Splits an HTTP header by one or more separators
     HeaderUtils::split('da, en-gb;q=0.8', ',;');
-    // => array(array('da'), array('en-gb','q=0.8'))
+    // => [['da'], ['en-gb','q=0.8']]
 
     // Combines an array of arrays into one associative array
-    HeaderUtils::combine(array(array('foo', 'abc'), array('bar')));
-    // => array('foo' => 'abc', 'bar' => true)
+    HeaderUtils::combine([['foo', 'abc'], ['bar']]);
+    // => ['foo' => 'abc', 'bar' => true]
 
     // Joins an associative array into a string for use in an HTTP header
-    HeaderUtils::toString(array('foo' => 'abc', 'bar' => true, 'baz' => 'a b c'), ',');
+    HeaderUtils::toString(['foo' => 'abc', 'bar' => true, 'baz' => 'a b c'], ',');
     // => 'foo=abc, bar, baz="a b c"'
 
     // Encodes a string as a quoted string, if necessary
@@ -281,29 +284,22 @@ this complexity and defines some methods for the most common tasks::
     HeaderUtils::unquote('"foo \"bar\""');
     // => 'foo "bar"'
 
+    // Parses a query string but maintains dots (PHP parse_str() replaces '.' by '_')
+    HeaderUtils::parseQuery('foo[bar.baz]=qux');
+    // => ['foo' => ['bar.baz' => 'qux']]
+
+.. versionadded:: 5.2
+
+    The ``parseQuery()`` method was introduced in Symfony 5.2.
+
 Accessing ``Accept-*`` Headers Data
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-You can easily access basic data extracted from ``Accept-*`` headers
+You can access basic data extracted from ``Accept-*`` headers
 by using the following methods:
 
 :method:`Symfony\\Component\\HttpFoundation\\Request::getAcceptableContentTypes`
     Returns the list of accepted content types ordered by descending quality.
-
-:method:`Symfony\\Component\\HttpFoundation\\Request::getAcceptableFormats`
-    Returns the list of accepted client formats associated with the request.
-
-Note that
-:method:`Symfony\\Component\\HttpFoundation\\Request::getAcceptableFormats`
-will use the data from
-:method:`Symfony\\Component\\HttpFoundation\\Request::getAcceptableContentTypes`
-and return the client acceptable formats::
-
-    $request->getAcceptableContentTypes();
-    // returns ['text/html', 'application/xhtml+xml', 'application/xml', '*/*']
-
-    $request->getAcceptableFormats();
-    // returns ['html', 'xml']
 
 :method:`Symfony\\Component\\HttpFoundation\\Request::getLanguages`
     Returns the list of accepted languages ordered by descending quality.
@@ -340,9 +336,23 @@ are also supported::
     $quality = $accept->get('text/xml')->getQuality(); // $quality = 0.8
     $quality = $accept->get('application/xml')->getQuality(); // $quality = 0.3
 
-.. versionadded:: 4.1
-    The support of default values in the ``Accept-*`` headers was introduced in
-    Symfony 4.1.
+Anonymizing IP Addresses
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+An increasingly common need for applications to comply with user protection
+regulations is to anonymize IP addresses before logging and storing them for
+analysis purposes. Use the ``anonymize()`` method from the
+:class:`Symfony\\Component\\HttpFoundation\\IpUtils` to do that::
+
+    use Symfony\Component\HttpFoundation\IpUtils;
+
+    $ipv4 = '123.234.235.236';
+    $anonymousIpv4 = IpUtils::anonymize($ipv4);
+    // $anonymousIpv4 = '123.234.235.0'
+
+    $ipv6 = '2a01:198:603:10:396e:4789:8e99:890f';
+    $anonymousIpv6 = IpUtils::anonymize($ipv6);
+    // $anonymousIpv6 = '2a01:198:603:10::'
 
 Accessing other Data
 ~~~~~~~~~~~~~~~~~~~~
@@ -364,12 +374,12 @@ PHP callable that is able to create an instance of your ``Request`` class::
     use Symfony\Component\HttpFoundation\Request;
 
     Request::setFactory(function (
-        array $query = array(),
-        array $request = array(),
-        array $attributes = array(),
-        array $cookies = array(),
-        array $files = array(),
-        array $server = array(),
+        array $query = [],
+        array $request = [],
+        array $attributes = [],
+        array $cookies = [],
+        array $files = [],
+        array $server = [],
         $content = null
     ) {
         return new SpecialRequest(
@@ -400,7 +410,7 @@ code, and an array of HTTP headers::
     $response = new Response(
         'Content',
         Response::HTTP_OK,
-        array('content-type' => 'text/html')
+        ['content-type' => 'text/html']
     );
 
 This information can also be manipulated after the Response object creation::
@@ -430,7 +440,7 @@ incompatibility with the HTTP specification (e.g. a wrong ``Content-Type`` heade
 
     $response->prepare($request);
 
-Sending the response to the client is then as simple as calling
+Sending the response to the client is done by calling the method
 :method:`Symfony\\Component\\HttpFoundation\\Response::send`::
 
     $response->send();
@@ -443,7 +453,7 @@ attribute::
 
     use Symfony\Component\HttpFoundation\Cookie;
 
-    $response->headers->setCookie(new Cookie('foo', 'bar'));
+    $response->headers->setCookie(Cookie::create('foo', 'bar'));
 
 The
 :method:`Symfony\\Component\\HttpFoundation\\ResponseHeaderBag::setCookie`
@@ -453,9 +463,21 @@ method takes an instance of
 You can clear a cookie via the
 :method:`Symfony\\Component\\HttpFoundation\\ResponseHeaderBag::clearCookie` method.
 
-Note you can create a
-:class:`Symfony\\Component\\HttpFoundation\\Cookie` object from a raw header
-value using :method:`Symfony\\Component\\HttpFoundation\\Cookie::fromString`.
+In addition to the ``Cookie::create()`` method, you can create a ``Cookie``
+object from a raw header value using :method:`Symfony\\Component\\HttpFoundation\\Cookie::fromString`
+method. You can also use the ``with*()`` methods to change some Cookie property (or
+to build the entire Cookie using a fluent interface). Each ``with*()`` method returns
+a new object with the modified property::
+
+    $cookie = Cookie::create('foo')
+        ->withValue('bar')
+        ->withExpires(strtotime('Fri, 20-May-2011 15:25:52 GMT'))
+        ->withDomain('.example.com')
+        ->withSecure(true);
+
+.. versionadded:: 5.1
+
+    The ``with*()`` methods were introduced in Symfony 5.1.
 
 Managing the HTTP Cache
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -463,17 +485,17 @@ Managing the HTTP Cache
 The :class:`Symfony\\Component\\HttpFoundation\\Response` class has a rich set
 of methods to manipulate the HTTP headers related to the cache:
 
-* :method:`Symfony\\Component\\HttpFoundation\\Response::setPublic`;
-* :method:`Symfony\\Component\\HttpFoundation\\Response::setPrivate`;
-* :method:`Symfony\\Component\\HttpFoundation\\Response::expire`;
-* :method:`Symfony\\Component\\HttpFoundation\\Response::setExpires`;
-* :method:`Symfony\\Component\\HttpFoundation\\Response::setMaxAge`;
-* :method:`Symfony\\Component\\HttpFoundation\\Response::setSharedMaxAge`;
-* :method:`Symfony\\Component\\HttpFoundation\\Response::setTtl`;
-* :method:`Symfony\\Component\\HttpFoundation\\Response::setClientTtl`;
-* :method:`Symfony\\Component\\HttpFoundation\\Response::setLastModified`;
-* :method:`Symfony\\Component\\HttpFoundation\\Response::setEtag`;
-* :method:`Symfony\\Component\\HttpFoundation\\Response::setVary`;
+* :method:`Symfony\\Component\\HttpFoundation\\Response::setPublic`
+* :method:`Symfony\\Component\\HttpFoundation\\Response::setPrivate`
+* :method:`Symfony\\Component\\HttpFoundation\\Response::expire`
+* :method:`Symfony\\Component\\HttpFoundation\\Response::setExpires`
+* :method:`Symfony\\Component\\HttpFoundation\\Response::setMaxAge`
+* :method:`Symfony\\Component\\HttpFoundation\\Response::setSharedMaxAge`
+* :method:`Symfony\\Component\\HttpFoundation\\Response::setTtl`
+* :method:`Symfony\\Component\\HttpFoundation\\Response::setClientTtl`
+* :method:`Symfony\\Component\\HttpFoundation\\Response::setLastModified`
+* :method:`Symfony\\Component\\HttpFoundation\\Response::setEtag`
+* :method:`Symfony\\Component\\HttpFoundation\\Response::setVary`
 
 .. note::
 
@@ -486,14 +508,25 @@ The :method:`Symfony\\Component\\HttpFoundation\\Response::setCache` method
 can be used to set the most commonly used cache information in one method
 call::
 
-    $response->setCache(array(
-        'etag'          => 'abcdef',
-        'last_modified' => new \DateTime(),
-        'max_age'       => 600,
-        's_maxage'      => 600,
-        'private'       => false,
-        'public'        => true,
-    ));
+    $response->setCache([
+        'must_revalidate'  => false,
+        'no_cache'         => false,
+        'no_store'         => false,
+        'no_transform'     => false,
+        'public'           => true,
+        'private'          => false,
+        'proxy_revalidate' => false,
+        'max_age'          => 600,
+        's_maxage'         => 600,
+        'immutable'        => true,
+        'last_modified'    => new \DateTime(),
+        'etag'             => 'abcdef',
+    ]);
+
+.. versionadded:: 5.1
+
+    The ``must_revalidate``, ``no_cache``, ``no_store``, ``no_transform`` and
+    ``proxy_revalidate`` directives were introduced in Symfony 5.1.
 
 To check if the Response validators (``ETag``, ``Last-Modified``) match a
 conditional value specified in the client Request, use the
@@ -548,11 +581,11 @@ represented by a PHP callable instead of a string::
 
     Additionally, PHP isn't the only layer that can buffer output. Your web
     server might also buffer based on its configuration. Some servers, such as
-    Nginx, let you disable buffering at the config level or by adding a special HTTP
+    nginx, let you disable buffering at the config level or by adding a special HTTP
     header in the response::
 
-        // disables FastCGI buffering in Nginx only for this response
-        $response->headers->set('X-Accel-Buffering', 'no')
+        // disables FastCGI buffering in nginx only for this response
+        $response->headers->set('X-Accel-Buffering', 'no');
 
 .. _component-http-foundation-serving-files:
 
@@ -560,19 +593,20 @@ Serving Files
 ~~~~~~~~~~~~~
 
 When sending a file, you must add a ``Content-Disposition`` header to your
-response. While creating this header for basic file downloads is easy, using
-non-ASCII filenames is more involving. The
-:method:`Symfony\\Component\\HttpFoundation\\ResponseHeaderBag::makeDisposition`
+response. While creating this header for basic file downloads is straightforward,
+using non-ASCII filenames is more involved. The
+:method:`Symfony\\Component\\HttpFoundation\\HeaderUtils::makeDisposition`
 abstracts the hard work behind a simple API::
 
+    use Symfony\Component\HttpFoundation\HeaderUtils;
     use Symfony\Component\HttpFoundation\Response;
     use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 
     $fileContent = ...; // the generated file content
     $response = new Response($fileContent);
 
-    $disposition = $response->headers->makeDisposition(
-        ResponseHeaderBag::DISPOSITION_ATTACHMENT,
+    $disposition = HeaderUtils::makeDisposition(
+        HeaderUtils::DISPOSITION_ATTACHMENT,
         'foo.pdf'
     );
 
@@ -588,12 +622,32 @@ Alternatively, if you are serving a static file, you can use a
 
 The ``BinaryFileResponse`` will automatically handle ``Range`` and
 ``If-Range`` headers from the request. It also supports ``X-Sendfile``
-(see for `Nginx`_ and `Apache`_). To make use of it, you need to determine
+(see for `nginx`_ and `Apache`_). To make use of it, you need to determine
 whether or not the ``X-Sendfile-Type`` header should be trusted and call
 :method:`Symfony\\Component\\HttpFoundation\\BinaryFileResponse::trustXSendfileTypeHeader`
 if it should::
 
     BinaryFileResponse::trustXSendfileTypeHeader();
+
+.. note::
+
+    The ``BinaryFileResponse`` will only handle ``X-Sendfile`` if the particular header is present.
+    For Apache, this is not the default case.
+
+    To add the header use the ``mod_headers`` Apache module and add the following to the Apache configuration:
+
+    .. code-block:: apache
+
+        <IfModule mod_xsendfile.c>
+          # This is already present somewhere...
+          XSendFile on
+          XSendFilePath ...some path...
+
+          # This needs to be added:
+          <IfModule mod_headers.c>
+            RequestHeader set X-Sendfile-Type X-Sendfile
+          </IfModule>
+        </IfModule>
 
 With the ``BinaryFileResponse``, you can still set the ``Content-Type`` of the sent file,
 or change its ``Content-Disposition``::
@@ -605,7 +659,7 @@ or change its ``Content-Disposition``::
         'filename.txt'
     );
 
-It is possible to delete the file after the request is sent with the
+It is possible to delete the file after the response is sent with the
 :method:`Symfony\\Component\\HttpFoundation\\BinaryFileResponse::deleteFileAfterSend` method.
 Please note that this will not work when the ``X-Sendfile`` header is set.
 
@@ -617,7 +671,7 @@ handling, switching to chunked encoding instead::
     use Symfony\Component\HttpFoundation\BinaryFileResponse;
     use Symfony\Component\HttpFoundation\File\Stream;
 
-    $stream  = new Stream('path/to/stream');
+    $stream = new Stream('path/to/stream');
     $response = new BinaryFileResponse($stream);
 
 .. note::
@@ -639,9 +693,9 @@ right content and headers. A JSON response might look like this::
     use Symfony\Component\HttpFoundation\Response;
 
     $response = new Response();
-    $response->setContent(json_encode(array(
+    $response->setContent(json_encode([
         'data' => 123,
-    )));
+    ]));
     $response->headers->set('Content-Type', 'application/json');
 
 There is also a helpful :class:`Symfony\\Component\\HttpFoundation\\JsonResponse`
@@ -650,12 +704,14 @@ class, which can make this even easier::
     use Symfony\Component\HttpFoundation\JsonResponse;
 
     // if you know the data to send when creating the response
-    $response = new JsonResponse(array('data' => 123));
+    $response = new JsonResponse(['data' => 123]);
 
-    // if you don't know the data to send when creating the response
+    // if you don't know the data to send or if you want to customize the encoding options
     $response = new JsonResponse();
     // ...
-    $response->setData(array('data' => 123));
+    // configure any custom encoding options (if needed, it must be called before "setData()")
+    //$response->setEncodingOptions(JsonResponse::DEFAULT_ENCODING_OPTIONS | \JSON_PRESERVE_ZERO_FRACTION);
+    $response->setData(['data' => 123]);
 
     // if the data to send is already encoded in JSON
     $response = JsonResponse::fromJsonString('{ "data": 123 }');
@@ -694,6 +750,37 @@ Session
 
 The session information is in its own document: :doc:`/components/http_foundation/sessions`.
 
+Safe Content Preference
+-----------------------
+
+Some web sites have a "safe" mode to assist those who don't want to be exposed
+to content to which they might object. The  `RFC 8674`_ specification defines a
+way for user agents to ask for safe content to a server.
+
+The specification does not define what content might be considered objectionable,
+so the concept of "safe" is not precisely defined. Rather, the term is interpreted
+by the server and within the scope of each web site that chooses to act upon this information.
+
+Symfony offers two methods to interact with this preference:
+
+* :method:`Symfony\\Component\\HttpFoundation\\Request::preferSafeContent`;
+* :method:`Symfony\\Component\\HttpFoundation\\Response::setContentSafe`;
+
+.. versionadded:: 5.1
+
+    The ``preferSafeContent()`` and ``setContentSafe()`` methods were introduced
+    in Symfony 5.1.
+
+The following example shows how to detect if the user agent prefers "safe" content::
+
+    if ($request->preferSafeContent()) {
+        $response = new Response($alternativeContent);
+        // this informs the user we respected their preferences
+        $response->setContentSafe();
+
+        return $response;
+    }
+
 Learn More
 ----------
 
@@ -707,8 +794,8 @@ Learn More
     /session/*
     /http_cache/*
 
-.. _Packagist: https://packagist.org/packages/symfony/http-foundation
-.. _Nginx: https://www.nginx.com/resources/wiki/start/topics/examples/xsendfile/
+.. _nginx: https://www.nginx.com/resources/wiki/start/topics/examples/xsendfile/
 .. _Apache: https://tn123.org/mod_xsendfile/
-.. _`JSON Hijacking`: http://haacked.com/archive/2009/06/25/json-hijacking.aspx
-.. _OWASP guidelines: https://www.owasp.org/index.php/OWASP_AJAX_Security_Guidelines#Always_return_JSON_with_an_Object_on_the_outside
+.. _`JSON Hijacking`: https://haacked.com/archive/2009/06/25/json-hijacking.aspx/
+.. _OWASP guidelines: https://cheatsheetseries.owasp.org/cheatsheets/AJAX_Security_Cheat_Sheet.html#always-return-json-with-an-object-on-the-outside
+.. _RFC 8674: https://tools.ietf.org/html/rfc8674

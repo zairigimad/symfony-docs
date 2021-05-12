@@ -13,7 +13,7 @@ simple principle: the logic is about creating the Response associated with a
 Request.
 
 Let's create our very own namespace for our framework: ``Simplex``. Move the
-request handling logic into its own ``Simplex\\Framework`` class::
+request handling logic into its own ``Simplex\Framework`` class::
 
     // example.com/src/Simplex/Framework.php
     namespace Simplex;
@@ -27,9 +27,9 @@ request handling logic into its own ``Simplex\\Framework`` class::
 
     class Framework
     {
-        protected $matcher;
-        protected $controllerResolver;
-        protected $argumentResolver;
+        private $matcher;
+        private $controllerResolver;
+        private $argumentResolver;
 
         public function __construct(UrlMatcher $matcher, ControllerResolver $controllerResolver, ArgumentResolver $argumentResolver)
         {
@@ -100,9 +100,9 @@ Move the controller to ``Calendar\Controller\LeapYearController``::
     // example.com/src/Calendar/Controller/LeapYearController.php
     namespace Calendar\Controller;
 
+    use Calendar\Model\LeapYear;
     use Symfony\Component\HttpFoundation\Request;
     use Symfony\Component\HttpFoundation\Response;
-    use Calendar\Model\LeapYear;
 
     class LeapYearController
     {
@@ -136,10 +136,10 @@ And move the ``is_leap_year()`` function to its own class too::
 
 Don't forget to update the ``example.com/src/app.php`` file accordingly::
 
-    $routes->add('leap_year', new Routing\Route('/is_leap_year/{year}', array(
+    $routes->add('leap_year', new Routing\Route('/is_leap_year/{year}', [
         'year' => null,
-        '_controller' => 'Calendar\Controller\LeapYearController::indexAction',
-    )));
+        '_controller' => 'Calendar\Controller\LeapYearController::index',
+    ]));
 
 To sum up, here is the new file layout:
 
@@ -163,7 +163,7 @@ To sum up, here is the new file layout:
         └── front.php
 
 That's it! Our application has now four different layers and each of them has
-a well defined goal:
+a well-defined goal:
 
 * ``web/front.php``: The front controller; the only exposed PHP code that
   makes the interface with the client (it gets the Request and sends the
@@ -171,7 +171,7 @@ a well defined goal:
   our application;
 
 * ``src/Simplex``: The reusable framework code that abstracts the handling of
-  incoming Requests (by the way, it makes your controllers/templates easily
+  incoming Requests (by the way, it makes your controllers/templates better
   testable -- more about that later on);
 
 * ``src/Calendar``: Our application specific code (the controllers and the

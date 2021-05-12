@@ -1,24 +1,29 @@
-Logging with Monolog
-====================
+Logging
+=======
 
-Symfony integrates seamlessly with `Monolog`_, the most popular PHP logging
-library, to create and store log messages in a variety of different places.
+Symfony comes with a minimalist `PSR-3`_ logger: :class:`Symfony\\Component\\HttpKernel\\Log\\Logger`.
+In conformance with `the twelve-factor app methodology`_, it sends messages starting from the
+``WARNING`` level to `stderr`_.
 
-Installation
-------------
+The minimal log level can be changed by setting the ``SHELL_VERBOSITY`` environment variable:
 
-In applications using :doc:`Symfony Flex </setup/flex>`, run this command to
-install the Monolog based logger before using it:
+=========================  =================
+``SHELL_VERBOSITY`` value  Minimum log level
+=========================  =================
+``-1``                     ``ERROR``
+``1``                      ``NOTICE``
+``2``                      ``INFO``
+``3``                      ``DEBUG``
+=========================  =================
 
-.. code-block:: terminal
-
-    $ composer require symfony/monolog-bundle
+The minimum log level, the default output and the log format can also be changed by
+passing the appropriate arguments to the constructor of :class:`Symfony\\Component\\HttpKernel\\Log\\Logger`.
+To do so, :ref:`override the "logger" service definition <service-psr4-loader>`.
 
 Logging a Message
 -----------------
 
-If the application uses the :ref:`default services.yaml configuration <service-container-services-load-example>`,
-you can get the logger service injecting the ``LoggerInterface`` class::
+To log a message, inject the default logger in your controller or service::
 
     use Psr\Log\LoggerInterface;
 
@@ -27,19 +32,34 @@ you can get the logger service injecting the ``LoggerInterface`` class::
         $logger->info('I just got the logger');
         $logger->error('An error occurred');
 
-        $logger->critical('I left the oven on!', array(
+        $logger->critical('I left the oven on!', [
             // include extra "context" info in your logs
             'cause' => 'in_hurry',
-        ));
+        ]);
 
         // ...
     }
 
-The logger service has different methods for different logging levels/priorities.
-You can configure the logger to do different things based on the *level* of a message
-(e.g. :doc:`send an email when an error occurs </logging/monolog_email>`).
+The ``logger`` service has different methods for different logging levels/priorities.
+See `LoggerInterface`_ for a list of all of the methods on the logger.
 
-See LoggerInterface_ for a list of all of the methods on the logger.
+Monolog
+-------
+
+Symfony integrates seamlessly with `Monolog`_, the most popular PHP logging
+library, to create and store log messages in a variety of different places
+and trigger various actions.
+
+For instance, using Monolog you can configure the logger to do different things based on the
+*level* of a message (e.g. :doc:`send an email when an error occurs </logging/monolog_email>`).
+
+Run this command to install the Monolog based logger before using it:
+
+.. code-block:: terminal
+
+    $ composer require symfony/monolog-bundle
+
+The following sections assume that Monolog is installed.
 
 Where Logs are Stored
 ---------------------
@@ -98,44 +118,52 @@ to write logs using the :phpfunction:`syslog` function:
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
             xmlns:monolog="http://symfony.com/schema/dic/monolog"
             xsi:schemaLocation="http://symfony.com/schema/dic/services
-                http://symfony.com/schema/dic/services/services-1.0.xsd
+                https://symfony.com/schema/dic/services/services-1.0.xsd
                 http://symfony.com/schema/dic/monolog
-                http://symfony.com/schema/dic/monolog/monolog-1.0.xsd">
+                https://symfony.com/schema/dic/monolog/monolog-1.0.xsd">
 
             <monolog:config>
-                <monolog:handler
-                    name="file_log"
+                <!-- this "file_log" key could be anything -->
+                <monolog:handler name="file_log"
                     type="stream"
                     path="%kernel.logs_dir%/%kernel.environment%.log"
-                    level="debug"
-                />
-                <monolog:handler
-                    name="syslog_handler"
+                    level="debug"/><!-- log *all* messages (debug is lowest level) -->
+
+                <monolog:handler name="syslog_handler"
                     type="syslog"
-                    level="error"
-                />
+                    level="error"/><!-- log error-level messages and higher -->
             </monolog:config>
         </container>
 
     .. code-block:: php
 
         // config/packages/prod/monolog.php
-        $container->loadFromExtension('monolog', array(
-            'handlers' => array(
-                'file_log' => array(
-                    'type'  => 'stream',
-                    'path'  => '%kernel.logs_dir%/%kernel.environment%.log',
-                    'level' => 'debug',
-                ),
-                'syslog_handler' => array(
-                    'type'  => 'syslog',
-                    'level' => 'error',
-                ),
-            ),
-        ));
+        use Symfony\Config\MonologConfig;
+
+        return static function (MonologConfig $monolog) {
+            // this "file_log" key could be anything
+            $monolog->handler('file_log')
+                ->type('stream')
+                // log to var/logs/(environment).log
+                ->path('%kernel.logs_dir%/%kernel.environment%.log')
+                // log *all* messages (debug is lowest level)
+                ->level('debug');
+
+            $monolog->handler('syslog_handler')
+                ->type('syslog')
+                // log error-level messages and higher
+                ->level('error');
+        };
 
 This defines a *stack* of handlers and each handler is called in the order that it's
 defined.
+
+.. note::
+
+    If you want to override the ``monolog`` configuration via another config
+    file, you will need to redefine the entire ``handlers`` stack. The configuration
+    from the two files cannot be merged because the order matters and a merge does
+    not allow to control the order.
 
 Handlers that Modify Log Entries
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -177,25 +205,27 @@ one of the messages reaches an ``action_level``. Take this example:
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
             xmlns:monolog="http://symfony.com/schema/dic/monolog"
             xsi:schemaLocation="http://symfony.com/schema/dic/services
-                http://symfony.com/schema/dic/services/services-1.0.xsd
+                https://symfony.com/schema/dic/services/services-1.0.xsd
                 http://symfony.com/schema/dic/monolog
-                http://symfony.com/schema/dic/monolog/monolog-1.0.xsd">
+                https://symfony.com/schema/dic/monolog/monolog-1.0.xsd">
 
             <monolog:config>
-                <monolog:handler
-                    name="filter_for_errors"
+                <!-- if *one* log is error or higher, pass *all* to file_log -->
+                <monolog:handler name="filter_for_errors"
                     type="fingers_crossed"
                     action-level="error"
                     handler="file_log"
                 />
-                <monolog:handler
-                    name="file_log"
+
+                <!-- now passed *all* logs, but only if one log is error or higher -->
+                <monolog:handler name="file_log"
                     type="stream"
                     path="%kernel.logs_dir%/%kernel.environment%.log"
                     level="debug"
                 />
-                <monolog:handler
-                    name="syslog_handler"
+
+                <!-- still passed *all* logs, and still only logs error or higher -->
+                <monolog:handler name="syslog_handler"
                     type="syslog"
                     level="error"
                 />
@@ -205,24 +235,29 @@ one of the messages reaches an ``action_level``. Take this example:
     .. code-block:: php
 
         // config/packages/prod/monolog.php
-        $container->loadFromExtension('monolog', array(
-            'handlers' => array(
-                'filter_for_errors' => array(
-                    'type'         => 'fingers_crossed',
-                    'action_level' => 'error',
-                    'handler'      => 'file_log',
-                ),
-                'file_log' => array(
-                    'type'  => 'stream',
-                    'path'  => '%kernel.logs_dir%/%kernel.environment%.log',
-                    'level' => 'debug',
-                ),
-                'syslog_handler' => array(
-                    'type'  => 'syslog',
-                    'level' => 'error',
-                ),
-            ),
-        ));
+        use Symfony\Config\MonologConfig;
+
+        return static function (MonologConfig $monolog) {
+            $monolog->handler('filter_for_errors')
+                ->type('fingers_crossed')
+                // if *one* log is error or higher, pass *all* to file_log
+                ->actionLevel('error')
+                ->handler('file_log')
+            ;
+
+            // now passed *all* logs, but only if one log is error or higher
+            $monolog->handler('file_log')
+                ->type('stream')
+                ->path('%kernel.logs_dir%/%kernel.environment%.log')
+                ->level('debug')
+            ;
+
+            // still passed *all* logs, and still only logs error or higher
+            $monolog->handler('syslog_handler')
+                ->type('syslog')
+                ->level('error')
+            ;
+        };
 
 Now, if even one log entry has an ``error`` level or higher, then *all* log entries
 for that request are saved to a file via the ``file_log`` handler. That means that
@@ -233,13 +268,6 @@ debugging much easier!
 
     The handler named "file_log" will not be included in the stack itself as
     it is used as a nested handler of the ``fingers_crossed`` handler.
-
-.. note::
-
-    If you want to override the ``monolog`` configuration via another config
-    file, you will need to redefine the entire ``handlers`` stack. The configuration
-    from the two files cannot be merged because the order matters and a merge does
-    not allow to control the order.
 
 All Built-in Handlers
 ---------------------
@@ -257,7 +285,7 @@ Linux command to rotate log files before they become too large.
 
 Another option is to have Monolog rotate the files for you by using the
 ``rotating_file`` handler. This handler creates a new log file every day
-and can also remove old files automatically. To use it, just set the ``type``
+and can also remove old files automatically. To use it, set the ``type``
 option of your handler to ``rotating_file``:
 
 .. configuration-block::
@@ -283,12 +311,12 @@ option of your handler to ``rotating_file``:
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
             xmlns:monolog="http://symfony.com/schema/dic/monolog"
             xsi:schemaLocation="http://symfony.com/schema/dic/services
-                http://symfony.com/schema/dic/services/services-1.0.xsd
+                https://symfony.com/schema/dic/services/services-1.0.xsd
                 http://symfony.com/schema/dic/monolog
-                http://symfony.com/schema/dic/monolog/monolog-1.0.xsd">
+                https://symfony.com/schema/dic/monolog/monolog-1.0.xsd">
 
             <monolog:config>
-                <!-- "max_files": max number of log files to keep
+                <!-- "max-files": max number of log files to keep
                      defaults to zero, which means infinite files -->
                 <monolog:handler name="main"
                     type="rotating_file"
@@ -302,25 +330,29 @@ option of your handler to ``rotating_file``:
     .. code-block:: php
 
         // config/packages/prod/monolog.php
-        $container->loadFromExtension('monolog', array(
-            'handlers' => array(
-                'main' => array(
-                    'type'  => 'rotating_file',
-                    'path'  => '%kernel.logs_dir%/%kernel.environment%.log',
-                    'level' => 'debug',
-                    // max number of log files to keep
-                    // defaults to zero, which means infinite files
-                    'max_files' => 10,
-                ),
-            ),
-        ));
+        use Symfony\Config\MonologConfig;
+
+        return static function (MonologConfig $monolog) {
+            $monolog->handler('main')
+                ->type('rotating_file')
+                ->path('%kernel.logs_dir%/%kernel.environment%.log')
+                ->level('debug')
+                // max number of log files to keep
+                // defaults to zero, which means infinite files
+                ->maxFiles(10);
+        };
 
 Using a Logger inside a Service
 -------------------------------
 
+If your application uses :ref:`service autoconfiguration <services-autoconfigure>`,
+any service whose class implements ``Psr\Log\LoggerAwareInterface`` will
+receive a call to its method ``setLogger()`` with the default logger service
+passed as a service.
+
 If you want to use in your own services a pre-configured logger which uses a
-specific channel (``app`` by default), use the ``monolog.logger`` tag  with the
-``channel`` property as explained in the
+specific channel (``app`` by default), you can either :ref:`autowire monolog channels <monolog-autowire-channels>`
+or use the ``monolog.logger`` tag  with the ``channel`` property as explained in the
 :ref:`Dependency Injection reference <dic_tags-monolog>`.
 
 Adding extra Data to each Log (e.g. a unique request token)
@@ -341,6 +373,7 @@ Learn more
     logging/channels_handlers
     logging/formatter
     logging/processors
+    logging/handlers
     logging/monolog_exclude_http_codes
     logging/monolog_console
 
@@ -349,6 +382,9 @@ Learn more
 
     logging/monolog_regex_based_excludes
 
+.. _`the twelve-factor app methodology`: https://12factor.net/logs
+.. _PSR-3: https://www.php-fig.org/psr/psr-3/
+.. _`stderr`: https://en.wikipedia.org/wiki/Standard_streams#Standard_error_(stderr)
 .. _Monolog: https://github.com/Seldaek/monolog
 .. _LoggerInterface: https://github.com/php-fig/log/blob/master/Psr/Log/LoggerInterface.php
 .. _`logrotate`: https://github.com/logrotate/logrotate

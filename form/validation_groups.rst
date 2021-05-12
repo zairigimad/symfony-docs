@@ -8,24 +8,35 @@ Validation Groups
 -----------------
 
 If your object takes advantage of :doc:`validation groups </validation/groups>`,
-you'll need to specify which validation group(s) your form should use::
+you'll need to specify which validation group(s) your form should use. Pass
+this as an option when :ref:`creating forms in controllers <creating-forms-in-controllers>`::
 
-    $form = $this->createFormBuilder($users, array(
-        'validation_groups' => array('registration'),
-    ))->add(...);
+    $form = $this->createFormBuilder($user, [
+        'validation_groups' => ['registration'],
+    ])->add(...);
 
-If you're creating :ref:`form classes <form-creating-form-classes>` (a good
-practice), then you'll need to add the following to the ``configureOptions()``
-method::
+When :ref:`creating forms in classes <creating-forms-in-classes>`, add the
+following to the ``configureOptions()`` method::
 
     use Symfony\Component\OptionsResolver\OptionsResolver;
 
-    public function configureOptions(OptionsResolver $resolver)
+    public function configureOptions(OptionsResolver $resolver): void
     {
-        $resolver->setDefaults(array(
-            'validation_groups' => array('registration'),
-        ));
+        $resolver->setDefaults([
+            // ...
+            'validation_groups' => ['registration'],
+        ]);
     }
 
 In both of these cases, *only* the ``registration`` validation group will
-be used to validate the underlying object.
+be used to validate the underlying object. To apply the ``registration``
+group *and* all constraints that are not in a group, use::
+
+    'validation_groups' => ['Default', 'registration']
+
+.. note::
+
+    You can choose any name for your validation groups, but Symfony recommends
+    using "lower snake case" names (e.g. ``foo_bar``) in contrast with the
+    automatic validation groups created by Symfony, which use "upper camel case"
+    (e.g. ``Default``, ``SomeClassName``).

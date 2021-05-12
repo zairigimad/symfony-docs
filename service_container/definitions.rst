@@ -21,6 +21,8 @@ Getting and Setting Service Definitions
 
 There are some helpful methods for working with the service definitions::
 
+    use Symfony\Component\DependencyInjection\Definition;
+
     // finds out if there is an "app.mailer" definition
     $container->hasDefinition('app.mailer');
     // finds out if there is an "app.mailer" definition or alias
@@ -54,8 +56,8 @@ Class
 The first optional argument of the ``Definition`` class is the fully qualified
 class name of the object returned when the service is fetched from the container::
 
-    use App\Config\UserConfigManager;
     use App\Config\CustomConfigManager;
+    use App\Config\UserConfigManager;
     use Symfony\Component\DependencyInjection\Definition;
 
     $definition = new Definition(UserConfigManager::class);
@@ -77,24 +79,28 @@ fetched from the container::
     use Symfony\Component\DependencyInjection\Definition;
     use Symfony\Component\DependencyInjection\Reference;
 
-    $definition = new Definition(DoctrineConfigManager::class, array(
+    $definition = new Definition(DoctrineConfigManager::class, [
         new Reference('doctrine'), // a reference to another service
         '%app.config_table_name%',  // will be resolved to the value of a container parameter
-    ));
+    ]);
 
     // gets all arguments configured for this definition
     $constructorArguments = $definition->getArguments();
 
     // gets a specific argument
     $firstArgument = $definition->getArgument(0);
+    
+    // adds a new named argument
+    // '$argumentName' = the name of the argument in the constructor, including the '$' symbol
+    $definition = $definition->setArgument('$argumentName', $argumentValue);
 
     // adds a new argument
-    $definition->addArgument($argument);
+    $definition->addArgument($argumentValue);
 
     // replaces argument on a specific index (0 = first argument)
     $definition->replaceArgument($index, $argument);
 
-    // replace all previously configured arguments with the passed array
+    // replaces all previously configured arguments with the passed array
     $definition->setArguments($arguments);
 
 .. caution::
@@ -113,7 +119,10 @@ any method calls in the definitions as well::
     $methodCalls = $definition->getMethodCalls();
 
     // configures a new method call
-    $definition->addMethodCall('setLogger', array(new Reference('logger')));
+    $definition->addMethodCall('setLogger', [new Reference('logger')]);
+
+    // configures an immutable-setter
+    $definition->addMethodCall('withLogger', [new Reference('logger')], true);
 
     // replaces all previously configured method calls with the passed array
     $definition->setMethodCalls($methodCalls);

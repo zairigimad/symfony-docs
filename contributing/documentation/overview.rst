@@ -65,9 +65,9 @@ Let's imagine that you want to improve the Setup guide. In order to make your
 changes, follow these steps:
 
 **Step 1.** Go to the official Symfony documentation repository located at
-`github.com/symfony/symfony-docs`_ and click on the **Fork** button to `fork the
-repository`_ to your personal account. This is only needed the first time you
-contribute to Symfony.
+`github.com/symfony/symfony-docs`_ and click on the **Fork** button to
+`fork the repository`_ to your personal account. This is only needed the first
+time you contribute to Symfony.
 
 **Step 2.** **Clone** the forked repository to your local machine (this example
 uses the ``projects/symfony-docs/`` directory to store the documentation; change
@@ -112,16 +112,16 @@ memorable name for the new branch (if you are fixing a reported issue, use
 
 .. code-block:: terminal
 
-    $ git checkout -b improve_install_article upstream/2.8
+    $ git checkout -b improve_install_article upstream/4.4
 
 In this example, the name of the branch is ``improve_install_article`` and the
-``upstream/2.8`` value tells Git to create this branch based on the ``2.8``
+``upstream/4.4`` value tells Git to create this branch based on the ``4.4``
 branch of the ``upstream`` remote, which is the original Symfony Docs repository.
 
 Fixes should always be based on the **oldest maintained branch** which contains
-the error. Nowadays this is the ``2.8`` branch. If you are instead documenting a
+the error. Nowadays this is the ``4.4`` branch. If you are instead documenting a
 new feature, switch to the first Symfony version that included it, e.g.
-``upstream/3.1``. Not sure? That's ok! Just use the ``upstream/master`` branch.
+``upstream/3.1``.
 
 **Step 5.** Now make your changes in the documentation. Add, tweak, reword and
 even remove any content and do your best to comply with the
@@ -155,7 +155,7 @@ changes should be applied:
    :align: center
 
 In this example, the **base fork** should be ``symfony/symfony-docs`` and
-the **base** branch should be the ``2.8``, which is the branch that you selected
+the **base** branch should be the ``4.4``, which is the branch that you selected
 to base your changes on. The **head fork** should be your forked copy
 of ``symfony-docs`` and the **compare** branch should be ``improve_install_article``,
 which is the name of the branch you created and where you made your changes.
@@ -186,7 +186,7 @@ changes and push the new changes:
 
 **Step 10.** After your pull request is eventually accepted and merged in the
 Symfony documentation, you will be included in the `Symfony Documentation
-Contributors`_ list. Moreover, if you happen to have a `SensioLabsConnect`_
+Contributors`_ list. Moreover, if you happen to have a `SymfonyConnect`_
 profile, you will get a cool `Symfony Documentation Badge`_.
 
 Your Next Documentation Contributions
@@ -205,7 +205,7 @@ contribution to the Symfony docs:
     # create a new branch based on the oldest maintained version
     $ cd projects/symfony-docs/
     $ git fetch upstream
-    $ git checkout -b my_changes upstream/2.8
+    $ git checkout -b my_changes upstream/4.4
 
     # ... do your changes
 
@@ -229,28 +229,42 @@ this hard work, it's **time to celebrate again!**
 Review your changes
 -------------------
 
-Every GitHub Pull Request is automatically built and deployed by `Platform.sh`_
-on a single environment that you can access on your browser to review your
-changes.
+Every GitHub Pull Request is automatically built and deployed by
+`SymfonyCloud`_ on a single environment that you can access on your browser to
+review your changes.
 
-.. image:: /_images/contributing/docs-pull-request-platformsh.png
+.. image:: /_images/contributing/docs-pull-request-symfonycloud.png
    :align: center
-   :alt:   Platform.sh Pull Request Deployment
+   :alt:   SymfonyCloud Pull Request Deployment
 
-To access the `Platform.sh`_ environment URL, go to your Pull Request page on
-GitHub, click on the **Show all checks** link and finally, click on the ``Details``
-link displayed for Platform.sh service.
+To access the `SymfonyCloud`_ environment URL, go to your Pull Request page on
+GitHub, click on the **Show all checks** link and finally, click on the
+``Details`` link displayed for SymfonyCloud service.
 
 .. note::
 
     Only Pull Requests to maintained branches are automatically built by
-    Platform.sh. Check the `roadmap`_ for maintained branches.
+    SymfonyCloud. Check the `roadmap`_ for maintained branches.
 
 Build the Documentation Locally
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Alternatively you can build the documentation on your own computer for testing
-purposes following these steps:
+If you have Docker installed on your machine, run these commands to build the
+docs:
+
+.. code-block:: terminal
+
+    # build the image...
+    $ docker build . -t symfony-docs
+
+    # ...and start the local web server
+    # (if it's already in use, change the '8080' port by any other port)
+    $ docker run --rm -p 8080:80 symfony-docs
+
+You can now read the docs at ``http://127.0.0.1:8080`` (if you use a virtual
+machine, browse its IP instead of localhost; e.g. ``http://192.168.99.100:8080``).
+
+If you don't use Docker, follow these steps to build the docs locally:
 
 #. Install `pip`_ as explained in the `pip installation`_ article;
 
@@ -259,7 +273,8 @@ purposes following these steps:
 
    .. code-block:: terminal
 
-        $ pip install sphinx~=1.3.0 git+https://github.com/fabpot/sphinx-php.git
+        $ cd _build/
+        $ pip install -r .requirements.txt
 
 #. Run the following command to build the documentation in HTML format:
 
@@ -278,18 +293,18 @@ Why Do my Changes Take so Long to Be Reviewed and/or Merged?
 
 Please be patient. It can take up to several days before your pull request can
 be fully reviewed. After merging the changes, it could take again several hours
-before your changes appear on the symfony.com website.
+before your changes appear on the Symfony website.
 
-Why Should I Use the Oldest Maintained Branch Instead of the Master Branch?
+Why Should I Use the Oldest Maintained Branch Instead of the Latest Branch?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Consistent with Symfony's source code, the documentation repository is split
 into multiple branches, corresponding to the different versions of Symfony itself.
-The ``master`` branch holds the documentation for the development branch of
+The latest (e.g. ``5.x``) branch holds the documentation for the development branch of
 the code.
 
-Unless you're documenting a feature that was introduced after Symfony 2.8,
-your changes should always be based on the ``2.8`` branch. Documentation managers
+Unless you're documenting a feature that was introduced after Symfony 4.4,
+your changes should always be based on the ``4.4`` branch. Documentation managers
 will use the necessary Git-magic to also apply your changes to all the active
 branches of the documentation.
 
@@ -319,16 +334,15 @@ your proposal after you put all that hard work into making the changes. We
 definitely don't want you to waste your time!
 
 .. _`github.com/symfony/symfony-docs`: https://github.com/symfony/symfony-docs
-.. _`reStructuredText`: http://docutils.sourceforge.net/rst.html
+.. _`reStructuredText`: https://docutils.sourceforge.io/rst.html
 .. _`GitHub`: https://github.com/
-.. _`fork the repository`: https://help.github.com/articles/fork-a-repo
+.. _`fork the repository`: https://help.github.com/github/getting-started-with-github/fork-a-repo
 .. _`Symfony Documentation Contributors`: https://symfony.com/contributors/doc
-.. _`SensioLabsConnect`: https://connect.sensiolabs.com/
-.. _`Symfony Documentation Badge`: https://connect.sensiolabs.com/badge/36/symfony-documentation-contributor
-.. _`sync your fork`: https://help.github.com/articles/syncing-a-fork
-.. _`Platform.sh`: https://platform.sh
-.. _`roadmap`: https://symfony.com/roadmap
+.. _`SymfonyConnect`: https://symfony.com/connect/login
+.. _`Symfony Documentation Badge`: https://connect.symfony.com/badge/36/symfony-documentation-contributor
+.. _`SymfonyCloud`: https://symfony.com/cloud
+.. _`roadmap`: https://symfony.com/releases
 .. _`pip`: https://pip.pypa.io/en/stable/
 .. _`pip installation`: https://pip.pypa.io/en/stable/installing/
-.. _`Sphinx`: http://sphinx-doc.org/
+.. _`Sphinx`: https://www.sphinx-doc.org/
 .. _`Sphinx Extensions for PHP and Symfony`: https://github.com/fabpot/sphinx-php

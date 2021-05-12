@@ -1,38 +1,19 @@
 .. index::
     single: Symfony Twig extensions
 
-.. _symfony2-twig-extensions:
+Twig Extensions Defined by Symfony
+==================================
 
-Symfony Twig Extensions
-=======================
-
-Twig is the default template engine for Symfony. By itself, it already contains
-a lot of built-in functions, filters, tags and tests. You can learn more about
-them from the `Twig Reference`_.
-
-The Symfony framework adds quite a few extra :ref:`functions <reference-twig-functions>`,
-:ref:`filters <reference-twig-filters>`, :ref:`tags <reference-twig-tags>`
-and :ref:`tests <reference-twig-tests>` to seamlessly integrate the
-various Symfony components with Twig templates. The following sections
-describe these extra features.
+:ref:`Twig <twig-language>` is the template engine used in Symfony applications.
+There are tens of `default filters and functions defined by Twig`_, but Symfony
+also defines some filters, functions and tags to integrate the various Symfony
+components with Twig templates. This article explains them all.
 
 .. tip::
 
-    Technically, most of the extensions live in the `Twig Bridge`_. That code
-    might give you some ideas when you need to write your own Twig extension
-    as described in :doc:`/templating/twig_extension`.
-
-.. note::
-
-    This reference only covers the Twig extensions provided by the Symfony
-    framework. You are probably using some other bundles as well, and
-    those might come with their own extensions not covered here.
-
-.. tip::
-
-    The `Twig Extensions repository`_ contains some additional Twig extensions
-    that do not belong to the Twig core, so you might want to have a look at
-    the `Twig Extensions documentation`_.
+    If these extensions provided by Symfony are not enough, you can
+    :doc:`create a custom Twig extension </templating/twig_extension>` to define
+    even more filters and functions.
 
 .. _reference-twig-functions:
 
@@ -54,20 +35,8 @@ render
     **type**: ``array`` **default**: ``[]``
 
 Makes a request to the given internal URI or controller and returns the result.
-It's commonly used to :doc:`embed controllers in templates </templating/embedding_controllers>`.
-
-.. code-block:: twig
-
-    {# if the controller is associated with a route, use the path() or
-       url() functions to generate the URI used by render() #}
-    {{ render(path('latest_articles', {num: 5})) }}
-    {{ render(url('latest_articles', {num: 5})) }}
-
-    {# if you don't want to expose the controller with a public URL, use
-       the controller() function to define the controller to be executed #}
-    {{ render(controller('App\\Controller\\DefaultController::latestArticles', {num: 5})) }}
-
 The render strategy can be specified in the ``strategy`` key of the options.
+It's commonly used to :ref:`embed controllers in templates <templates-embed-controllers>`.
 
 .. _reference-twig-function-render-esi:
 
@@ -112,6 +81,8 @@ Returns an instance of ``ControllerReference`` to be used with functions
 like :ref:`render() <reference-twig-function-render>` and
 :ref:`render_esi() <reference-twig-function-render-esi>`.
 
+.. _reference-twig-function-asset:
+
 asset
 ~~~~~
 
@@ -124,12 +95,18 @@ asset
 ``packageName`` *(optional)*
     **type**: ``string`` | ``null`` **default**: ``null``
 
-Returns a public path to ``path``, which takes into account the base path
-set for the package and the URL path. More information in
-:ref:`templating-assets`. Symfony provides various cache busting
-implementations via the :ref:`reference-framework-assets-version`,
-:ref:`reference-assets-version-strategy`, and
-:ref:`reference-assets-json-manifest-path` configuration options.
+Returns the public path of the given asset path (which can be a CSS file, a
+JavaScript file, an image path, etc.). This function takes into account where
+the application is installed (e.g. in case the project is accessed in a host
+subdirectory) and the optional asset package base path.
+
+Symfony provides various cache busting implementations via the
+:ref:`reference-framework-assets-version`, :ref:`reference-assets-version-strategy`,
+and :ref:`reference-assets-json-manifest-path` configuration options.
+
+.. seealso::
+
+    Read more about :ref:`linking to web assets from templates <templates-link-to-assets>`.
 
 asset_version
 ~~~~~~~~~~~~~~
@@ -142,140 +119,9 @@ asset_version
     **type**: ``string`` | ``null`` **default**: ``null``
 
 Returns the current version of the package, more information in
-:ref:`templating-assets`.
+:ref:`templates-link-to-assets`.
 
-form
-~~~~
-
-.. code-block:: twig
-
-    {{ form(view, variables = []) }}
-
-``view``
-    **type**: ``FormView``
-``variables`` *(optional)*
-    **type**: ``array`` **default**: ``[]``
-
-Renders the HTML of a complete form, more information in
-:ref:`the Twig Form reference <reference-forms-twig-form>`.
-
-form_start
-~~~~~~~~~~
-
-.. code-block:: twig
-
-    {{ form_start(view, variables = []) }}
-
-``view``
-    **type**: ``FormView``
-``variables`` *(optional)*
-    **type**: ``array`` **default**: ``[]``
-
-Renders the HTML start tag of a form, more information in
-:ref:`the Twig Form reference <reference-forms-twig-start>`.
-
-form_end
-~~~~~~~~
-
-.. code-block:: twig
-
-    {{ form_end(view, variables = []) }}
-
-``view``
-    **type**: ``FormView``
-``variables`` *(optional)*
-    **type**: ``array`` **default**: ``[]``
-
-Renders the HTML end tag of a form together with all fields that have not
-been rendered yet, more information in
-:ref:`the Twig Form reference <reference-forms-twig-end>`.
-
-form_widget
-~~~~~~~~~~~
-
-.. code-block:: twig
-
-    {{ form_widget(view, variables = []) }}
-
-``view``
-    **type**: ``FormView``
-``variables`` *(optional)*
-    **type**: ``array`` **default**: ``[]``
-
-Renders a complete form or a specific HTML widget of a field, more information
-in :ref:`the Twig Form reference <reference-forms-twig-widget>`.
-
-form_errors
-~~~~~~~~~~~
-
-.. code-block:: twig
-
-    {{ form_errors(view) }}
-
-``view``
-    **type**: ``FormView``
-
-Renders any errors for the given field or the global errors, more information
-in :ref:`the Twig Form reference <reference-forms-twig-errors>`.
-
-form_label
-~~~~~~~~~~
-
-.. code-block:: twig
-
-    {{ form_label(view, label = null, variables = []) }}
-
-``view``
-    **type**: ``FormView``
-``label`` *(optional)*
-    **type**: ``string`` **default**: ``null``
-``variables`` *(optional)*
-    **type**: ``array`` **default**: ``[]``
-
-Renders the label for the given field, more information in
-:ref:`the Twig Form reference <reference-forms-twig-label>`.
-
-form_help
-~~~~~~~~~~
-
-.. code-block:: twig
-
-    {{ form_help(view) }}
-
-``view``
-    **type**: ``FormView``
-
-Renders the help text for the given field.
-
-form_row
-~~~~~~~~
-
-.. code-block:: twig
-
-    {{ form_row(view, variables = []) }}
-
-``view``
-    **type**: ``FormView``
-``variables`` *(optional)*
-    **type**: ``array`` **default**: ``[]``
-
-Renders the row (the field's label, errors and widget) of the given field,
-more information in :ref:`the Twig Form reference <reference-forms-twig-row>`.
-
-form_rest
-~~~~~~~~~
-
-.. code-block:: twig
-
-    {{ form_rest(view, variables = []) }}
-
-``view``
-    **type**: ``FormView``
-``variables`` *(optional)*
-    **type**: ``array`` **default**: ``[]``
-
-Renders all fields that have not yet been rendered, more information in
-:ref:`the Twig Form reference <reference-forms-twig-rest>`.
+.. _reference-twig-function-csrf-token:
 
 csrf_token
 ~~~~~~~~~~
@@ -285,10 +131,10 @@ csrf_token
     {{ csrf_token(intention) }}
 
 ``intention``
-    **type**: ``string``
+    **type**: ``string`` - an arbitrary string used to identify the token.
 
-Renders a CSRF token. Use this function if you want CSRF protection without
-creating a form.
+Renders a CSRF token. Use this function if you want :doc:`CSRF protection </security/csrf>`
+in a regular HTML form not managed by the Symfony Form component.
 
 is_granted
 ~~~~~~~~~~
@@ -304,9 +150,10 @@ is_granted
 ``field`` *(optional)*
     **type**: ``string``
 
-Returns ``true`` if the current user has the required role. Optionally,
-an object can be pasted to be used by the voter. More information can be
-found in :ref:`security-template`.
+Returns ``true`` if the current user has the given role.
+
+Optionally, an object can be passed to be used by the voter. More information
+can be found in :ref:`security-template`.
 
 logout_path
 ~~~~~~~~~~~
@@ -339,7 +186,7 @@ path
 
 .. code-block:: twig
 
-    {{ path(name, parameters = [], relative = false) }}
+    {{ path(route_name, route_parameters = [], relative = false) }}
 
 ``name``
     **type**: ``string``
@@ -349,19 +196,19 @@ path
     **type**: ``boolean`` **default**: ``false``
 
 Returns the relative URL (without the scheme and host) for the given route.
-If ``relative`` is enabled, it'll create a path relative to the current
-path. More information in :ref:`templating-pages`.
+If ``relative`` is enabled, it'll create a path relative to the current path.
 
 .. seealso::
 
-    Read :doc:`/routing` to learn more about the Routing component.
+    Read more about :doc:`Symfony routing </routing>` and about
+    :ref:`creating links in Twig templates <templates-link-to-pages>`.
 
 url
 ~~~
 
 .. code-block:: twig
 
-    {{ url(name, parameters = [], schemeRelative = false) }}
+    {{ url(route_name, route_parameters = [], schemeRelative = false) }}
 
 ``name``
     **type**: ``string``
@@ -371,39 +218,31 @@ url
     **type**: ``boolean`` **default**: ``false``
 
 Returns the absolute URL (with scheme and host) for the given route. If
-``schemeRelative`` is enabled, it'll create a scheme-relative URL. More
-information in :ref:`templating-pages`.
+``schemeRelative`` is enabled, it'll create a scheme-relative URL.
 
 .. seealso::
 
-    Read :doc:`/routing` to learn more about the Routing component.
+    Read more about :doc:`Symfony routing </routing>` and about
+    :ref:`creating links in Twig templates <templates-link-to-pages>`.
 
 absolute_url
 ~~~~~~~~~~~~
 
-.. code-block:: jinja
+.. code-block:: twig
 
     {{ absolute_url(path) }}
 
 ``path``
     **type**: ``string``
 
-Returns the absolute URL from the passed relative path. For example, assume
-you're on the following page in your app:
-``http://example.com/products/hover-board``.
-
-.. code-block:: jinja
-
-    {{ absolute_url('/human.txt') }}
-    {# http://example.com/human.txt #}
-
-    {{ absolute_url('products_icon.png') }}
-    {# http://example.com/products/products_icon.png #}
+Returns the absolute URL (with scheme and host) from the passed relative path. Combine it with the
+:ref:`asset() function <reference-twig-function-asset>` to generate absolute URLs
+for web assets. Read more about :ref:`Linking to CSS, JavaScript and Image Assets <templates-link-to-assets>`.
 
 relative_path
 ~~~~~~~~~~~~~
 
-.. code-block:: jinja
+.. code-block:: twig
 
     {{ relative_path(path) }}
 
@@ -414,7 +253,7 @@ Returns the relative path from the passed absolute URL. For example, assume
 you're on the following page in your app:
 ``http://example.com/products/hover-board``.
 
-.. code-block:: jinja
+.. code-block:: twig
 
     {{ relative_path('http://example.com/human.txt') }}
     {# ../human.txt #}
@@ -425,8 +264,84 @@ you're on the following page in your app:
 expression
 ~~~~~~~~~~
 
-Creates an :class:`Symfony\\Component\\ExpressionLanguage\\Expression` in
-Twig. See ":ref:`Template Expressions <security-template-expression>`".
+Creates an :class:`Symfony\\Component\\ExpressionLanguage\\Expression` related
+to the :doc:`ExpressionLanguage component </components/expression_language>`.
+
+impersonation_exit_path
+~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: twig
+
+    {{ impersonation_exit_path(exitTo = null) }}
+
+``exitTo`` *(optional)*
+    **type**: ``string``
+
+.. versionadded:: 5.2
+
+    The ``impersonation_exit_path()`` function was introduced in Symfony 5.2.
+
+Generates a URL that you can visit to exit :doc:`user impersonation </security/impersonating_user>`.
+After exiting impersonation, the user is redirected to the current URI. If you
+prefer to redirect to a different URI, define its value in the ``exitTo`` argument.
+
+If no user is being impersonated, the function returns an empty string.
+
+impersonation_exit_url
+~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: twig
+
+    {{ impersonation_exit_url(exitTo = null) }}
+
+``exitTo`` *(optional)*
+    **type**: ``string``
+
+.. versionadded:: 5.2
+
+    The ``impersonation_exit_url()`` function was introduced in Symfony 5.2.
+
+It's similar to the `impersonation_exit_path`_ function, but it generates
+absolute URLs instead of relative URLs.
+
+.. _reference-twig-function-t:
+
+t
+~
+
+.. code-block:: twig
+
+    {{ t(message, parameters = [], domain = 'messages')|trans }}
+
+``message``
+    **type**: ``string``
+``parameters`` *(optional)*
+    **type**: ``array`` **default**: ``[]``
+``domain`` *(optional)*
+    **type**: ``string`` **default**: ``messages``
+
+.. versionadded:: 5.2
+
+    The ``t()`` function was introduced in Symfony 5.2.
+
+Creates a ``Translatable`` object that can be passed to the
+:ref:`trans filter <reference-twig-filter-trans>`.
+
+Form Related Functions
+~~~~~~~~~~~~~~~~~~~~~~
+
+The following functions related to Symfony Forms are also available. They are
+explained in the article about :doc:`customizing form rendering </form/form_customization>`:
+
+* :ref:`form() <reference-forms-twig-form>`
+* :ref:`form_start() <reference-forms-twig-start>`
+* :ref:`form_end() <reference-forms-twig-end>`
+* :ref:`form_widget() <reference-forms-twig-widget>`
+* :ref:`form_errors() <reference-forms-twig-errors>`
+* :ref:`form_label() <reference-forms-twig-label>`
+* :ref:`form_help() <reference-forms-twig-help>`
+* :ref:`form_row() <reference-forms-twig-row>`
+* :ref:`form_rest() <reference-forms-twig-rest>`
 
 .. _reference-twig-filters:
 
@@ -449,6 +364,8 @@ Makes a technical name human readable (i.e. replaces underscores by spaces
 or transforms camelCase text like ``helloWorld`` to ``hello world``
 and then capitalizes the string).
 
+.. _reference-twig-filter-trans:
+
 trans
 ~~~~~
 
@@ -457,36 +374,19 @@ trans
     {{ message|trans(arguments = [], domain = null, locale = null) }}
 
 ``message``
-    **type**: ``string``
+    **type**: ``string`` | ``Translatable``
 ``arguments`` *(optional)*
     **type**: ``array`` **default**: ``[]``
 ``domain`` *(optional)*
     **type**: ``string`` **default**: ``null``
 ``locale`` *(optional)*
     **type**: ``string`` **default**: ``null``
+
+.. versionadded:: 5.2
+
+    ``message`` accepting ``Translatable`` as a valid type was introduced in Symfony 5.2.
 
 Translates the text into the current language. More information in
-:ref:`Translation Filters <translation-filters>`.
-
-transchoice
-~~~~~~~~~~~
-
-.. code-block:: twig
-
-    {{ message|transchoice(count, arguments = [], domain = null, locale = null) }}
-
-``message``
-    **type**: ``string``
-``count``
-    **type**: ``integer``
-``arguments`` *(optional)*
-    **type**: ``array`` **default**: ``[]``
-``domain`` *(optional)*
-    **type**: ``string`` **default**: ``null``
-``locale`` *(optional)*
-    **type**: ``string`` **default**: ``null``
-
-Translates the text with pluralization support. More information in
 :ref:`Translation Filters <translation-filters>`.
 
 yaml_encode
@@ -608,7 +508,7 @@ format_file
 
 Generates the file path inside an ``<a>`` element. If the path is inside
 the kernel root directory, the kernel root directory path is replaced by
-``kernel.root_dir`` (showing the full path in a tooltip on hover).
+``kernel.project_dir`` (showing the full path in a tooltip on hover).
 
 format_file_from_text
 ~~~~~~~~~~~~~~~~~~~~~
@@ -640,9 +540,6 @@ a preconfigured scheme.
 file_relative
 ~~~~~~~~~~~~~
 
-.. versionadded:: 4.2
-    The ``file_relative`` filter was introduced in Symfony 4.2.
-
 .. code-block:: twig
 
     {{ file|file_relative }}
@@ -661,10 +558,35 @@ project's root directory:
 If the given file path is out of the project directory, a ``null`` value
 will be returned.
 
+serialize
+~~~~~~~~~
+
+.. code-block:: twig
+
+    {{ object|serialize(format = 'json', context = []) }}
+
+``object``
+    **type**: ``mixed``
+
+``format`` *(optional)*
+    **type**: ``string``
+
+``context`` *(optional)*
+    **type**: ``array``
+
+.. versionadded:: 5.3
+
+    The ``serialize`` filter was introduced in Symfony 5.3.
+
+Accepts any data that can be serialized by the :doc:`Serializer component </serializer>`
+and returns a serialized string in the specified ``format``.
+
 .. _reference-twig-tags:
 
 Tags
 ----
+
+.. _reference-twig-tag-form-theme:
 
 form_theme
 ~~~~~~~~~~
@@ -698,25 +620,6 @@ trans
 
 Renders the translation of the content. More information in :ref:`translation-tags`.
 
-transchoice
-~~~~~~~~~~~
-
-.. code-block:: twig
-
-    {% transchoice count with vars from domain into locale %}{% endtranschoice %}
-
-``count``
-    **type**: ``integer``
-``vars`` *(optional)*
-    **type**: ``array`` **default**: ``[]``
-``domain`` *(optional)*
-    **type**: ``string`` **default**: ``null``
-``locale`` *(optional)*
-    **type**: ``string`` **default**: ``null``
-
-Renders the translation of the content with pluralization support, more
-information in :ref:`translation-tags`.
-
 trans_default_domain
 ~~~~~~~~~~~~~~~~~~~~
 
@@ -729,76 +632,37 @@ trans_default_domain
 
 This will set the default domain in the current template.
 
+.. _reference-twig-tag-stopwatch:
+
 stopwatch
 ~~~~~~~~~
 
-.. code-block:: jinja
+.. code-block:: twig
 
-    {% stopwatch 'name' %}...{% endstopwatch %}
+    {% stopwatch 'event_name' %}...{% endstopwatch %}
 
-This will time the run time of the code inside it and put that on the timeline
-of the WebProfilerBundle.
+This measures the time and memory used to execute some code in the template and
+displays it in the Symfony profiler. See :ref:`how to profile Symfony applications <profiling-applications>`.
 
 .. _reference-twig-tests:
 
 Tests
 -----
 
-selectedchoice
-~~~~~~~~~~~~~~
+The following tests related to Symfony Forms are available. They are explained
+in the article about :doc:`customizing form rendering </form/form_customization>`:
 
-.. code-block:: twig
-
-    {% if choice is selectedchoice(selectedValue) %}
-
-``choice``
-    **type**: ``ChoiceView``
-``selectedValue``
-    **type**: ``string``
-
-Checks if ``selectedValue`` was checked for the provided choice field. Using
-this test is the most effective way.
-
-rootform
-~~~~~~~~
-
-.. code-block:: twig
-
-    {% if form is rootform %}
-        {# ... #}
-    {% endif %}
-
-``form``
-    **type**: ``FormView``
-
-Checks if the given ``form`` does not have a parent form view. This is the only
-safe way of testing it because checking if the form contains a field called
-``parent`` is not reliable.
+* :ref:`selectedchoice() <form-twig-selectedchoice>`
+* :ref:`rootform() <form-twig-rootform>`
 
 Global Variables
 ----------------
 
-.. _reference-twig-global-app:
-
 app
 ~~~
 
-The ``app`` variable is available everywhere and gives access to many commonly
-needed objects and values. It is an instance of
-:class:`Symfony\\Bundle\\FrameworkBundle\\Templating\\GlobalVariables`.
+The ``app`` variable is injected automatically by Symfony in all templates and
+provides access to lots of useful application information. Read more about the
+:ref:`Twig global app variable <twig-app-variable>`.
 
-The available attributes are:
-
-* ``app.user``, a PHP object representing the current user;
-* ``app.request``, a :class:`Symfony\\Component\\HttpFoundation\\Request` object;
-* ``app.session``, a :class:`Symfony\\Component\\HttpFoundation\\Session\\Session` object;
-* ``app.environment``, a string with the name of the execution environment;
-* ``app.debug``, a boolean telling whether the debug mode is enabled in the app;
-* ``app.token``, a :class:`Symfony\\Component\\Security\\Core\\Authentication\\Token\\TokenInterface`
-  object representing the security token
-* ``app.flashes``, returns flash messages from the session
-
-.. _`Twig Reference`: https://twig.symfony.com/doc/2.x/#reference
-.. _`Twig Extensions repository`: https://github.com/twigphp/Twig-extensions
-.. _`Twig Extensions documentation`: http://twig-extensions.readthedocs.io/en/latest/
-.. _`Twig Bridge`: https://github.com/symfony/symfony/tree/master/src/Symfony/Bridge/Twig/Extension
+.. _`default filters and functions defined by Twig`: https://twig.symfony.com/doc/2.x/#reference

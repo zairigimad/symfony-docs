@@ -7,7 +7,8 @@ How to Load Service Configuration inside a Bundle
 
 Services created by bundles are not defined in the main ``config/services.yaml``
 file used by the application but in the bundles themselves. This article
-explains how to create and load those bundle services files.
+explains how to create and load service files using the bundle directory
+structure.
 
 Creating an Extension Class
 ---------------------------
@@ -32,8 +33,8 @@ This is how the extension of an AcmeHelloBundle should look like::
     // src/Acme/HelloBundle/DependencyInjection/AcmeHelloExtension.php
     namespace Acme\HelloBundle\DependencyInjection;
 
-    use Symfony\Component\HttpKernel\DependencyInjection\Extension;
     use Symfony\Component\DependencyInjection\ContainerBuilder;
+    use Symfony\Component\DependencyInjection\Extension\Extension;
 
     class AcmeHelloExtension extends Extension
     {
@@ -88,8 +89,8 @@ but it is more common if you put these definitions in a configuration file
 For instance, assume you have a file called ``services.xml`` in the
 ``Resources/config/`` directory of your bundle, your ``load()`` method looks like::
 
-    use Symfony\Component\DependencyInjection\Loader\XmlFileLoader;
     use Symfony\Component\Config\FileLocator;
+    use Symfony\Component\DependencyInjection\Loader\XmlFileLoader;
 
     // ...
     public function load(array $configs, ContainerBuilder $container)
@@ -118,22 +119,18 @@ they are compiled when generating the application cache to improve the overall
 performance. Define the list of annotated classes to compile in the
 ``addAnnotatedClassesToCompile()`` method::
 
-    use App\Manager\UserManager;
-    use App\Utils\Slugger;
-
-    // ...
     public function load(array $configs, ContainerBuilder $container)
     {
         // ...
 
-        $this->addAnnotatedClassesToCompile(array(
+        $this->addAnnotatedClassesToCompile([
             // you can define the fully qualified class names...
             'App\\Controller\\DefaultController',
             // ... but glob patterns are also supported:
             '**Bundle\\Controller\\',
 
             // ...
-        ));
+        ]);
     }
 
 .. note::

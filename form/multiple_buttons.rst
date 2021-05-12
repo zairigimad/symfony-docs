@@ -11,8 +11,8 @@ To do this, add a second button with the caption "Save and add" to your form::
     $form = $this->createFormBuilder($task)
         ->add('task', TextType::class)
         ->add('dueDate', DateType::class)
-        ->add('save', SubmitType::class, array('label' => 'Create Task'))
-        ->add('saveAndAdd', SubmitType::class, array('label' => 'Save and Add'))
+        ->add('save', SubmitType::class, ['label' => 'Create Task'])
+        ->add('saveAndAdd', SubmitType::class, ['label' => 'Save and Add'])
         ->getForm();
 
 In your controller, use the button's
@@ -33,5 +33,11 @@ Or you can get the button's name by using the
 :method:`Symfony\\Component\\Form\\Form::getClickedButton` method of the form::
 
     if ($form->getClickedButton() && 'saveAndAdd' === $form->getClickedButton()->getName()) {
+        // ...
+    }
+
+    // when using nested forms, two or more buttons can have the same name;
+    // in those cases, compare the button objects instead of the button names
+    if ($form->getClickedButton() === $form->get('saveAndAdd')){
         // ...
     }

@@ -57,12 +57,18 @@ helper method allows creating and configuring a `Memcached`_ class instance usin
     );
 
     // pass an array of DSN strings to register multiple servers with the client
-    $client = MemcachedAdapter::createConnection(array(
+    $client = MemcachedAdapter::createConnection([
         'memcached://10.0.0.100',
         'memcached://10.0.0.101',
         'memcached://10.0.0.102',
         // etc...
-    ));
+    ]);
+
+    // a single DSN can define multiple servers using the following syntax:
+    // host[hostname-or-IP:port] (where port is optional). Sockets must include a trailing ':'
+    $client = MemcachedAdapter::createConnection(
+        'memcached:?host[localhost]&host[localhost:12345]&host[/some/memcached.sock:]=3'
+    );
 
 The `Data Source Name (DSN)`_ for this adapter must use the following format:
 
@@ -81,7 +87,7 @@ Below are common examples of valid DSNs showing a combination of available value
 
     use Symfony\Component\Cache\Adapter\MemcachedAdapter;
 
-    $client = MemcachedAdapter::createConnection(array(
+    $client = MemcachedAdapter::createConnection([
         // hostname + port
         'memcached://my.server.com:11211'
 
@@ -96,7 +102,7 @@ Below are common examples of valid DSNs showing a combination of available value
 
         // socket instead of hostname/IP + weight
         'memcached:///var/run/memcached.sock?weight=20'
-    ));
+    ]);
 
 Configure the Options
 ---------------------
@@ -110,14 +116,13 @@ option names and their respective values::
 
     $client = MemcachedAdapter::createConnection(
         // a DSN string or an array of DSN strings
-        array(),
+        [],
 
         // associative array of configuration options
-        array(
-            'compression' => true,
+        [
             'libketama_compatible' => true,
             'serializer' => 'igbinary',
-         )
+        ]
     );
 
 Available Options
@@ -132,17 +137,6 @@ Available Options
     commands to buffer instead of being immediately sent to the remote
     server(s). Any action that retrieves data, quits the connection, or closes
     down the connection will cause the buffer to be committed.
-
-``compression`` (type: ``bool``, default: ``true``)
-    Enables or disables payload compression, where item values longer than 100
-    bytes are compressed during storage and decompressed during retrieval.
-
-``compression_type`` (type: ``string``)
-    Specifies the compression method used on value payloads. when the
-    **compression** option is enabled.
-
-    Valid option values include ``fastlz`` and ``zlib``, with a default value
-    that *varies based on flags used at compilation*.
 
 ``connect_timeout`` (type: ``int``, default: ``1000``)
     Specifies the timeout (in milliseconds) of socket connection operations when
@@ -231,7 +225,7 @@ Available Options
 
 ``server_failure_limit`` (type: ``int``, default: ``0``)
     Specifies the failure limit for server connection attempts before marking
-    the server as "dead". The server will remaining in the server pool unless
+    the server as "dead". The server will remain in the server pool unless
     ``auto_eject_hosts`` is enabled.
 
     Valid option values include *any positive integer*.
@@ -278,6 +272,7 @@ Available Options
     are valid and fit within the design of the protocol being used.
 
 .. tip::
+
     Reference the `Memcached`_ extension's `predefined constants`_ documentation
     for additional information about the available options.
 
@@ -285,9 +280,8 @@ Available Options
 .. _`User Datagram Protocol (UDP)`: https://en.wikipedia.org/wiki/User_Datagram_Protocol
 .. _`no-delay`: https://en.wikipedia.org/wiki/TCP_NODELAY
 .. _`keep-alive`: https://en.wikipedia.org/wiki/Keepalive
-.. _`Memcached PHP extension`: http://php.net/manual/en/book.memcached.php
-.. _`predefined constants`: http://php.net/manual/en/memcached.constants.php
+.. _`Memcached PHP extension`: https://www.php.net/manual/en/book.memcached.php
+.. _`predefined constants`: https://www.php.net/manual/en/memcached.constants.php
 .. _`Memcached server`: https://memcached.org/
-.. _`Memcached`: http://php.net/manual/en/class.memcached.php
+.. _`Memcached`: https://www.php.net/manual/en/class.memcached.php
 .. _`Data Source Name (DSN)`: https://en.wikipedia.org/wiki/Data_source_name
-.. _`Domain Name System (DNS)`: https://en.wikipedia.org/wiki/Domain_Name_System

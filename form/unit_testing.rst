@@ -4,6 +4,13 @@
 How to Unit Test your Forms
 ===========================
 
+.. caution::
+
+    This article is intended for developers who create
+    :doc:`custom form types </form/create_custom_field_type>`. If you are using
+    the :doc:`built-in Symfony form types </reference/forms/types>` or the form
+    types provided by third-party bundles, you don't need to unit test them.
+
 The Form component consists of 3 core objects: a form type (implementing
 :class:`Symfony\\Component\\Form\\FormTypeInterface`), the
 :class:`Symfony\\Component\\Form\\Form` and the
@@ -13,12 +20,12 @@ The only class that is usually manipulated by programmers is the form type class
 which serves as a form blueprint. It is used to generate the ``Form`` and the
 ``FormView``. You could test it directly by mocking its interactions with the
 factory but it would be complex. It is better to pass it to FormFactory like it
-is done in a real application. It is simple to bootstrap and you can trust
+is done in a real application. It is easier to bootstrap and you can trust
 the Symfony components enough to use them as a testing base.
 
-There is already a class that you can benefit from for simple FormTypes
-testing: :class:`Symfony\\Component\\Form\\Test\\TypeTestCase`. It is used to
-test the core types and you can use it to test your types too.
+There is already a class that you can benefit from for testing:
+:class:`Symfony\\Component\\Form\\Test\\TypeTestCase`. It is used to test the
+core types and you can use it to test your types too.
 
 .. note::
 
@@ -42,32 +49,39 @@ The simplest ``TypeTestCase`` implementation looks like the following::
     {
         public function testSubmitValidData()
         {
-            $formData = array(
+            $formData = [
                 'test' => 'test',
                 'test2' => 'test2',
-            );
+            ];
 
-            $objectToCompare = new TestObject();
-            // $objectToCompare will retrieve data from the form submission; pass it as the second argument
-            $form = $this->factory->create(TestedType::class, $objectToCompare);
+            $model = new TestObject();
+            // $formData will retrieve data from the form submission; pass it as the second argument
+            $form = $this->factory->create(TestedType::class, $model);
 
-            $object = new TestObject();
+            $expected = new TestObject();
             // ...populate $object properties with the data stored in $formData
 
             // submit the data to the form directly
             $form->submit($formData);
 
+            // This check ensures there are no transformation failures
             $this->assertTrue($form->isSynchronized());
 
-            // check that $objectToCompare was modified as expected when the form was submitted
-            $this->assertEquals($object, $objectToCompare);
+            // check that $formData was modified as expected when the form was submitted
+            $this->assertEquals($expected, $model);
+        }
 
-            $view = $form->createView();
-            $children = $view->children;
+        public function testCustomFormView()
+        {
+            $formData = new TestObject();
+            // ... prepare the data as you need
 
-            foreach (array_keys($formData) as $key) {
-                $this->assertArrayHasKey($key, $children);
-            }
+            // The initial data may be used to compute custom view variables
+            $view = $this->factory->create(TestedType::class, $formData)
+                ->createView();
+
+            $this->assertArrayHasKey('custom_var', $view->vars);
+            $this->assertSame('expected value', $view->vars['custom_var']);
         }
     }
 
@@ -77,10 +91,10 @@ First you verify if the ``FormType`` compiles. This includes basic class
 inheritance, the ``buildForm()`` function and options resolution. This should
 be the first test you write::
 
-    $form = $this->factory->create(TestedType::class, $objectToCompare);
+    $form = $this->factory->create(TestedType::class, $formData);
 
 This test checks that none of your data transformers used by the form
-failed. The :method:`Symfony\\Component\\Form\\FormInterface::isSynchronized`
+produces an error. The :method:`Symfony\\Component\\Form\\FormInterface::isSynchronized`
 method is only set to ``false`` if a data transformer throws an exception::
 
     $form->submit($formData);
@@ -90,35 +104,43 @@ method is only set to ``false`` if a data transformer throws an exception::
 
     Don't test the validation: it is applied by a listener that is not
     active in the test case and it relies on validation configuration.
-    Instead, unit test your custom constraints directly.
+    Instead, unit test your custom constraints directly or read how
+    to :ref:`add custom extensions <form_unit_testing-adding_custom_extensions>`
+    in the last section of this page.
 
-Next, verify the submission and mapping of the form. The test below
-checks if all the fields are correctly specified::
+Next, verify the submission and mapping of the form. The test below checks if
+all the fields are correctly specified::
 
-    $this->assertEquals($object, $objectToCompare);
+    $this->assertEquals($expected, $formData);
 
-Finally, check the creation of the ``FormView``. You should check if all
-widgets you want to display are available in the children property::
+Finally, check the creation of the ``FormView``. You can check that a custom
+variable exists and will be available in your form themes::
 
-    $view = $form->createView();
-    $children = $view->children;
-
-    foreach (array_keys($formData) as $key) {
-        $this->assertArrayHasKey($key, $children);
-    }
+    $this->assertArrayHasKey('custom_var', $view->vars);
+    $this->assertSame('expected value', $view->vars['custom_var']);
 
 .. tip::
 
-    Use :ref:`PHPUnit data providers <testing-data-providers>` to test multiple
-    form conditions using the same test code.
+    Use `PHPUnit data providers`_ to test multiple form conditions using
+    the same test code.
 
-Testings Types from the Service Container
------------------------------------------
+.. caution::
+
+    When your type relies on the ``EntityType``, you should register the
+    :class:`Symfony\\Bridge\\Doctrine\\Form\\DoctrineOrmExtension`, which will
+    need to mock the ``ManagerRegistry``.
+
+    However, If you cannot use a mock to write your test, you should extend
+    the ``KernelTestCase`` instead and use the ``form.factory`` service to
+    create the form.
+
+Testings Types Registered as Services
+-------------------------------------
 
 Your form may be used as a service, as it depends on other services (e.g. the
 Doctrine entity manager). In these cases, using the above code won't work, as
-the Form component just instantiates the form type without passing any
-arguments to the constructor.
+the Form component instantiates the form type without passing any arguments
+to the constructor.
 
 To solve this, you have to mock the injected dependencies, instantiate your own
 form type and use the :class:`Symfony\\Component\\Form\\PreloadedExtension` to
@@ -128,7 +150,7 @@ make sure the ``FormRegistry`` uses the created instance::
     namespace App\Tests\Form\Type;
 
     use App\Form\Type\TestedType;
-    use Doctrine\Common\Persistence\ObjectManager;
+    use Doctrine\Persistence\ObjectManager;
     use Symfony\Component\Form\PreloadedExtension;
     use Symfony\Component\Form\Test\TypeTestCase;
     // ...
@@ -137,7 +159,7 @@ make sure the ``FormRegistry`` uses the created instance::
     {
         private $objectManager;
 
-        protected function setUp()
+        protected function setUp(): void
         {
             // mock any dependencies
             $this->objectManager = $this->createMock(ObjectManager::class);
@@ -150,21 +172,25 @@ make sure the ``FormRegistry`` uses the created instance::
             // create a type instance with the mocked dependencies
             $type = new TestedType($this->objectManager);
 
-            return array(
+            return [
                 // register the type instances with the PreloadedExtension
-                new PreloadedExtension(array($type), array()),
-            );
+                new PreloadedExtension([$type], []),
+            ];
         }
 
         public function testSubmitValidData()
         {
+            // ...
+
             // Instead of creating a new instance, the one created in
             // getExtensions() will be used.
-            $form = $this->factory->create(TestedType::class);
+            $form = $this->factory->create(TestedType::class, $formData);
 
             // ... your test
         }
     }
+
+.. _form_unit_testing-adding_custom_extensions:
 
 Adding Custom Extensions
 ------------------------
@@ -182,39 +208,40 @@ allows you to return a list of extensions to register::
     namespace App\Tests\Form\Type;
 
     // ...
-    use App\Form\Type\TestedType;
     use Symfony\Component\Form\Extension\Validator\ValidatorExtension;
-    use Symfony\Component\Form\Form;
-    use Symfony\Component\Validator\ConstraintViolationList;
-    use Symfony\Component\Validator\Mapping\ClassMetadata;
-    use Symfony\Component\Validator\Validator\ValidatorInterface;
+    use Symfony\Component\Validator\Validation;
 
     class TestedTypeTest extends TypeTestCase
     {
-        private $validator;
-
         protected function getExtensions()
         {
-            $this->validator = $this->createMock(ValidatorInterface::class);
-            // use getMock() on PHPUnit 5.3 or below
-            // $this->validator = $this->getMock(ValidatorInterface::class);
-            $this->validator
-                ->method('validate')
-                ->will($this->returnValue(new ConstraintViolationList()));
-            $this->validator
-                ->method('getMetadataFor')
-                ->will($this->returnValue(new ClassMetadata(Form::class)));
+            $validator = Validation::createValidator();
 
-            return array(
-                new ValidatorExtension($this->validator),
-            );
+            // or if you also need to read constraints from annotations
+            $validator = Validation::createValidatorBuilder()
+                ->enableAnnotationMapping(true)
+                ->addDefaultDoctrineAnnotationReader()
+                ->getValidator();
+
+            return [
+                new ValidatorExtension($validator),
+            ];
         }
 
         // ... your tests
     }
+
+.. note::
+
+    By default only the
+    :class:`Symfony\\Component\\Form\\Extension\\Core\\CoreExtension` is
+    registered in tests. You can find other extensions from the Form component
+    in the ``Symfony\Component\Form\Extension`` namespace.
 
 It is also possible to load custom form types, form type extensions or type
 guessers using the :method:`Symfony\\Component\\Form\\Test\\FormIntegrationTestCase::getTypes`,
 :method:`Symfony\\Component\\Form\\Test\\FormIntegrationTestCase::getTypeExtensions`
 and :method:`Symfony\\Component\\Form\\Test\\FormIntegrationTestCase::getTypeGuessers`
 methods.
+
+.. _`PHPUnit data providers`: https://phpunit.readthedocs.io/en/stable/writing-tests-for-phpunit.html#data-providers

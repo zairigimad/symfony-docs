@@ -7,42 +7,59 @@ FormType Field
 The ``FormType`` predefines a couple of options that are then available
 on all types for which ``FormType`` is the parent.
 
-+-----------+--------------------------------------------------------------------+
-| Options   | - `action`_                                                        |
-|           | - `allow_extra_fields`_                                            |
-|           | - `by_reference`_                                                  |
-|           | - `compound`_                                                      |
-|           | - `constraints`_                                                   |
-|           | - `data`_                                                          |
-|           | - `data_class`_                                                    |
-|           | - `empty_data`_                                                    |
-|           | - `error_bubbling`_                                                |
-|           | - `error_mapping`_                                                 |
-|           | - `extra_fields_message`_                                          |
-|           | - `help`_                                                          |
-|           | - `inherit_data`_                                                  |
-|           | - `invalid_message`_                                               |
-|           | - `invalid_message_parameters`_                                    |
-|           | - `label_attr`_                                                    |
-|           | - `label_format`_                                                  |
-|           | - `mapped`_                                                        |
-|           | - `method`_                                                        |
-|           | - `post_max_size_message`_                                         |
-|           | - `property_path`_                                                 |
-|           | - `required`_                                                      |
-|           | - `trim`_                                                          |
-+-----------+--------------------------------------------------------------------+
-| Inherited | - `attr`_                                                          |
-| options   | - `auto_initialize`_                                               |
-|           | - `block_name`_                                                    |
-|           | - `disabled`_                                                      |
-|           | - `label`_                                                         |
-|           | - `translation_domain`_                                            |
-+-----------+--------------------------------------------------------------------+
-| Parent    | none                                                               |
-+-----------+--------------------------------------------------------------------+
-| Class     | :class:`Symfony\\Component\\Form\\Extension\\Core\\Type\\FormType` |
-+-----------+--------------------------------------------------------------------+
++---------------------------+--------------------------------------------------------------------+
+| Options                   | - `action`_                                                        |
+|                           | - `allow_extra_fields`_                                            |
+|                           | - `by_reference`_                                                  |
+|                           | - `compound`_                                                      |
+|                           | - `constraints`_                                                   |
+|                           | - `data`_                                                          |
+|                           | - `data_class`_                                                    |
+|                           | - `empty_data`_                                                    |
+|                           | - `error_bubbling`_                                                |
+|                           | - `error_mapping`_                                                 |
+|                           | - `extra_fields_message`_                                          |
+|                           | - `form_attr`_                                                     |
+|                           | - `help`_                                                          |
+|                           | - `help_attr`_                                                     |
+|                           | - `help_html`_                                                     |
+|                           | - `help_translation_parameters`_                                   |
+|                           | - `inherit_data`_                                                  |
+|                           | - `invalid_message`_                                               |
+|                           | - `invalid_message_parameters`_                                    |
+|                           | - `label_attr`_                                                    |
+|                           | - `label_format`_                                                  |
+|                           | - `mapped`_                                                        |
+|                           | - `method`_                                                        |
+|                           | - `post_max_size_message`_                                         |
+|                           | - `property_path`_                                                 |
+|                           | - `required`_                                                      |
+|                           | - `trim`_                                                          |
+|                           | - `validation_groups`_                                             |
++---------------------------+--------------------------------------------------------------------+
+| Inherited options         | - `attr`_                                                          |
+|                           | - `auto_initialize`_                                               |
+|                           | - `block_name`_                                                    |
+|                           | - `block_prefix`_                                                  |
+|                           | - `disabled`_                                                      |
+|                           | - `label`_                                                         |
+|                           | - `label_html`_                                                    |
+|                           | - `row_attr`_                                                      |
+|                           | - `translation_domain`_                                            |
+|                           | - `label_translation_parameters`_                                  |
+|                           | - `attr_translation_parameters`_                                   |
+|                           | - `priority`_                                                      |
++---------------------------+--------------------------------------------------------------------+
+| Default invalid message   | This value is not valid.                                           |
++---------------------------+--------------------------------------------------------------------+
+| Legacy invalid message    | This value is not valid.                                           |
++---------------------------+--------------------------------------------------------------------+
+| Parent                    | none                                                               |
++---------------------------+--------------------------------------------------------------------+
+| Class                     | :class:`Symfony\\Component\\Form\\Extension\\Core\\Type\\FormType` |
++---------------------------+--------------------------------------------------------------------+
+
+.. include:: /reference/forms/types/options/_debug_form.rst.inc
 
 Field Options
 -------------
@@ -53,8 +70,8 @@ Field Options
 
 .. _form-option-allow-extra-fields:
 
-allow_extra_fields
-~~~~~~~~~~~~~~~~~~
+``allow_extra_fields``
+~~~~~~~~~~~~~~~~~~~~~~
 
 **type**: ``boolean`` **default**: ``false``
 
@@ -67,6 +84,8 @@ option on the form.
 .. include:: /reference/forms/types/options/by_reference.rst.inc
 
 .. include:: /reference/forms/types/options/compound.rst.inc
+
+.. _reference-form-option-constraints:
 
 .. include:: /reference/forms/types/options/constraints.rst.inc
 
@@ -83,7 +102,7 @@ The actual default value of this option depends on other field options:
 
 * If ``data_class`` is set and ``required`` is ``true``, then ``new $data_class()``;
 * If ``data_class`` is set and ``required`` is ``false``, then ``null``;
-* If ``data_class`` is not set and ``compound`` is ``true``, then ``array()``
+* If ``data_class`` is not set and ``compound`` is ``true``, then ``[]``
   (empty array);
 * If ``data_class`` is not set and ``compound`` is ``false``, then ``''``
   (empty string).
@@ -99,7 +118,15 @@ The actual default value of this option depends on other field options:
 
 .. include:: /reference/forms/types/options/extra_fields_message.rst.inc
 
+.. include:: /reference/forms/types/options/form_attr.rst.inc
+
 .. include:: /reference/forms/types/options/help.rst.inc
+
+.. include:: /reference/forms/types/options/help_attr.rst.inc
+
+.. include:: /reference/forms/types/options/help_html.rst.inc
+
+.. include:: /reference/forms/types/options/help_translation_parameters.rst.inc
 
 .. include:: /reference/forms/types/options/inherit_data.rst.inc
 
@@ -131,6 +158,8 @@ The actual default value of this option depends on other field options:
 
 .. include:: /reference/forms/types/options/trim.rst.inc
 
+.. include:: /reference/forms/types/options/validation_groups.rst.inc
+
 Inherited Options
 -----------------
 
@@ -146,8 +175,20 @@ of the form type tree (i.e. it cannot be used as a form type on its own).
 
 .. include:: /reference/forms/types/options/block_name.rst.inc
 
+.. include:: /reference/forms/types/options/block_prefix.rst.inc
+
 .. include:: /reference/forms/types/options/disabled.rst.inc
 
 .. include:: /reference/forms/types/options/label.rst.inc
 
+.. include:: /reference/forms/types/options/label_html.rst.inc
+
+.. include:: /reference/forms/types/options/row_attr.rst.inc
+
 .. include:: /reference/forms/types/options/translation_domain.rst.inc
+
+.. include:: /reference/forms/types/options/label_translation_parameters.rst.inc
+
+.. include:: /reference/forms/types/options/attr_translation_parameters.rst.inc
+
+.. include:: /reference/forms/types/options/priority.rst.inc

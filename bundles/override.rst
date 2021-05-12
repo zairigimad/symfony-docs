@@ -45,7 +45,7 @@ extend from the original template, not from the overridden one:
 
     {# templates/bundles/FOSUserBundle/Registration/confirmed.html.twig #}
     {# the special '!' prefix avoids errors when extending from an overridden template #}
-    {% extends "@!FOSUserBundle/Registration/confirmed.html.twig" %}
+    {% extends "@!FOSUser/Registration/confirmed.html.twig" %}
 
     {% block some_block %}
         ...
@@ -68,7 +68,7 @@ the routes from any bundle, then they must be manually imported from somewhere
 in your application (e.g. ``config/routes.yaml``).
 
 The easiest way to "override" a bundle's routing is to never import it at
-all. Instead of importing a third-party bundle's routing, simply copy
+all. Instead of importing a third-party bundle's routing, copy
 that routing file into your application, modify it, and import it instead.
 
 Controllers
@@ -92,14 +92,10 @@ inside a :doc:`compiler pass </service_container/compiler_passes>`.
 Entities & Entity Mapping
 -------------------------
 
-If a bundle defines its entity mapping in configuration files instead of
-annotations, you can override them as any other regular bundle configuration
-file. The only caveat is that you must override all those mapping configuration
-files and not just the ones you actually want to override.
-
-If a bundle provides a mapped superclass (such as the ``User`` entity in the
-FOSUserBundle) you can override its attributes and associations. Learn more
-about this feature and its limitations in `the Doctrine documentation`_.
+Overriding entity mapping is only possible if a bundle provides a mapped
+superclass (such as the ``User`` entity in the FOSUserBundle). It's possible to
+override attributes and associations in this way. Learn more about this feature
+and its limitations in `the Doctrine documentation`_.
 
 Forms
 -----
@@ -143,7 +139,7 @@ to a new validation group:
         <constraint-mapping xmlns="http://symfony.com/schema/dic/constraint-mapping"
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
             xsi:schemaLocation="http://symfony.com/schema/dic/constraint-mapping
-                http://symfony.com/schema/dic/constraint-mapping/constraint-mapping-1.0.xsd">
+                https://symfony.com/schema/dic/constraint-mapping/constraint-mapping-1.0.xsd">
 
             <class name="FOS\UserBundle\Model\User">
                 <property name="plainPassword">
@@ -172,12 +168,12 @@ instead of the original ones.
 Translations
 ------------
 
-Translations are not related to bundles, but to :ref:`translation domains <using-message-domains>`.
+Translations are not related to bundles, but to translation domains.
 For this reason, you can override any bundle translation file from the main
 ``translations/`` directory, as long as the new file uses the same domain.
 
 For example, to override the translations defined in the
 ``Resources/translations/FOSUserBundle.es.yml`` file of the FOSUserBundle,
-create a``<your-project>/translations/FOSUserBundle.es.yml`` file.
+create a ``<your-project>/translations/FOSUserBundle.es.yml`` file.
 
-.. _`the Doctrine documentation`: http://docs.doctrine-project.org/projects/doctrine-orm/en/latest/reference/inheritance-mapping.html#overrides
+.. _`the Doctrine documentation`: https://www.doctrine-project.org/projects/doctrine-orm/en/current/reference/inheritance-mapping.html#overrides

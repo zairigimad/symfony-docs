@@ -20,13 +20,13 @@ if the service does not exist:
         <container xmlns="http://symfony.com/schema/dic/services"
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
             xsi:schemaLocation="http://symfony.com/schema/dic/services
-                http://symfony.com/schema/dic/services/services-1.0.xsd">
+                https://symfony.com/schema/dic/services/services-1.0.xsd">
 
             <services>
                 <!-- ... -->
 
                 <service id="App\Newsletter\NewsletterManager">
-                    <argument type="service" id="logger" on-invalid="null" />
+                    <argument type="service" id="logger" on-invalid="null"/>
                 </service>
             </services>
         </container>
@@ -34,17 +34,17 @@ if the service does not exist:
     .. code-block:: php
 
         // config/services.php
+        namespace Symfony\Component\DependencyInjection\Loader\Configurator;
+
         use App\Newsletter\NewsletterManager;
-        use Symfony\Component\DependencyInjection\Reference;
-        use Symfony\Component\DependencyInjection\ContainerInterface;
 
-        // ...
+        return function(ContainerConfigurator $configurator) {
+            $services = $configurator->services();
 
-        $container->register(NewsletterManager::class)
-            ->addArgument(new Reference(
-                'logger',
-                ContainerInterface::NULL_ON_INVALID_REFERENCE
-            ));
+            $services->set(NewsletterManager::class)
+                // In versions earlier to Symfony 5.1 the service() function was called ref()
+                ->args([service('logger')->nullOnInvalid()]);
+        };
 
 .. note::
 
@@ -66,10 +66,9 @@ call if the service exists and remove the method call if it does not:
 
         # config/services.yaml
         services:
-            app.newsletter_manager:
-                class: App\Newsletter\NewsletterManager
+            App\Newsletter\NewsletterManager:
                 calls:
-                    - [setLogger, ['@?logger']]
+                    - setLogger: ['@?logger']
 
     .. code-block:: xml
 
@@ -78,13 +77,9 @@ call if the service exists and remove the method call if it does not:
         <container xmlns="http://symfony.com/schema/dic/services"
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
             xsi:schemaLocation="http://symfony.com/schema/dic/services
-                http://symfony.com/schema/dic/services/services-1.0.xsd">
+                https://symfony.com/schema/dic/services/services-1.0.xsd">
 
             <services>
-                <service id="app.mailer">
-                <!-- ... -->
-                </service>
-
                 <service id="App\Newsletter\NewsletterManager">
                     <call method="setLogger">
                         <argument type="service" id="logger" on-invalid="ignore"/>
@@ -96,19 +91,17 @@ call if the service exists and remove the method call if it does not:
     .. code-block:: php
 
         // config/services.php
-        use App\Newsletter\NewsletterManager;
-        use Symfony\Component\DependencyInjection\Reference;
-        use Symfony\Component\DependencyInjection\ContainerInterface;
+        namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
-        $container
-            ->register(NewsletterManager::class)
-            ->addMethodCall('setLogger', array(
-                new Reference(
-                    'logger',
-                    ContainerInterface::IGNORE_ON_INVALID_REFERENCE
-                ),
-            ))
-        ;
+        use App\Newsletter\NewsletterManager;
+
+        return function(ContainerConfigurator $configurator) {
+            $services = $configurator->services();
+
+            $services->set(NewsletterManager::class)
+                ->call('setLogger', [service('logger')->ignoreOnInvalid()])
+            ;
+        };
 
 .. note::
 
@@ -116,11 +109,11 @@ call if the service exists and remove the method call if it does not:
     them is missing, those elements are removed but the method call is still
     made with the remaining elements of the collection.
 
-In YAML, the special ``@?`` syntax tells the service container that the dependency
-is optional. Of course, the ``NewsletterManager`` must also be rewritten by
+In YAML, the special ``@?`` syntax tells the service container that the
+dependency is optional. The ``NewsletterManager`` must also be rewritten by
 adding a ``setLogger()`` method::
 
-        public function setLogger(LoggerInterface $logger)
+        public function setLogger(LoggerInterface $logger): void
         {
             // ...
         }

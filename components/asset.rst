@@ -17,7 +17,7 @@ For example:
 
     <!-- ... -->
 
-    <a href="/"><img src="/images/logo.png"></a>
+    <a href="/"><img src="/images/logo.png" alt="logo"></a>
 
 This practice is no longer recommended unless the web application is extremely
 simple. Hardcoding URLs can be a disadvantage because:
@@ -30,7 +30,7 @@ simple. Hardcoding URLs can be a disadvantage because:
   is essential for some applications because it allows you to control how
   the assets are cached. The Asset component allows you to define different
   versioning strategies for each package;
-* **Moving assets location** is cumbersome and error-prone: it requires you to
+* **Moving assets' location** is cumbersome and error-prone: it requires you to
   carefully update the URLs of all assets included in all templates. The Asset
   component allows to move assets effortlessly just by changing the base path
   value associated with the package of assets;
@@ -46,12 +46,12 @@ Installation
 
     $ composer require symfony/asset
 
-Alternatively, you can clone the `<https://github.com/symfony/asset>`_ repository.
-
 .. include:: /components/require_autoload.rst.inc
 
 Usage
 -----
+
+.. _asset-packages:
 
 Asset Packages
 ~~~~~~~~~~~~~~
@@ -121,8 +121,9 @@ suffix to any asset path::
     echo $package->getUrl('image.png');
     // result: image.png?v1
 
-In case you want to modify the version format, pass a sprintf-compatible format
-string as the second argument of the ``StaticVersionStrategy`` constructor::
+In case you want to modify the version format, pass a ``sprintf``-compatible
+format string as the second argument of the ``StaticVersionStrategy``
+constructor::
 
     // puts the 'version' word before the version value
     $package = new Package(new StaticVersionStrategy('v1', '%s?version=%s'));
@@ -148,23 +149,39 @@ corresponding output file:
 
 .. code-block:: json
 
-    // rev-manifest.json
     {
         "css/app.css": "build/css/app.b916426ea1d10021f3f17ce8031f93c2.css",
         "js/app.js": "build/js/app.13630905267b809161e71d0f8a0c017b.js",
         "...": "..."
     }
 
-In those cases, use the 
+In those cases, use the
 :class:`Symfony\\Component\\Asset\\VersionStrategy\\JsonManifestVersionStrategy`::
 
     use Symfony\Component\Asset\Package;
     use Symfony\Component\Asset\VersionStrategy\JsonManifestVersionStrategy;
 
+    // assumes the JSON file above is called "rev-manifest.json"
     $package = new Package(new JsonManifestVersionStrategy(__DIR__.'/rev-manifest.json'));
 
     echo $package->getUrl('css/app.css');
     // result: build/css/app.b916426ea1d10021f3f17ce8031f93c2.css
+
+If your JSON file is not on your local filesystem but is accessible over HTTP,
+use the :class:`Symfony\\Component\\Asset\\VersionStrategy\\RemoteJsonManifestVersionStrategy`
+with the :doc:`HttpClient component </http_client>`::
+
+    use Symfony\Component\Asset\Package;
+    use Symfony\Component\Asset\VersionStrategy\RemoteJsonManifestVersionStrategy;
+    use Symfony\Component\HttpClient\HttpClient;
+
+    $httpClient = HttpClient::create();
+    $manifestUrl = 'https://cdn.example.com/rev-manifest.json';
+    $package = new Package(new RemoteJsonManifestVersionStrategy($manifestUrl, $httpClient));
+
+.. versionadded:: 5.1
+
+    The ``RemoteJsonManifestVersionStrategy`` was introduced in Symfony 5.1.
 
 Custom Version Strategies
 .........................
@@ -185,12 +202,12 @@ every day::
             $this->version = date('Ymd');
         }
 
-        public function getVersion($path)
+        public function getVersion(string $path)
         {
             return $this->version;
         }
 
-        public function applyVersion($path)
+        public function applyVersion(string $path)
         {
             return sprintf('%s?v=%s', $path, $this->getVersion($path));
         }
@@ -215,7 +232,7 @@ that path over and over again::
     // result: /static/images/logo.png?v1
 
     // Base path is ignored when using absolute paths
-    echo $package->getUrl('/logo.png');
+    echo $pathPackage->getUrl('/logo.png');
     // result: /logo.png?v1
 
 Request Context Aware Assets
@@ -225,8 +242,8 @@ If you are also using the :doc:`HttpFoundation </components/http_foundation>`
 component in your project (for instance, in a Symfony application), the ``PathPackage``
 class can take into account the context of the current request::
 
-    use Symfony\Component\Asset\PathPackage;
     use Symfony\Component\Asset\Context\RequestStackContext;
+    use Symfony\Component\Asset\PathPackage;
     // ...
 
     $pathPackage = new PathPackage(
@@ -239,7 +256,7 @@ class can take into account the context of the current request::
     // result: /somewhere/static/images/logo.png?v1
 
     // Both "base path" and "base url" are ignored when using absolute path for asset
-    echo $package->getUrl('/logo.png');
+    echo $pathPackage->getUrl('/logo.png');
     // result: /logo.png?v1
 
 Now that the request context is set, the ``PathPackage`` will prepend the
@@ -282,8 +299,8 @@ You can also pass a schema-agnostic URL::
     // result: //static.example.com/images/logo.png?v1
 
 This is useful because assets will automatically be requested via HTTPS if
-a visitor is viewing your site in https. Just make sure that your CDN host
-supports https.
+a visitor is viewing your site in https. If you want to use this, make sure
+that your CDN host supports HTTPS.
 
 In case you serve assets from more than one domain to improve application
 performance, pass an array of URLs as the first argument to the ``UrlPackage``
@@ -292,10 +309,10 @@ constructor::
     use Symfony\Component\Asset\UrlPackage;
     // ...
 
-    $urls = array(
+    $urls = [
         '//static1.example.com/images/',
         '//static2.example.com/images/',
-    );
+    ];
     $urlPackage = new UrlPackage($urls, new StaticVersionStrategy('v1'));
 
     echo $urlPackage->getUrl('/logo.png');
@@ -304,7 +321,7 @@ constructor::
     // result: http://static2.example.com/images/icon.png?v1
 
 For each asset, one of the URLs will be randomly used. But, the selection
-is deterministic, meaning that each asset will be always served by the same
+is deterministic, meaning that each asset will always be served by the same
 domain. This behavior simplifies the management of HTTP cache.
 
 Request Context Aware Assets
@@ -315,12 +332,12 @@ account the context of the current request. In this case, only the request
 scheme is considered, in order to select the appropriate base URL (HTTPs or
 protocol-relative URLs for HTTPs requests, any base URL for HTTP requests)::
 
-    use Symfony\Component\Asset\UrlPackage;
     use Symfony\Component\Asset\Context\RequestStackContext;
+    use Symfony\Component\Asset\UrlPackage;
     // ...
 
     $urlPackage = new UrlPackage(
-        array('http://example.com/', 'https://example.com/'),
+        ['http://example.com/', 'https://example.com/'],
         new StaticVersionStrategy('v1'),
         new RequestStackContext($requestStack)
     );
@@ -341,19 +358,19 @@ In the following example, all packages use the same versioning strategy, but
 they all have different base paths::
 
     use Symfony\Component\Asset\Package;
+    use Symfony\Component\Asset\Packages;
     use Symfony\Component\Asset\PathPackage;
     use Symfony\Component\Asset\UrlPackage;
-    use Symfony\Component\Asset\Packages;
     // ...
 
     $versionStrategy = new StaticVersionStrategy('v1');
 
     $defaultPackage = new Package($versionStrategy);
 
-    $namedPackages = array(
+    $namedPackages = [
         'img' => new UrlPackage('http://img.example.com/', $versionStrategy),
         'doc' => new PathPackage('/somewhere/deep/for/documents', $versionStrategy),
-    );
+    ];
 
     $packages = new Packages($defaultPackage, $namedPackages);
 
@@ -372,8 +389,36 @@ document inside a template::
     echo $packages->getUrl('resume.pdf', 'doc');
     // result: /somewhere/deep/for/documents/resume.pdf?v1
 
+Local Files and Other Protocols
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In addition to HTTP this component supports other protocols (such as ``file://``
+and ``ftp://``). This allows for example to serve local files in order to
+improve performance::
+
+    use Symfony\Component\Asset\UrlPackage;
+    // ...
+
+    $localPackage = new UrlPackage(
+        'file:///path/to/images/',
+        new EmptyVersionStrategy()
+    );
+
+    $ftpPackage = new UrlPackage(
+        'ftp://example.com/images/',
+        new EmptyVersionStrategy()
+    );
+
+    echo $localPackage->getUrl('/logo.png');
+    // result: file:///path/to/images/logo.png
+
+    echo $ftpPackage->getUrl('/logo.png');
+    // result: ftp://example.com/images/logo.png
+
 Learn more
 ----------
 
-.. _Packagist: https://packagist.org/packages/symfony/asset
+* :doc:`How to manage CSS and JavaScript assets in Symfony applications </frontend>`
+* :doc:`WebLink component </web_link>` to preload assets using HTTP/2.
+
 .. _`Webpack`: https://webpack.js.org/

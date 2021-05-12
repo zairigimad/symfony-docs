@@ -18,8 +18,6 @@ Installation
 
     $ composer require symfony/http-kernel
 
-Alternatively, you can clone the `<https://github.com/symfony/http-kernel>`_ repository.
-
 .. include:: /components/require_autoload.rst.inc
 
 The Workflow of a Request
@@ -47,12 +45,12 @@ This is a simplified overview of the request workflow in Symfony applications:
 #. The **browser** displays the **resource** to the **user**.
 
 Typically, some sort of framework or system is built to handle all the repetitive
-tasks (e.g. routing, security, etc) so that a developer can easily build
-each *page* of the application. Exactly *how* these systems are built varies
-greatly. The HttpKernel component provides an interface that formalizes
-the process of starting with a request and creating the appropriate response.
-The component is meant to be the heart of any application or framework, no
-matter how varied the architecture of that system::
+tasks (e.g. routing, security, etc) so that a developer can build each *page* of
+the application. Exactly *how* these systems are built varies greatly. The HttpKernel
+component provides an interface that formalizes the process of starting with a
+request and creating the appropriate response. The component is meant to be the
+heart of any application or framework, no matter how varied the architecture of
+that system::
 
     namespace Symfony\Component\HttpKernel;
 
@@ -67,8 +65,8 @@ matter how varied the architecture of that system::
          */
         public function handle(
             Request $request,
-            $type = self::MASTER_REQUEST,
-            $catch = true
+            int $type = self::MAIN_REQUEST,
+            bool $catch = true
         );
     }
 
@@ -96,19 +94,19 @@ To help explain this process, this document looks at each step of the process
 and talks about how one specific implementation of the HttpKernel - the Symfony
 Framework - works.
 
-Initially, using the :class:`Symfony\\Component\\HttpKernel\\HttpKernel`
-is really simple and involves creating an
+Initially, using the :class:`Symfony\\Component\\HttpKernel\\HttpKernel` does
+not take many steps. You create an
 :doc:`event dispatcher </components/event_dispatcher>` and a
 :ref:`controller and argument resolver <component-http-kernel-resolve-controller>`
 (explained below). To complete your working kernel, you'll add more event
 listeners to the events discussed below::
 
-    use Symfony\Component\HttpFoundation\Request;
-    use Symfony\Component\HttpKernel\HttpKernel;
     use Symfony\Component\EventDispatcher\EventDispatcher;
+    use Symfony\Component\HttpFoundation\Request;
     use Symfony\Component\HttpFoundation\RequestStack;
     use Symfony\Component\HttpKernel\Controller\ArgumentResolver;
     use Symfony\Component\HttpKernel\Controller\ControllerResolver;
+    use Symfony\Component\HttpKernel\HttpKernel;
 
     // create the Request object
     $request = Request::createFromGlobals();
@@ -174,7 +172,7 @@ to the login page or a 403 Access Denied response.
 If a ``Response`` is returned at this stage, the process skips directly to
 the :ref:`kernel.response <component-http-kernel-kernel-response>` event.
 
-Other listeners simply initialize things or add more information to the request.
+Other listeners initialize things or add more information to the request.
 For example, a listener might determine and set the locale on the ``Request``
 object.
 
@@ -202,8 +200,8 @@ attributes).
     is the :class:`Symfony\\Component\\HttpKernel\\EventListener\\RouterListener`.
     This class executes the routing layer, which returns an *array* of information
     about the matched request, including the ``_controller`` and any placeholders
-    that are in the route's pattern (e.g. ``{slug}``). See
-    :doc:`Routing component </components/routing>`.
+    that are in the route's pattern (e.g. ``{slug}``). See the
+    :doc:`Routing documentation </routing>`.
 
     This array of information is stored in the :class:`Symfony\\Component\\HttpFoundation\\Request`
     object's ``attributes`` array. Adding the routing information here doesn't
@@ -294,7 +292,7 @@ have been determined (e.g. the controller, routing information) but before
 the controller is executed. For some examples, see the Symfony section below.
 
 Listeners to this event can also change the controller callable completely
-by calling :method:`FilterControllerEvent::setController <Symfony\\Component\\HttpKernel\\Event\\FilterControllerEvent::setController>`
+by calling :method:`ControllerEvent::setController <Symfony\\Component\\HttpKernel\\Event\\ControllerEvent::setController>`
 on the event object that's passed to listeners on this event.
 
 .. sidebar:: ``kernel.controller`` in the Symfony Framework
@@ -342,8 +340,7 @@ of arguments that should be passed when executing that callable.
 
     b) If the argument in the controller is type-hinted with Symfony's
        :class:`Symfony\\Component\\HttpFoundation\\Request` object, the
-       ``Request`` is passed in as the value. If you have a custom ``Request``
-       class, it will be injected as long as you extend the Symfony ``Request``.
+       ``Request`` is passed in as the value.
 
     c) If the function or method argument is `variadic`_ and the ``Request``
        ``attributes`` bag contains an array for that argument, they will all be
@@ -361,7 +358,7 @@ of arguments that should be passed when executing that callable.
 5) Calling the Controller
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The next step is simple! ``HttpKernel::handle()`` executes the controller.
+The next step ``HttpKernel::handle()`` does is executing the controller.
 
 The job of the controller is to build the response for the given resource.
 This could be an HTML page, a JSON string or anything else. Unlike every
@@ -527,16 +524,16 @@ to the exception.
 
     <object data="../_images/components/http_kernel/http-workflow-exception.svg" type="image/svg+xml"></object>
 
-Each listener to this event is passed a :class:`Symfony\\Component\\HttpKernel\\Event\\GetResponseForExceptionEvent`
+Each listener to this event is passed a :class:`Symfony\\Component\\HttpKernel\\Event\\ExceptionEvent`
 object, which you can use to access the original exception via the
-:method:`Symfony\\Component\\HttpKernel\\Event\\GetResponseForExceptionEvent::getException`
+:method:`Symfony\\Component\\HttpKernel\\Event\\ExceptionEvent::getThrowable`
 method. A typical listener on this event will check for a certain type of
 exception and create an appropriate error ``Response``.
 
 For example, to generate a 404 page, you might throw a special type of exception
 and then add a listener on this event that looks for this exception and
 creates and returns a 404 ``Response``. In fact, the HttpKernel component
-comes with an :class:`Symfony\\Component\\HttpKernel\\EventListener\\ExceptionListener`,
+comes with an :class:`Symfony\\Component\\HttpKernel\\EventListener\\ErrorListener`,
 which if you choose to use, will do this and more by default (see the sidebar
 below for more details).
 
@@ -550,14 +547,14 @@ below for more details).
     There are two main listeners to ``kernel.exception`` when using the
     Symfony Framework.
 
-    **ExceptionListener in HttpKernel**
+    **ErrorListener in the HttpKernel Component**
 
     The first comes core to the HttpKernel component
-    and is called :class:`Symfony\\Component\\HttpKernel\\EventListener\\ExceptionListener`.
+    and is called :class:`Symfony\\Component\\HttpKernel\\EventListener\\ErrorListener`.
     The listener has several goals:
 
     1) The thrown exception is converted into a
-       :class:`Symfony\\Component\\Debug\\Exception\\FlattenException`
+       :class:`Symfony\\Component\\ErrorHandler\\Exception\\FlattenException`
        object, which contains all the information about the request, but which
        can be printed and serialized.
 
@@ -579,7 +576,7 @@ below for more details).
        controller to render is passed as a constructor argument to this listener.
        This controller will return the final ``Response`` for this error page.
 
-    **ExceptionListener in Security**
+    **ExceptionListener in the Security Component**
 
     The other important listener is the
     :class:`Symfony\\Component\\Security\\Http\\Firewall\\ExceptionListener`.
@@ -605,17 +602,18 @@ each event has their own event object:
 
 .. _component-http-kernel-event-table:
 
-=====================  ================================  ===================================================================================
-Name                   ``KernelEvents`` Constant         Argument passed to the listener
-=====================  ================================  ===================================================================================
-kernel.request         ``KernelEvents::REQUEST``         :class:`Symfony\\Component\\HttpKernel\\Event\\GetResponseEvent`
-kernel.controller      ``KernelEvents::CONTROLLER``      :class:`Symfony\\Component\\HttpKernel\\Event\\FilterControllerEvent`
-kernel.view            ``KernelEvents::VIEW``            :class:`Symfony\\Component\\HttpKernel\\Event\\GetResponseForControllerResultEvent`
-kernel.response        ``KernelEvents::RESPONSE``        :class:`Symfony\\Component\\HttpKernel\\Event\\FilterResponseEvent`
-kernel.finish_request  ``KernelEvents::FINISH_REQUEST``  :class:`Symfony\\Component\\HttpKernel\\Event\\FinishRequestEvent`
-kernel.terminate       ``KernelEvents::TERMINATE``       :class:`Symfony\\Component\\HttpKernel\\Event\\PostResponseEvent`
-kernel.exception       ``KernelEvents::EXCEPTION``       :class:`Symfony\\Component\\HttpKernel\\Event\\GetResponseForExceptionEvent`
-=====================  ================================  ===================================================================================
+===========================  ======================================  ========================================================================
+Name                         ``KernelEvents`` Constant               Argument passed to the listener
+===========================  ======================================  ========================================================================
+kernel.request               ``KernelEvents::REQUEST``               :class:`Symfony\\Component\\HttpKernel\\Event\\RequestEvent`
+kernel.controller            ``KernelEvents::CONTROLLER``            :class:`Symfony\\Component\\HttpKernel\\Event\\ControllerEvent`
+kernel.controller_arguments  ``KernelEvents::CONTROLLER_ARGUMENTS``  :class:`Symfony\\Component\\HttpKernel\\Event\\ControllerArgumentsEvent`
+kernel.view                  ``KernelEvents::VIEW``                  :class:`Symfony\\Component\\HttpKernel\\Event\\ViewEvent`
+kernel.response              ``KernelEvents::RESPONSE``              :class:`Symfony\\Component\\HttpKernel\\Event\\ResponseEvent`
+kernel.finish_request        ``KernelEvents::FINISH_REQUEST``        :class:`Symfony\\Component\\HttpKernel\\Event\\FinishRequestEvent`
+kernel.terminate             ``KernelEvents::TERMINATE``             :class:`Symfony\\Component\\HttpKernel\\Event\\TerminateEvent`
+kernel.exception             ``KernelEvents::EXCEPTION``             :class:`Symfony\\Component\\HttpKernel\\Event\\ExceptionEvent`
+===========================  ======================================  ========================================================================
 
 .. _http-kernel-working-example:
 
@@ -644,12 +642,12 @@ else that can be used to create a working example::
     use Symfony\Component\Routing\RouteCollection;
 
     $routes = new RouteCollection();
-    $routes->add('hello', new Route('/hello/{name}', array(
+    $routes->add('hello', new Route('/hello/{name}', [
         '_controller' => function (Request $request) {
             return new Response(
                 sprintf("Hello %s", $request->get('name'))
             );
-        })
+        }]
     ));
 
     $request = Request::createFromGlobals();
@@ -703,20 +701,20 @@ argument as follows::
 
 This creates another full request-response cycle where this new ``Request`` is
 transformed into a ``Response``. The only difference internally is that some
-listeners (e.g. security) may only act upon the master request. Each listener
+listeners (e.g. security) may only act upon the main request. Each listener
 is passed some sub-class of :class:`Symfony\\Component\\HttpKernel\\Event\\KernelEvent`,
-whose :method:`Symfony\\Component\\HttpKernel\\Event\\KernelEvent::isMasterRequest`
-can be used to check if the current request is a "master" or "sub" request.
+whose :method:`Symfony\\Component\\HttpKernel\\Event\\KernelEvent::isMainRequest`
+can be used to check if the current request is a "main" or "sub" request.
 
-For example, a listener that only needs to act on the master request may
+For example, a listener that only needs to act on the main request may
 look like this::
 
-    use Symfony\Component\HttpKernel\Event\GetResponseEvent;
+    use Symfony\Component\HttpKernel\Event\RequestEvent;
     // ...
 
-    public function onKernelRequest(GetResponseEvent $event)
+    public function onKernelRequest(RequestEvent $event)
     {
-        if (!$event->isMasterRequest()) {
+        if (!$event->isMainRequest()) {
             return;
         }
 
@@ -743,10 +741,6 @@ directory of FooBundle.
 The HttpKernel component provides a method called :method:`Symfony\\Component\\HttpKernel\\Kernel::locateResource`
 which can be used to transform logical paths into physical paths::
 
-    use Symfony\Component\HttpKernel\HttpKernel;
-
-    // ...
-    $kernel = new HttpKernel($dispatcher, $resolver);
     $path = $kernel->locateResource('@FooBundle/Resources/config/services.xml');
 
 Learn more
@@ -758,13 +752,11 @@ Learn more
 
    /reference/events
 
-.. _Packagist: https://packagist.org/packages/symfony/http-kernel
-.. _reflection: https://php.net/manual/en/book.reflection.php
+.. _reflection: https://www.php.net/manual/en/book.reflection.php
 .. _FOSRestBundle: https://github.com/friendsofsymfony/FOSRestBundle
-.. _`Create your own framework... on top of the Symfony2 Components`: http://fabien.potencier.org/article/50/create-your-own-framework-on-top-of-the-symfony2-components-part-1
-.. _`PHP FPM`: https://php.net/manual/en/install.fpm.php
+.. _`PHP FPM`: https://www.php.net/manual/en/install.fpm.php
 .. _`SensioFrameworkExtraBundle`: https://symfony.com/doc/current/bundles/SensioFrameworkExtraBundle/index.html
 .. _`@ParamConverter`: https://symfony.com/doc/current/bundles/SensioFrameworkExtraBundle/annotations/converters.html
 .. _`@Template`: https://symfony.com/doc/current/bundles/SensioFrameworkExtraBundle/annotations/view.html
 .. _`EmailSenderListener`: https://github.com/symfony/swiftmailer-bundle/blob/master/EventListener/EmailSenderListener.php
-.. _variadic: http://php.net/manual/en/functions.arguments.php
+.. _variadic: https://www.php.net/manual/en/functions.arguments.php#functions.variable-arg-list

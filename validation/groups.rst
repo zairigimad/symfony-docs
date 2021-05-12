@@ -8,7 +8,7 @@ By default, when validating an object all constraints of this class will
 be checked whether or not they actually pass. In some cases, however, you
 will need to validate an object against only *some* constraints on that class.
 To do this, you can organize each constraint into one or more "validation
-groups" and then apply validation against just one group of constraints.
+groups" and then apply validation against one group of constraints.
 
 For example, suppose you have a ``User`` class, which is used both when a
 user registers and when a user updates their contact information later:
@@ -42,6 +42,27 @@ user registers and when a user updates their contact information later:
             private $city;
         }
 
+    .. code-block:: php-attributes
+
+        // src/Entity/User.php
+        namespace App\Entity;
+
+        use Symfony\Component\Security\Core\User\UserInterface;
+        use Symfony\Component\Validator\Constraints as Assert;
+
+        class User implements UserInterface
+        {
+            #[Assert\Email(groups: ['registration'])]
+            private $email;
+
+            #[Assert\NotBlank(groups: ['registration'])]
+            #[Assert\Length(min: 7, groups: ['registration'])]
+            private $password;
+
+            #[Assert\Length(min: 2)]
+            private $city;
+        }
+
     .. code-block:: yaml
 
         # config/validator/validation.yaml
@@ -64,7 +85,7 @@ user registers and when a user updates their contact information later:
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
             xsi:schemaLocation="
                 http://symfony.com/schema/dic/constraint-mapping
-                http://symfony.com/schema/dic/constraint-mapping/constraint-mapping-1.0.xsd
+                https://symfony.com/schema/dic/constraint-mapping/constraint-mapping-1.0.xsd
             ">
 
             <class name="App\Entity\User">
@@ -92,7 +113,7 @@ user registers and when a user updates their contact information later:
 
                 <property name="city">
                     <constraint name="Length">
-                        <option name="min">7</option>
+                        <option name="min">2</option>
                     </constraint>
                 </property>
             </class>
@@ -103,28 +124,28 @@ user registers and when a user updates their contact information later:
         // src/Entity/User.php
         namespace App\Entity;
 
-        use Symfony\Component\Validator\Mapping\ClassMetadata;
         use Symfony\Component\Validator\Constraints as Assert;
+        use Symfony\Component\Validator\Mapping\ClassMetadata;
 
         class User
         {
             public static function loadValidatorMetadata(ClassMetadata $metadata)
             {
-                $metadata->addPropertyConstraint('email', new Assert\Email(array(
-                    'groups' => array('registration'),
-                )));
+                $metadata->addPropertyConstraint('email', new Assert\Email([
+                    'groups' => ['registration'],
+                ]));
 
-                $metadata->addPropertyConstraint('password', new Assert\NotBlank(array(
-                    'groups' => array('registration'),
-                )));
-                $metadata->addPropertyConstraint('password', new Assert\Length(array(
+                $metadata->addPropertyConstraint('password', new Assert\NotBlank([
+                    'groups' => ['registration'],
+                ]));
+                $metadata->addPropertyConstraint('password', new Assert\Length([
                     'min'    => 7,
-                    'groups' => array('registration'),
-                )));
+                    'groups' => ['registration'],
+                ]));
 
-                $metadata->addPropertyConstraint('city', new Assert\Length(array(
-                    "min" => 3,
-                )));
+                $metadata->addPropertyConstraint('city', new Assert\Length([
+                    'min' => 2,
+                ]));
             }
         }
 
@@ -132,7 +153,8 @@ With this configuration, there are three validation groups:
 
 ``Default``
     Contains the constraints in the current class and all referenced classes
-    that belong to no other group.
+    that belong to no other group. In this example, it only contains the
+    ``city`` field.
 
 ``User``
     Equivalent to all constraints of the ``User`` object in the ``Default``
@@ -140,7 +162,9 @@ With this configuration, there are three validation groups:
     and ``Default`` is explained in :doc:`/validation/sequence_provider`.
 
 ``registration``
-    Contains the constraints on the ``email`` and ``password`` fields only.
+    This is a custom validation group, so it only contains the constraints
+    explicitly associated to it. In this example, only the ``email`` and
+    ``password`` fields.
 
 Constraints in the ``Default`` group of a class are the constraints that have
 either no explicit group configured or that are configured to a group equal to
@@ -174,11 +198,11 @@ the class name or the string ``Default``.
 To tell the validator to use a specific group, pass one or more group names
 as the third argument to the ``validate()`` method::
 
-    $errors = $validator->validate($author, null, array('registration'));
+    $errors = $validator->validate($author, null, ['registration']);
 
 If no groups are specified, all constraints that belong to the group ``Default``
 will be applied.
 
-Of course, you'll usually work with validation indirectly through the form
-library. For information on how to use validation groups inside forms, see
-:doc:`/form/validation_groups`.
+In a full stack Symfony project, you'll usually work with validation indirectly
+through the form library. For information on how to use validation groups inside
+forms, see :doc:`/form/validation_groups`.

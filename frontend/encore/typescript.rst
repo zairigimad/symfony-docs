@@ -1,66 +1,59 @@
 Enabling TypeScript (ts-loader)
 ===============================
 
-Want to use `TypeScript`_? No problem! First, install the dependencies:
+Want to use `TypeScript`_? No problem! First, enable it:
 
-.. code-block:: terminal
+.. code-block:: diff
 
-    $ yarn add --dev typescript ts-loader
+      // webpack.config.js
 
-Then, activate the ``ts-loader`` in ``webpack.config.js``:
+      // ...
+      Encore
+          // ...
+    +     .addEntry('main', './assets/main.ts')
 
-.. code-block:: javascript
+    +     .enableTypeScriptLoader()
 
-    // webpack.config.js
-    // ...
+          // optionally enable forked type script for faster builds
+          // https://www.npmjs.com/package/fork-ts-checker-webpack-plugin
+          // requires that you have a tsconfig.json file that is setup correctly.
+    +     //.enableForkedTypeScriptTypesChecking()
+      ;
 
-    Encore
-        // ...
-        .addEntry('main', './assets/main.ts')
+Then restart Encore. When you do, it will give you a command you can run to
+install any missing dependencies. After running that command and restarting
+Encore, you're done!
 
-        .enableTypeScriptLoader()
-    ;
+Any ``.ts`` files that you require will be processed correctly. You can
+also configure the `ts-loader options`_ via the ``enableTypeScriptLoader()``
+method.
 
-That's it! Any ``.ts`` files that you require will be processed correctly. You can
-also configure the `ts-loader options`_ via a callback:
+.. code-block:: diff
 
-.. code-block:: javascript
+      // webpack.config.js
+      Encore
+          // ...
+          .addEntry('main', './assets/main.ts')
 
-    .enableTypeScriptLoader(function (typeScriptConfigOptions) {
-        typeScriptConfigOptions.transpileOnly = true;
-        typeScriptConfigOptions.configFile = '/path/to/tsconfig.json';
-    });
+    -     .enableTypeScriptLoader()
+    +     .enableTypeScriptLoader(function(tsConfig) {
+    +         // You can use this callback function to adjust ts-loader settings
+    +         // https://github.com/TypeStrong/ts-loader/blob/master/README.md#loader-options
+    +         // For example:
+    +         // tsConfig.silent = false
+    +     })
 
-If React assets are enabled (``.enableReactPreset()``), any ``.tsx`` file will be
-processed as well by ``ts-loader``.
+              // ...
+      ;
 
-More information about the ``ts-loader`` can be found in its `README`_.
+See the `Encore's index.js file`_ for detailed documentation and check
+out the `tsconfig.json reference`_ and the `Webpack guide about Typescript`_.
 
-Faster Builds with fork-ts-checker-webpack-plugin
--------------------------------------------------
-
-By using `fork-ts-checker-webpack-plugin`_, you can run type checking in a separate
-process, which can speedup compile time. To enable it, install the plugin:
-
-.. code-block:: terminal
-
-    $ yarn add --dev fork-ts-checker-webpack-plugin
-
-Then enable it by calling:
-
-.. code-block:: javascript
-
-    // webpack.config.js
-
-    Encore
-        // ...
-        .enableForkedTypeScriptTypesChecking()
-    ;
-
-This plugin requires that you have a `tsconfig.json`_ file that is setup correctly.
+If React is enabled (``.enableReactPreset()``), any ``.tsx`` file will also be
+processed by ``ts-loader``.
 
 .. _`TypeScript`: https://www.typescriptlang.org/
 .. _`ts-loader options`: https://github.com/TypeStrong/ts-loader#options
-.. _`README`: https://github.com/TypeStrong/ts-loader#typescript-loader-for-webpack
-.. _`fork-ts-checker-webpack-plugin`: https://www.npmjs.com/package/fork-ts-checker-webpack-plugin
-.. _`tsconfig.json`: https://www.npmjs.com/package/fork-ts-checker-webpack-plugin#modules-resolution
+.. _`Encore's index.js file`: https://github.com/symfony/webpack-encore/blob/master/index.js
+.. _`tsconfig.json reference`: https://www.typescriptlang.org/docs/handbook/tsconfig-json.html
+.. _`Webpack guide about Typescript`: https://webpack.js.org/guides/typescript/

@@ -23,13 +23,13 @@ Native PHP Save Handlers
 ------------------------
 
 So-called native handlers, are save handlers which are either compiled into
-PHP or provided by PHP extensions, such as PHP-Sqlite, PHP-Memcached and so on.
+PHP or provided by PHP extensions, such as PHP-SQLite, PHP-Memcached and so on.
 
 All native save handlers are internal to PHP and as such, have no public facing API.
 They must be configured by ``php.ini`` directives, usually ``session.save_path`` and
 potentially other driver specific directives. Specific details can be found in
 the docblock of the ``setOptions()`` method of each class. For instance, the one
-provided by the Memcached extension can be found on `php.net/memcached.setoption`_
+provided by the Memcached extension can be found on :phpmethod:`php.net <Memcached::setOption>`.
 
 While native save handlers can be activated by directly using
 ``ini_set('session.save_handler', $name);``, Symfony provides a convenient way to
@@ -42,10 +42,10 @@ Symfony provides drivers for the following native save handler as an example:
 Example usage::
 
     use Symfony\Component\HttpFoundation\Session\Session;
-    use Symfony\Component\HttpFoundation\Session\Storage\NativeSessionStorage;
     use Symfony\Component\HttpFoundation\Session\Storage\Handler\NativeFileSessionHandler;
+    use Symfony\Component\HttpFoundation\Session\Storage\NativeSessionStorage;
 
-    $sessionStorage = new NativeSessionStorage(array(), new NativeFileSessionHandler());
+    $sessionStorage = new NativeSessionStorage([], new NativeFileSessionHandler());
     $session = new Session($sessionStorage);
 
 .. note::
@@ -69,7 +69,7 @@ handlers by providing six callback functions which PHP calls internally at
 various points in the session workflow.
 
 The Symfony HttpFoundation component provides some by default and these can
-easily serve as examples if you wish to write your own.
+serve as examples if you wish to write your own.
 
 * :class:`Symfony\\Component\\HttpFoundation\\Session\\Storage\\Handler\\PdoSessionHandler`
 * :class:`Symfony\\Component\\HttpFoundation\\Session\\Storage\\Handler\\MemcachedSessionHandler`
@@ -81,18 +81,15 @@ easily serve as examples if you wish to write your own.
 Example usage::
 
     use Symfony\Component\HttpFoundation\Session\Session;
-    use Symfony\Component\HttpFoundation\Session\Storage\NativeSessionStorage;
     use Symfony\Component\HttpFoundation\Session\Storage\Handler\PdoSessionHandler;
+    use Symfony\Component\HttpFoundation\Session\Storage\NativeSessionStorage;
 
     $pdo = new \PDO(...);
-    $sessionStorage = new NativeSessionStorage(array(), new PdoSessionHandler($pdo));
+    $sessionStorage = new NativeSessionStorage([], new PdoSessionHandler($pdo));
     $session = new Session($sessionStorage);
 
 Migrating Between Save Handlers
 -------------------------------
-
-.. versionadded:: 4.1
-    The ``MigratingSessionHandler`` class was introduced in Symfony 4.1.
 
 If your application changes the way sessions are stored, use the
 :class:`Symfony\\Component\\HttpFoundation\\Session\\Storage\\Handler\\MigratingSessionHandler`
@@ -202,7 +199,7 @@ calculated by adding the PHP runtime configuration value in
     using the ``migrate()`` or ``invalidate()`` methods of the ``Session`` class.
 
     The initial cookie lifetime can be set by configuring ``NativeSessionStorage``
-    using the ``setOptions(array('cookie_lifetime' => 1234))`` method.
+    using the ``setOptions(['cookie_lifetime' => 1234])`` method.
 
 .. note::
 
@@ -289,6 +286,5 @@ particular cookie by reading the ``getLifetime()`` method::
 The expiry time of the cookie can be determined by adding the created
 timestamp and the lifetime.
 
-.. _`php.net/session.customhandler`: https://php.net/session.customhandler
-.. _`php.net/session.configuration`: https://php.net/session.configuration
-.. _`php.net/memcached.setoption`: https://php.net/memcached.setoption
+.. _`php.net/session.customhandler`: https://www.php.net/session.customhandler
+.. _`php.net/session.configuration`: https://www.php.net/session.configuration

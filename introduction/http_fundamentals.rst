@@ -23,8 +23,7 @@ to communicate with each other. For example, when checking for the latest
 .. image:: /_images/http/xkcd-full.png
    :align: center
 
-And while the actual language used is a bit more formal, it's still dead-simple.
-HTTP is the term used to describe this simple text-based language. The goal of
+HTTP is the term used to describe this text-based language. The goal of
 your server is *always* to understand text requests and return text responses.
 
 Symfony is built from the ground up around that reality. Whether you realize
@@ -57,7 +56,7 @@ In HTTP-speak, this HTTP request would actually look something like this:
     Accept: text/html
     User-Agent: Mozilla/5.0 (Macintosh)
 
-This simple message communicates *everything* necessary about exactly which
+These few lines communicate *everything* necessary about exactly which
 resource the client is requesting. The first line of an HTTP request is the
 most important, because it contains two important things: the HTTP method (GET)
 and the URI (``/``).
@@ -121,7 +120,7 @@ like this:
     Content-Type: text/html
 
     <html>
-      <!-- ... HTML for the xkcd comic -->
+        <!-- ... HTML for the xkcd comic -->
     </html>
 
 The HTTP response contains the requested resource (the HTML content in this
@@ -147,8 +146,7 @@ Requests, Responses and Web Development
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This request-response conversation is the fundamental process that drives all
-communication on the web. And as important and powerful as this process is,
-it's inescapably simple.
+communication on the web.
 
 The most important fact is this: regardless of the language you use, the
 type of application you build (web, mobile, JSON API) or the development
@@ -231,7 +229,7 @@ have all the request information at your fingertips::
 
     // retrieves an HTTP request header, with normalized, lowercase keys
     $request->headers->get('host');
-    $request->headers->get('content_type');
+    $request->headers->get('content-type');
 
     $request->getMethod();    // e.g. GET, POST, PUT, DELETE or HEAD
     $request->getLanguages(); // an array of languages the client accepts
@@ -245,7 +243,7 @@ Symfony Response Object
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 Symfony also provides a :class:`Symfony\\Component\\HttpFoundation\\Response`
-class: a simple PHP representation of an HTTP response message. This allows your
+class: a PHP representation of an HTTP response message. This allows your
 application to use an object-oriented interface to construct the response that
 needs to be returned to the client::
 
@@ -275,17 +273,17 @@ and more.
     that you can use in *any* PHP project. This also contains classes for handling
     sessions, file uploads and more.
 
-If Symfony offered nothing else, you would already have a toolkit for easily
-accessing request information and an object-oriented interface for creating
-the response. Even as you learn the many powerful features in Symfony, keep
-in mind that the goal of your application is always *to interpret a request
-and create the appropriate response based on your application logic*.
+If Symfony offered nothing else, you would already have a toolkit for accessing
+request information and an object-oriented interface for creating the response.
+Even as you learn the many powerful features in Symfony, keep in mind that the
+goal of your application is always *to interpret a request and create the
+appropriate response based on your application logic*.
 
 The Journey from the Request to the Response
 --------------------------------------------
 
 Like HTTP itself, using the ``Request`` and ``Response`` objects is pretty
-simple. The hard part of building an application is writing what comes in
+straightforward. The hard part of building an application is writing what comes in
 between. In other words, the real work comes in writing the code that
 interprets the request information and creates the response.
 
@@ -328,7 +326,7 @@ executing different PHP files, the front controller is *always* executed,
 and the routing of different URLs to different parts of your application
 is done internally.
 
-A very simple front controller might look like this::
+A small front controller might look like this::
 
     // index.php
     use Symfony\Component\HttpFoundation\Request;
@@ -337,7 +335,7 @@ A very simple front controller might look like this::
     $request = Request::createFromGlobals();
     $path = $request->getPathInfo(); // the URI path being requested
 
-    if (in_array($path, array('', '/'))) {
+    if (in_array($path, ['', '/'])) {
         $response = new Response('Welcome to the homepage.');
     } elseif ('/contact' === $path) {
         $response = new Response('Contact us');
@@ -361,12 +359,12 @@ to do:
 
 .. _request-flow-figure:
 
-.. figure:: /_images/http/request-flow.png
-   :align: center
-   :alt: Symfony request flow
+.. raw:: html
 
-   Incoming requests are interpreted by the :doc:`Routing component </routing>` and
-   passed to PHP functions that return ``Response`` objects.
+    <object data="../_images/http/request-flow.svg" type="image/svg+xml"></object>
+
+Incoming requests are interpreted by the :doc:`Routing component </routing>` and
+passed to PHP functions that return ``Response`` objects.
 
 This may not make sense yet, but as you keep reading, you'll learn about :doc:`routes </routing>`
 and :doc:`controllers </controller>`: the two fundamental parts to creating a page.
@@ -387,13 +385,10 @@ Here's what we've learned so far:
 #. Symfony turns your ``Response`` object into the text headers and content
    (i.e. the HTTP response), which are sent back to the client.
 
-.. _`xkcd`: http://xkcd.com/
+.. _`xkcd`: https://xkcd.com/
 .. _`XMLHttpRequest`: https://en.wikipedia.org/wiki/XMLHttpRequest
 .. _`HTTP 1.1 RFC`: http://www.w3.org/Protocols/rfc2616/rfc2616.html
 .. _`HTTP Bis`: http://datatracker.ietf.org/wg/httpbis/
-.. _`Live HTTP Headers`: https://addons.mozilla.org/en-US/firefox/addon/live-http-headers/
 .. _`List of HTTP header fields`: https://en.wikipedia.org/wiki/List_of_HTTP_header_fields
 .. _`list of HTTP status codes`: https://en.wikipedia.org/wiki/List_of_HTTP_status_codes
 .. _`List of common media types`: https://www.iana.org/assignments/media-types/media-types.xhtml
-.. _`Validator`: https://github.com/symfony/validator
-.. _`Swift Mailer`: http://swiftmailer.org/

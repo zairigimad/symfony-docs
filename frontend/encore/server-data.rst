@@ -6,7 +6,7 @@ In Symfony applications, you may find that you need to pass some dynamic data
 dynamic configuration is by storing information in ``data`` attributes and reading
 them later in JavaScript. For example:
 
-.. code-block:: twig
+.. code-block:: html+twig
 
     <div class="js-user-rating" data-is-authenticated="{{ app.user ? 'true' : 'false' }}">
         <!-- ... -->
@@ -19,6 +19,9 @@ Fetch this in JavaScript:
     document.addEventListener('DOMContentLoaded', function() {
         var userRating = document.querySelector('.js-user-rating');
         var isAuthenticated = userRating.dataset.isAuthenticated;
+
+        // or with jQuery
+        //var isAuthenticated = $('.js-user-rating').data('isAuthenticated');
     });
 
 .. note::
@@ -33,9 +36,9 @@ store any content. In Twig, use the ``html_attr`` escaping strategy to avoid mes
 with HTML attributes. For example, if your ``User`` object has some ``getProfileData()``
 method that returns an array, you could do the following:
 
-.. code-block:: twig
+.. code-block:: html+twig
 
-    <div data-user-profile="{{ app.user ? app.user.profileData|json_encode|e('html_attr') : '' }}">
+    <div data-user-profile="{{ app.user ? app.user.profileData|json_encode|e('html_attr') }}">
         <!-- ... -->
     </div>
 

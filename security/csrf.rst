@@ -39,21 +39,41 @@ for more information):
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
             xmlns:framework="http://symfony.com/schema/dic/symfony"
             xsi:schemaLocation="http://symfony.com/schema/dic/services
-                http://symfony.com/schema/dic/services/services-1.0.xsd
+                https://symfony.com/schema/dic/services/services-1.0.xsd
                 http://symfony.com/schema/dic/symfony
-                http://symfony.com/schema/dic/symfony/symfony-1.0.xsd">
+                https://symfony.com/schema/dic/symfony/symfony-1.0.xsd">
 
             <framework:config>
-                <framework:csrf-protection enabled="true" />
+                <framework:csrf-protection enabled="true"/>
             </framework:config>
         </container>
 
     .. code-block:: php
 
         // config/packages/framework.php
-        $container->loadFromExtension('framework', array(
-            'csrf_protection' => null,
-        ));
+        use Symfony\Config\FrameworkConfig;
+
+        return static function (FrameworkConfig $framework) {
+            $framework->csrfProtection()
+                ->enabled(true)
+            ;
+        };
+
+The tokens used for CSRF protection are meant to be different for every user and
+they are stored in the session. That's why a session is started automatically as
+soon as you render a form with CSRF protection.
+
+.. _caching-pages-that-contain-csrf-protected-forms:
+
+Moreover, this means that you cannot fully cache pages that include CSRF
+protected forms. As an alternative, you can:
+
+* Embed the form inside an uncached :doc:`ESI fragment </http_cache/esi>` and
+  cache the rest of the page contents;
+* Cache the entire page and load the form via an uncached AJAX request;
+* Cache the entire page and use :doc:`hinclude.js </templating/hinclude>` to
+  load the CSRF token with an uncached AJAX request and replace the form
+  field value with it.
 
 CSRF Protection in Symfony Forms
 --------------------------------
@@ -67,6 +87,9 @@ protected against CSRF attacks.
 By default Symfony adds the CSRF token in a hidden field called ``_token``, but
 this can be customized on a form-by-form basis::
 
+    // src/Form/TaskType.php
+    namespace App\Form;
+
     // ...
     use App\Entity\Task;
     use Symfony\Component\OptionsResolver\OptionsResolver;
@@ -75,9 +98,9 @@ this can be customized on a form-by-form basis::
     {
         // ...
 
-        public function configureOptions(OptionsResolver $resolver)
+        public function configureOptions(OptionsResolver $resolver): void
         {
-            $resolver->setDefaults(array(
+            $resolver->setDefaults([
                 'data_class'      => Task::class,
                 // enable/disable CSRF protection for this form
                 'csrf_protection' => true,
@@ -86,194 +109,42 @@ this can be customized on a form-by-form basis::
                 // an arbitrary string used to generate the value of the token
                 // using a different string for each form improves its security
                 'csrf_token_id'   => 'task_item',
-            ));
+            ]);
         }
 
         // ...
     }
 
-.. caution::
-
-    Since the token is stored in the session, a session is started automatically
-    as soon as you render a form with CSRF protection.
-
-.. caution::
-
-    CSRF tokens are meant to be different for every user. Beware of that when
-    caching pages that include forms containing CSRF tokens. For more
-    information, see :doc:`/http_cache/form_csrf_caching`.
+You can also customize the rendering of the CSRF form field creating a custom
+:doc:`form theme </form/form_themes>` and using ``csrf_token`` as the prefix of
+the field (e.g. define ``{% block csrf_token_widget %} ... {% endblock %}`` to
+customize the entire form field contents).
 
 CSRF Protection in Login Forms
 ------------------------------
 
-`Login CSRF attacks`_ can be prevented using the same technique of adding hidden
-CSRF tokens into the login forms. The Security component already provides CSRF
-protection, but you need to configure some options before using it.
+See :doc:`/security/form_login_setup` for a login form that is protected from
+CSRF attacks. You can also configure the
+:ref:`CSRF protection for the logout action <reference-security-logout-csrf>`.
 
-.. tip::
+.. _csrf-protection-in-html-forms:
 
-    If you're using a :doc:`Guard Authenticator </security/guard_authentication>`,
-    you'll need to validate the CSRF token manually inside of that class. See
-    :ref:`guard-csrf-protection` for details.
+Generating and Checking CSRF Tokens Manually
+--------------------------------------------
 
-First, configure the CSRF token provider used by the form login in your security
-configuration. You can set this to use the default provider available in the
-security component:
+Although Symfony Forms provide automatic CSRF protection by default, you may
+need to generate and check CSRF tokens manually for example when using regular
+HTML forms not managed by the Symfony Form component.
 
-.. configuration-block::
-
-    .. code-block:: yaml
-
-        # config/packages/security.yaml
-        security:
-            # ...
-
-            firewalls:
-                secured_area:
-                    # ...
-                    form_login:
-                        # ...
-                        csrf_token_generator: security.csrf.token_manager
-
-    .. code-block:: xml
-
-        <!-- config/packages/security.xml -->
-        <?xml version="1.0" encoding="UTF-8" ?>
-        <srv:container xmlns="http://symfony.com/schema/dic/security"
-            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-            xmlns:srv="http://symfony.com/schema/dic/services"
-            xsi:schemaLocation="http://symfony.com/schema/dic/services
-                http://symfony.com/schema/dic/services/services-1.0.xsd">
-
-            <config>
-                <!-- ... -->
-
-                <firewall name="secured_area">
-                    <!-- ... -->
-                    <form-login csrf-token-generator="security.csrf.token_manager" />
-                </firewall>
-            </config>
-        </srv:container>
-
-    .. code-block:: php
-
-        // config/packages/security.php
-        $container->loadFromExtension('security', array(
-            // ...
-
-            'firewalls' => array(
-                'secured_area' => array(
-                    // ...
-                    'form_login' => array(
-                        // ...
-                        'csrf_token_generator' => 'security.csrf.token_manager',
-                    ),
-                ),
-            ),
-        ));
-
-.. _csrf-login-template:
-
-Then, use the ``csrf_token()`` function in the Twig template to generate a CSRF
-token and store it as a hidden field of the form. By default, the HTML field
-must be called ``_csrf_token`` and the string used to generate the value must
-be ``authenticate``:
+Consider a HTML form created to allow deleting items. First, use the
+:ref:`csrf_token() Twig function <reference-twig-function-csrf-token>` to
+generate a CSRF token in the template and store it as a hidden form field:
 
 .. code-block:: html+twig
 
-    {# templates/security/login.html.twig #}
-
-    {# ... #}
-    <form action="{{ path('login') }}" method="post">
-        {# ... the login fields #}
-
-        <input type="hidden" name="_csrf_token"
-            value="{{ csrf_token('authenticate') }}"
-        >
-
-        <button type="submit">login</button>
-    </form>
-
-After this, you have protected your login form against CSRF attacks.
-
-.. tip::
-
-    You can change the name of the field by setting ``csrf_parameter`` and change
-    the token ID by setting  ``csrf_token_id`` in your configuration:
-
-    .. configuration-block::
-
-        .. code-block:: yaml
-
-            # config/packages/security.yaml
-            security:
-                # ...
-
-                firewalls:
-                    secured_area:
-                        # ...
-                        form_login:
-                            # ...
-                            csrf_parameter: _csrf_security_token
-                            csrf_token_id: a_private_string
-
-        .. code-block:: xml
-
-            <!-- config/packages/security.xml -->
-            <?xml version="1.0" encoding="UTF-8" ?>
-            <srv:container xmlns="http://symfony.com/schema/dic/security"
-                xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                xmlns:srv="http://symfony.com/schema/dic/services"
-                xsi:schemaLocation="http://symfony.com/schema/dic/services
-                    http://symfony.com/schema/dic/services/services-1.0.xsd">
-
-                <config>
-                    <!-- ... -->
-
-                    <firewall name="secured_area">
-                        <!-- ... -->
-                        <form-login csrf-parameter="_csrf_security_token"
-                            csrf-token-id="a_private_string"
-                        />
-                    </firewall>
-                </config>
-            </srv:container>
-
-        .. code-block:: php
-
-            // config/packages/security.php
-            $container->loadFromExtension('security', array(
-                // ...
-
-                'firewalls' => array(
-                    'secured_area' => array(
-                        // ...
-                        'form_login' => array(
-                            // ...
-                            'csrf_parameter' => '_csrf_security_token',
-                            'csrf_token_id'  => 'a_private_string',
-                        ),
-                    ),
-                ),
-            ));
-
-CSRF Protection in HTML Forms
------------------------------
-
-.. versionadded:: 4.1
-    In Symfony versions prior to 4.1, CSRF support required installing the
-    Symfony Form component even if you didn't use it.
-
-It's also possible to add CSRF protection to regular HTML forms not managed by
-the Symfony Form component, for example the simple forms used to delete items.
-First, use the ``csrf_token()`` function in the Twig template to generate a CSRF
-token and store it as a hidden field of the form:
-
-.. code-block:: twig
-
     <form action="{{ url('admin_post_delete', { id: post.id }) }}" method="post">
-        {# the argument of csrf_token() is an arbitrary value used to generate the token #}
-        <input type="hidden" name="token" value="{{ csrf_token('delete-item') }}" />
+        {# the argument of csrf_token() is an arbitrary string used to generate the token #}
+        <input type="hidden" name="token" value="{{ csrf_token('delete-item') }}"/>
 
         <button type="submit">Delete item</button>
     </form>
@@ -283,9 +154,10 @@ Then, get the value of the CSRF token in the controller action and use the
 to check its validity::
 
     use Symfony\Component\HttpFoundation\Request;
+    use Symfony\Component\HttpFoundation\Response;
     // ...
 
-    public function delete(Request $request)
+    public function delete(Request $request): Response
     {
         $submittedToken = $request->request->get('token');
 
@@ -295,5 +167,19 @@ to check its validity::
         }
     }
 
-.. _`Cross-site request forgery`: http://en.wikipedia.org/wiki/Cross-site_request_forgery
-.. _`Login CSRF attacks`: https://en.wikipedia.org/wiki/Cross-site_request_forgery#Forging_login_requests
+CSRF Tokens and Compression Side-Channel Attacks
+------------------------------------------------
+
+`BREACH`_ and `CRIME`_ are security exploits against HTTPS when using HTTP
+compression. Attackers can leverage information leaked by compression to recover
+targeted parts of the plaintext. To mitigate these attacks, and prevent an
+attacker from guessing the CSRF tokens, a random mask is prepended to the token
+and used to scramble it.
+
+.. versionadded:: 5.3
+
+    The randomization of tokens was introduced in Symfony 5.3
+
+.. _`Cross-site request forgery`: https://en.wikipedia.org/wiki/Cross-site_request_forgery
+.. _`BREACH`: https://en.wikipedia.org/wiki/BREACH
+.. _`CRIME`: https://en.wikipedia.org/wiki/CRIME

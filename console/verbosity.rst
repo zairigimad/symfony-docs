@@ -41,18 +41,22 @@ It is possible to print a message in a command for only a specific verbosity
 level. For example::
 
     // ...
+    use Symfony\Component\Console\Command\Command;
+    use Symfony\Component\Console\Input\InputInterface;
+    use Symfony\Component\Console\Output\OutputInterface;
+
     class CreateUserCommand extends Command
     {
         // ...
 
-        public function execute(InputInterface $input, OutputInterface $output)
+        public function execute(InputInterface $input, OutputInterface $output): int
         {
             $user = new User(...);
 
-            $output->writeln(array(
+            $output->writeln([
                 'Username: '.$input->getArgument('username'),
                 'Password: '.$input->getArgument('password'),
-            ));
+            ]);
 
             // available methods: ->isQuiet(), ->isVerbose(), ->isVeryVerbose(), ->isDebug()
             if ($output->isVerbose()) {
@@ -64,6 +68,8 @@ level. For example::
                 'Will only be printed in verbose mode or higher',
                 OutputInterface::VERBOSITY_VERBOSE
             );
+
+            return 0;
         }
     }
 
